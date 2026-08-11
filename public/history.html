@@ -27,7 +27,7 @@
   <section class="history-grid">
     <div class="history-card"><span>Closed Records</span><strong id="statClosed">0</strong></div>
     <div class="history-card"><span>Works</span><strong id="statWorks">0</strong></div>
-    <div class="history-card"><span>Award Hints</span><strong id="statAwardHints">0</strong></div>
+    <div class="history-card"><span>Awarded</span><strong id="statAwardHints">0</strong></div>
     <div class="history-card"><span>Results Checked</span><strong id="statResults">0</strong></div>
   </section>
 
@@ -39,9 +39,13 @@
       <option value="GOODS">GOODS</option>
       <option value="SERVICES">SERVICES</option>
     </select>
+    <select id="historyCity">
+      <option value="ALL">All cities / locations</option>
+    </select>
     <select id="historyView">
-      <option value="ALL">All closed tenders</option>
-      <option value="AWARD_HINT">Award/AOC status hints</option>
+      <option value="ALL">All closed + awarded</option>
+      <option value="AWARDED">Awarded only</option>
+      <option value="CLOSED">Closed only</option>
     </select>
     <button onclick="loadHistory()">Refresh</button>
   </section>
@@ -77,12 +81,12 @@
 
   <section class="contractor-panel">
     <h3>🔎 Contractor Search</h3>
-    <p style="color:#64748b;font-size:12px">Search among award/result records you have checked on this page. Contractor names from mirrors are marked secondary and should be verified against KPPP/AOC before relying on them.</p>
+    <p style="color:#64748b;font-size:12px">Contractor names appear after a verified award-result lookup. KPPP remains the status source; external award records are clearly marked secondary.</p>
     <input id="contractorSearch" style="width:100%;height:42px;border:1px solid #cbd5e1;border-radius:8px;padding:0 11px" placeholder="Type contractor / company name…">
     <div class="contractor-results" id="contractorResults"></div>
   </section>
 </main>
 
-<script src="/history.js" defer></script>
+<script src="/history.js?v=4" defer></script>
 </body>
 </html>
