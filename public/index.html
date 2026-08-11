@@ -30,12 +30,15 @@
     <div class="meta" id="portalMeta">Loading portal data...</div>
 
     <div class="controls">
-      <input type="text" id="searchInput" placeholder="Search title, department, ref number, location...">
+      <input type="text" id="searchInput" placeholder="Search title, department, ref number...">
       <select id="categorySelect">
         <option value="ALL">All Categories</option>
         <option value="WORKS">WORKS</option>
         <option value="GOODS">GOODS</option>
         <option value="SERVICES">SERVICES</option>
+      </select>
+      <select id="districtSelect">
+        <option value="ALL">All Cities / Districts</option>
       </select>
     </div>
 
@@ -77,11 +80,28 @@
         const updatedDate = data.generated_at ? new Date(data.generated_at).toLocaleString() : 'N/A';
         meta.innerHTML = `Total Tenders: <strong>${data.count || allTenders.length}</strong> | Last Sync: <strong>${updatedDate}</strong>`;
 
+        populateDistrictDropdown(allTenders);
         renderTenders(allTenders);
       } catch (err) {
         body.innerHTML = `<tr><td colspan="6" class="error" style="color:#dc2626;">⚠️ ${err.message}</td></tr>`;
         meta.innerText = 'Unable to fetch tenders dataset';
       }
+    }
+
+    function populateDistrictDropdown(tenders) {
+      const select = document.getElementById('districtSelect');
+      const locations = new Set();
+
+      tenders.forEach(t => {
+        const loc = (t.district || t.city || t.location || '').trim();
+        if (loc) {
+          locations.add(loc);
+        }
+      });
+
+      const sortedLocations = Array.from(locations).sort((a, b) => a.localeCompare(b));
+      select.innerHTML = '<option value="ALL">All Cities / Districts</option>' + 
+        sortedLocations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
     }
 
     function renderTenders(tenders) {
@@ -91,32 +111,46 @@
         return;
       }
 
-      body.innerHTML = tenders.map(t => `
-        <tr>
-          <td><span class="badge ${t.category}">${t.category}</span></td>
-          <td>
-            <strong>${escapeHtml(t.title)}</strong><br>
-            <small style="color:#64748b;">Ref: ${escapeHtml(t.ref_no || t.id)}</small>
-          </td>
-          <td>${escapeHtml(t.department)}</td>
-          <td>${escapeHtml(t.location || t.district || 'Karnataka')}</td>
-          <td>${t.amount ? '₹' + t.amount.toLocaleString('en-IN') : (t.amount_display || 'Refer tender')}</td>
-          <td>${t.closing_date || 'N/A'}</td>
-        </tr>
-      `).join('');
+      body.innerHTML = tenders.map(t => {
+        const catUpper = (t.category || '').toUpperCase();
+        return `
+          <tr>
+            <td><span class="badge ${catUpper}">${catUpper}</span></td>
+            <td>
+              <strong>${escapeHtml(t.title)}</strong><br>
+              <small style="color:#64748b;">Ref: ${escapeHtml(t.ref_no || t.id)}</small>
+            </td>
+            <td>${escapeHtml(t.department)}</td>
+            <td>${escapeHtml(t.district || t.city || t.location || 'Karnataka')}</td>
+            <td>${t.amount ? '₹' + t.amount.toLocaleString('en-IN') : (t.amount_display || 'Refer tender')}</td>
+            <td>${t.closing_date || 'N/A'}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function filterTenders() {
       const search = document.getElementById('searchInput').value.toLowerCase();
-      const category = document.getElementById('categorySelect').value;
+      const category = document.getElementById('categorySelect').value.toUpperCase();
+      const selectedDistrict = document.getElementById('districtSelect').value;
 
       const filtered = allTenders.filter(t => {
-        const matchesSearch = (t.title || '').toLowerCase().includes(search) ||
-                              (t.department || '').toLowerCase().includes(search) ||
-                              (t.location || '').toLowerCase().includes(search) ||
-                              (t.ref_no || '').toLowerCase().includes(search);
-        const matchesCategory = category === 'ALL' || t.category === category;
-        return matchesSearch && matchesCategory;
+        const titleMatch = (t.title || '').toLowerCase().includes(search);
+        const deptMatch = (t.department || '').toLowerCase().includes(search);
+        const refMatch = (t.ref_no || '').toLowerCase().includes(search);
+        const locMatch = (t.location || '').toLowerCase().includes(search) || 
+                         (t.district || '').toLowerCase().includes(search) || 
+                         (t.city || '').toLowerCase().includes(search);
+
+        const matchesSearch = titleMatch || deptMatch || refMatch || locMatch;
+        
+        const itemCat = (t.category || '').toUpperCase();
+        const matchesCategory = category === 'ALL' || itemCat === category;
+
+        const itemLoc = (t.district || t.city || t.location || '').trim();
+        const matchesDistrict = selectedDistrict === 'ALL' || itemLoc === selectedDistrict;
+
+        return matchesSearch && matchesCategory && matchesDistrict;
       });
 
       renderTenders(filtered);
@@ -129,6 +163,7 @@
 
     document.getElementById('searchInput').addEventListener('input', filterTenders);
     document.getElementById('categorySelect').addEventListener('change', filterTenders);
+    document.getElementById('districtSelect').addEventListener('change', filterTenders);
 
     loadTenders();
   </script>
