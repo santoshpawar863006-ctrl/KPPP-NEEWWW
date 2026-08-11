@@ -69,11 +69,15 @@ def normalize(x, category):
     publish = str(pick(x, "publishedDate", "publishDate", "dateOfPublication", "tenderPublishDate", default=""))
     emd = pick(x, "emdAmount", "emd", "emdValue", default="")
     fee = pick(x, "tenderFee", "tenderFeeAmount", "fee", default="")
+
+    # Force category casing to UPPERCASE for exact UI matching
+    raw_cat = str(pick(x, "category", "tenderCategory", default=category)).strip().upper()
+
     return {
         "id": tid,
         "ref_no": ref,
         "title": title,
-        "category": str(pick(x, "category", "tenderCategory", default=category)),
+        "category": raw_cat,
         "department": department,
         "location": location,
         "district": district,
