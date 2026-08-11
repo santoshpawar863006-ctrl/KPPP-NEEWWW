@@ -53,7 +53,6 @@ def add_bidder(bidders, name, rank, amount=None):
     name = re.sub(r"\s+", " ", str(name or "")).strip(" .,-|")
     if len(name) < 3:
         return
-    # Avoid accidentally capturing UI labels as company names.
     if name.lower() in {"company", "bidder", "contractor", "contractor name", "bidder list"}:
         return
     key = (name.lower(), rank)
@@ -64,7 +63,8 @@ def add_bidder(bidders, name, rank, amount=None):
 def extract_bidders(text):
     bidders = []
 
-    # TenderKart AOC pages: "Company --- ABC CONTRACTOR ₹5.0 L accepted-aoc"
+    # TenderKart AOC pages typically render:
+    # Company --- ABC CONTRACTOR ₹5.0 L accepted-aoc
     company_section = re.search(
         r"\bCompany\b\s*-*\s*(.+?)(?=\s+Download\b|\s+Tender\s+Value\b|\s+EMD\s+Value\b|$)",
         text,
@@ -79,9 +79,17 @@ def extract_bidders(text):
         ):
             add_bidder(bidders, m.group(1), "AWARDEE", parse_money(m.group(2), m.group(3)))
 
+    # Fallback for TenderKart pages where markup flattening leaves extra tokens.
+    for m in re.finditer(
+        r"(?:Company\s*-*\s*)?([A-Za-z0-9][A-Za-z0-9&.,()'\/\- ]{2,120}?)\s*₹\s*([0-9][0-9,.]*)\s*(Cr|Crores?|L|Lakhs?|Lacs?)?\s+accepted-aoc\b",
+        text,
+        flags=re.I,
+    ):
+        add_bidder(bidders, m.group(1), "AWARDEE", parse_money(m.group(2), m.group(3)))
+
     # TenderDetail result pages expose a Contractor Name field.
     m = re.search(
-        r"Contractor\s+Name\s*\|?\s*(.{3,140}?)(?=\s+Information\s+Source\b|\s+View\s+Original\b|$)",
+        r"Contractor\s+Name\s*\|?\s*(.{3,140}?)(?=\s+Information\s+Source\b|\s+View\s+Original\b|\s+Contract\s+Value\b|$)",
         text,
         flags=re.I,
     )
@@ -96,7 +104,6 @@ def extract_bidders(text):
             contract_value = parse_money(vm.group(1), vm.group(2))
         add_bidder(bidders, m.group(1), "AWARDEE", contract_value)
 
-    # BidEasy / generic public result prose.
     patterns = [
         (r"([A-Z0-9&.,()\-/ ]{3,100}?)\s+was\s+the\s+lowest\s+bidder\s*\(L1\)\s+at\s+₹?\s*([0-9][0-9,.]*)\s*(Cr|Crores?|L|Lakhs?|Lacs?)?", "L1"),
         (r"lowest\s+bidder\s*\(L1\)\s*[:\-]?\s*([A-Z0-9&.,()\-/ ]{3,100})", "L1"),
@@ -118,21 +125,17 @@ def extract_result(text):
     lower = text.lower()
     bidders = extract_bidders(text)
 
-    awarded = bool(
-        re.search(
-            r"\b(?:award(?:ed)?|aoc|award of contract|successful bidder|accepted contractor|accepted-aoc)\b",
-            lower,
-        )
-    )
+    awarded = bool(re.search(
+        r"\b(?:award(?:ed)?|aoc|award of contract|successful bidder|accepted contractor|accepted-aoc)\b",
+        lower,
+    ))
     if any(b.get("rank") == "AWARDEE" for b in bidders):
         awarded = True
 
-    provisional = bool(
-        re.search(
-            r"l1\s+is\s+provisional|award\s+has\s+not\s+been\s+declared|financial bid opening",
-            lower,
-        )
-    )
+    provisional = bool(re.search(
+        r"l1\s+is\s+provisional|award\s+has\s+not\s+been\s+declared|financial bid opening",
+        lower,
+    ))
     if provisional:
         awarded = False
 
@@ -189,7 +192,7 @@ def find_key(obj, wanted):
 
 def fetch_verified_page(session, tender_ref, source, url):
     try:
-        response = session.get(url, headers=HEADERS, timeout=8, allow_redirects=True)
+        response = session.get(url, headers=HEADERS, timeout=7, allow_redirects=True)
     except Exception:
         return None
     if response.status_code != 200:
@@ -210,7 +213,7 @@ def tenderkart_exact_lookup(session, tender_ref):
             TENDERKART_LOOKUP,
             params={"tender_id": tender_ref},
             headers={"X-API-Key": TENDERKART_API_KEY, "Accept": "application/json", "User-Agent": HEADERS["User-Agent"]},
-            timeout=8,
+            timeout=7,
         )
     except Exception as exc:
         return None, {"source": "TenderKart API", "configured": True, "error": str(exc)[:150]}
@@ -232,13 +235,60 @@ def tenderkart_exact_lookup(session, tender_ref):
     return candidate, attempt
 
 
-def search_urls(session, tender_ref, domain):
-    response = session.get(
-        "https://html.duckduckgo.com/html/",
-        params={"q": f'site:{domain} "{tender_ref}"'},
-        headers=HEADERS,
-        timeout=7,
-    )
+def add_search_url(urls, href, domain):
+    href = html.unescape(str(href or ""))
+    if href.startswith("//"):
+        href = "https:" + href
+    if not href.startswith("http"):
+        return
+    if domain.lower() not in href.lower():
+        return
+    # Avoid search/cache/static links; we want actual result pages.
+    if any(x in href.lower() for x in ("bing.com", "duckduckgo.com", "google.com", "/api-docs", "/pricing")):
+        return
+    if href not in urls:
+        urls.append(href)
+
+
+def bing_search_urls(session, tender_ref, domain):
+    query = f'site:{domain} "{tender_ref}"'
+    try:
+        response = session.get(
+            "https://www.bing.com/search",
+            params={"q": query, "count": "8", "setlang": "en-IN"},
+            headers={**HEADERS, "Referer": "https://www.bing.com/"},
+            timeout=6,
+        )
+    except Exception:
+        return []
+    if response.status_code != 200:
+        return []
+
+    urls = []
+    # Standard Bing result markup.
+    for href in re.findall(r'<li[^>]*class=["\'][^"\']*b_algo[^"\']*["\'][\s\S]*?<a[^>]+href=["\']([^"\']+)', response.text, flags=re.I):
+        add_search_url(urls, href, domain)
+        if len(urls) >= 3:
+            return urls
+
+    # Generic fallback in case Bing changes the result wrapper.
+    for href in re.findall(r'href=["\'](https?://[^"\']+)["\']', response.text, flags=re.I):
+        add_search_url(urls, href, domain)
+        if len(urls) >= 3:
+            break
+    return urls
+
+
+def ddg_search_urls(session, tender_ref, domain):
+    try:
+        response = session.get(
+            "https://html.duckduckgo.com/html/",
+            params={"q": f'site:{domain} "{tender_ref}"'},
+            headers=HEADERS,
+            timeout=5,
+        )
+    except Exception:
+        return []
     if response.status_code != 200:
         return []
 
@@ -249,13 +299,19 @@ def search_urls(session, tender_ref, domain):
             m = re.search(r"[?&]uddg=([^&]+)", href)
             if m:
                 href = unquote(m.group(1))
-        if href.startswith("//"):
-            href = "https:" + href
-        if href.startswith("http") and domain in href.lower() and href not in urls:
-            urls.append(href)
-        if len(urls) >= 2:
+        add_search_url(urls, href, domain)
+        if len(urls) >= 3:
             break
     return urls
+
+
+def search_urls(session, tender_ref, domain):
+    # Bing currently indexes KPPP award mirrors much better than DDG.
+    urls = bing_search_urls(session, tender_ref, domain)
+    if urls:
+        return urls, "bing"
+    urls = ddg_search_urls(session, tender_ref, domain)
+    return urls, "duckduckgo"
 
 
 def lookup(tender_ref):
@@ -263,7 +319,6 @@ def lookup(tender_ref):
     attempts = []
     best = None
 
-    # Preferred path: TenderKart's documented exact tender lookup API.
     candidate, attempt = tenderkart_exact_lookup(session, tender_ref)
     attempts.append(attempt)
     if candidate:
@@ -272,16 +327,14 @@ def lookup(tender_ref):
         if candidate.get("bidders") or candidate.get("provisional"):
             best = candidate
 
-    # Public search fallback. This is less reliable because search engines may
-    # block server-side result discovery; it never invents a contractor.
     for source, domain in SOURCES:
         try:
-            candidates = search_urls(session, tender_ref, domain)
+            candidates, engine = search_urls(session, tender_ref, domain)
         except Exception as exc:
             attempts.append({"source": source, "error": str(exc)[:150]})
             continue
 
-        attempts.append({"source": source, "candidates": len(candidates)})
+        attempts.append({"source": source, "engine": engine, "candidates": len(candidates)})
 
         for url in candidates:
             candidate = fetch_verified_page(session, tender_ref, source, url)
@@ -300,13 +353,7 @@ def lookup(tender_ref):
     return {
         "success": False,
         "tender_ref": tender_ref,
-        "needs_api_key": not bool(TENDERKART_API_KEY),
-        "message": (
-            "KPPP confirms the tender status, but the contractor name is not present in the KPPP history row. "
-            "Automatic exact contractor lookup requires the TenderKart API connection."
-            if not TENDERKART_API_KEY
-            else "No verified public award/result record was found for this tender number."
-        ),
+        "message": "No verified contractor name was found in the indexed public award records for this tender.",
         "attempts": attempts,
     }
 
@@ -316,7 +363,7 @@ class handler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "public, max-age=3600, s-maxage=3600")
+        self.send_header("Cache-Control", "public, max-age=900, s-maxage=900")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
