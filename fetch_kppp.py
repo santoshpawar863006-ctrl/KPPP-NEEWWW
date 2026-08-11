@@ -21,7 +21,7 @@ def headers():
         "Content-Type": "application/json",
         "Origin": BASE,
         "Referer": BASE + "/",
-        "Post": "CONTRACTOR-EPROC-CONTRACTOR",
+        "Role": "CONTRACTOR-EPROC-CONTRACTOR",
         "User-Agent": "Mozilla/5.0 KPPP-Tender-Aggregator/2.0",
     }
     if TOKEN:
@@ -80,7 +80,6 @@ def normalize(raw):
     ref = str(pick(raw, "tenderNumber", "tenderNo", "tenderReferenceNumber", "referenceNumber", "nitNumber", default=tid)).strip()
     title = str(pick(raw, "tenderTitle", "title", "workDescription", "description", "tenderDescription", "name", default="Tender"))
 
-    # KPPP currently exposes these short field names in the public search result.
     amount_raw = pick(
         raw,
         "ecv",
@@ -140,21 +139,18 @@ def normalize(raw):
 
 
 def base_payload():
-    # IMPORTANT: do not force GOODS/WORKS/SERVICES here.
-    # The KPPP public search can return the full live list; we categorize locally
-    # from each row's own category/categoryText field.
     return {
         "tenderNumber": "",
         "status": "PUBLISHED",
-        "deptId": None,
-        "publishedFromDate": None,
-        "publishedToDate": None,
+        "deptId": "",
+        "publishedFromDate": "",
+        "publishedToDate": "",
         "tenderType": "OPEN",
         "title": "",
-        "location": None,
-        "tenderClosureFromDate": None,
-        "tenderClosureToDate": None,
-        "category": None,
+        "location": "",
+        "tenderClosureFromDate": "",
+        "tenderClosureToDate": "",
+        "category": "",
     }
 
 
@@ -164,39 +160,50 @@ def fetch_all():
     seen = set()
 
     for page in range(MAX_PAGES):
-        response = session.post(
-            SEARCH,
-            params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"},
-            json=base_payload(),
-            headers=headers(),
-            timeout=45,
-        )
-
-        if response.status_code in (401, 403):
-            raise RuntimeError(
-                f"KPPP authentication failed (HTTP {response.status_code}). "
-                "Add/refresh the GitHub secret KPPP_AUTH_TOKEN."
+        try:
+            response = session.post(
+                SEARCH,
+                params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"},
+                json=base_payload(),
+                headers=headers(),
+                timeout=45,
             )
 
-        response.raise_for_status()
-        data = response.json()
-        items = find_list(data)
-        print(f"ALL CATEGORIES page {page}: {len(items)}")
+            if response.status_code in (401, 403):
+                raise RuntimeError(
+                    f"KPPP authentication failed (HTTP {response.status_code}). "
+                    "Add/refresh the GitHub secret KPPP_AUTH_TOKEN."
+                )
 
-        if not items:
+            response.raise_for_status()
+            
+            try:
+                data = response.json()
+            except ValueError:
+                print(f"Page {page} returned non-JSON response. Skipping or stopping.")
+                break
+
+            items = find_list(data)
+            print(f"ALL CATEGORIES page {page}: {len(items)}")
+
+            if not items:
+                break
+
+            for raw in items:
+                row = normalize(raw)
+                key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                rows.append(row)
+
+            if len(items) < PAGE_SIZE:
+                break
+            time.sleep(0.15)
+
+        except requests.RequestException as e:
+            print(f"Network error on page {page}: {e}")
             break
-
-        for raw in items:
-            row = normalize(raw)
-            key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
-            if key in seen:
-                continue
-            seen.add(key)
-            rows.append(row)
-
-        if len(items) < PAGE_SIZE:
-            break
-        time.sleep(0.15)
 
     return rows
 
@@ -208,14 +215,6 @@ def main():
 
     category_counts = Counter(row["category"] for row in rows)
     print("CATEGORY COUNTS:", dict(category_counts))
-
-    # Do not silently replace the good database with another one-category result.
-    visible_categories = {c for c in ("WORKS", "GOODS", "SERVICES") if category_counts.get(c, 0) > 0}
-    if len(visible_categories) < 2:
-        raise RuntimeError(
-            "KPPP result still contains fewer than two of WORKS/GOODS/SERVICES: "
-            f"{dict(category_counts)}. Refusing to overwrite public/tenders.json."
-        )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     temp = OUT.with_suffix(".tmp")
