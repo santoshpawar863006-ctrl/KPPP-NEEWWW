@@ -1,171 +1,3308 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Karnataka Tender Portal</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 20px; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    h1 { margin-bottom: 5px; color: #0f172a; }
-    .meta { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
-    .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    input, select { padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
-    input { flex: 1; min-width: 250px; }
-    .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-    th { background: #f1f5f9; font-weight: 600; color: #334155; }
-    tr:hover { background: #f8fafc; }
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-    .WORKS { background: #e0f2fe; color: #0369a1; }
-    .GOODS { background: #dcfce7; color: #15803d; }
-    .SERVICES { background: #fef3c7; color: #b45309; }
-    .loading, .error { padding: 20px; text-align: center; color: #64748b; font-size: 1rem; }
-  </style>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Karnataka Tender Intelligence</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    background: #f3f6fa;
+    color: #172033;
+}
+
+
+/* ======================================================
+   HEADER
+====================================================== */
+
+.header {
+    background: #0f172a;
+    color: white;
+    padding: 24px;
+}
+
+.header-inner {
+    max-width: 1600px;
+    margin: auto;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.header p {
+    margin: 8px 0 0 0;
+    color: #cbd5e1;
+}
+
+
+/* ======================================================
+   MAIN
+====================================================== */
+
+.container {
+    max-width: 1600px;
+    margin: auto;
+    padding: 24px;
+}
+
+
+/* ======================================================
+   STATS
+====================================================== */
+
+.stats {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(180px, 1fr));
+
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+
+    box-shadow:
+        0 1px 4px
+        rgba(15, 23, 42, 0.08);
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 800;
+    margin-top: 6px;
+}
+
+.stat.works {
+    border-left: 5px solid #0284c7;
+}
+
+.stat.goods {
+    border-left: 5px solid #16a34a;
+}
+
+.stat.services {
+    border-left: 5px solid #d97706;
+}
+
+.stat.total {
+    border-left: 5px solid #7c3aed;
+}
+
+
+/* ======================================================
+   META
+====================================================== */
+
+.meta-bar {
+    background: white;
+    padding: 14px 18px;
+
+    border-radius: 10px;
+
+    margin-bottom: 20px;
+
+    font-size: 14px;
+
+    color: #64748b;
+
+    box-shadow:
+        0 1px 4px
+        rgba(15, 23, 42, 0.06);
+}
+
+
+/* ======================================================
+   FILTER PANEL
+====================================================== */
+
+.filter-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+
+    box-shadow:
+        0 1px 5px
+        rgba(15, 23, 42, 0.08);
+
+    margin-bottom: 20px;
+}
+
+.filter-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 18px;
+}
+
+.filter-title h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.filters {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(200px, 1fr));
+
+    gap: 14px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #475569;
+}
+
+.filter-group input,
+.filter-group select {
+
+    width: 100%;
+
+    padding: 11px 12px;
+
+    border:
+        1px solid #cbd5e1;
+
+    border-radius: 7px;
+
+    background: white;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(37, 99, 235, 0.1);
+}
+
+
+/* Search takes 2 columns */
+
+.search-large {
+    grid-column: span 2;
+}
+
+
+/* ======================================================
+   BUTTON
+====================================================== */
+
+.reset-btn {
+
+    border: none;
+
+    background: #ef4444;
+
+    color: white;
+
+    padding: 10px 16px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+.reset-btn:hover {
+    background: #dc2626;
+}
+
+
+/* ======================================================
+   RESULT BAR
+====================================================== */
+
+.result-bar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 18px 0;
+
+    flex-wrap: wrap;
+}
+
+.result-count {
+
+    font-weight: 700;
+
+    font-size: 15px;
+}
+
+.result-controls {
+
+    display: flex;
+
+    gap: 10px;
+
+    align-items: center;
+}
+
+.result-controls select {
+
+    padding: 8px 10px;
+
+    border-radius: 6px;
+
+    border:
+        1px solid #cbd5e1;
+}
+
+
+/* ======================================================
+   TABLE
+====================================================== */
+
+.table-wrapper {
+
+    background: white;
+
+    border-radius: 12px;
+
+    overflow-x: auto;
+
+    box-shadow:
+        0 1px 6px
+        rgba(15, 23, 42, 0.08);
+}
+
+table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 1450px;
+}
+
+thead {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 2;
+}
+
+th {
+
+    background: #e9eef5;
+
+    color: #334155;
+
+    padding: 13px 12px;
+
+    text-align: left;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+
+    border-bottom:
+        1px solid #cbd5e1;
+}
+
+td {
+
+    padding: 14px 12px;
+
+    vertical-align: top;
+
+    border-bottom:
+        1px solid #e2e8f0;
+
+    font-size: 13px;
+}
+
+tbody tr:hover {
+
+    background: #f8fafc;
+}
+
+
+/* ======================================================
+   CATEGORY BADGES
+====================================================== */
+
+.badge {
+
+    display: inline-block;
+
+    padding: 5px 8px;
+
+    border-radius: 5px;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.WORKS {
+
+    background: #e0f2fe;
+
+    color: #0369a1;
+}
+
+.GOODS {
+
+    background: #dcfce7;
+
+    color: #15803d;
+}
+
+.SERVICES {
+
+    background: #fef3c7;
+
+    color: #b45309;
+}
+
+
+/* ======================================================
+   TENDER TITLE
+====================================================== */
+
+.tender-title {
+
+    font-weight: 700;
+
+    line-height: 1.45;
+
+    margin-bottom: 5px;
+
+    min-width: 300px;
+}
+
+.reference {
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+/* ======================================================
+   MONEY
+====================================================== */
+
+.money {
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.not-available {
+
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+
+/* ======================================================
+   STATUS
+====================================================== */
+
+.status {
+
+    padding: 4px 7px;
+
+    background: #dcfce7;
+
+    color: #166534;
+
+    border-radius: 5px;
+
+    font-weight: 700;
+
+    font-size: 11px;
+
+    display: inline-block;
+}
+
+
+/* ======================================================
+   PAGINATION
+====================================================== */
+
+.pagination {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 22px;
+
+    flex-wrap: wrap;
+}
+
+.page-btn {
+
+    border:
+        1px solid #cbd5e1;
+
+    background: white;
+
+    padding: 8px 12px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.page-btn:hover {
+
+    background: #f1f5f9;
+}
+
+.page-btn:disabled {
+
+    opacity: 0.4;
+
+    cursor: not-allowed;
+}
+
+.page-info {
+
+    color: #475569;
+
+    font-weight: 600;
+
+    padding: 0 10px;
+}
+
+
+/* ======================================================
+   EMPTY / ERROR
+====================================================== */
+
+.message {
+
+    padding: 50px;
+
+    text-align: center;
+
+    color: #64748b;
+
+    font-size: 16px;
+}
+
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media (max-width: 1100px) {
+
+    .filters {
+
+        grid-template-columns:
+            repeat(2, minmax(200px, 1fr));
+    }
+
+    .stats {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .container {
+
+        padding: 12px;
+    }
+
+    .filters {
+
+        grid-template-columns:
+            1fr;
+    }
+
+    .search-large {
+
+        grid-column: span 1;
+    }
+
+    .stats {
+
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .header {
+
+        padding: 18px;
+    }
+
+    .header h1 {
+
+        font-size: 22px;
+    }
+}
+
+</style>
+
 </head>
+
+
 <body>
-  <div class="container">
-    <h1>Karnataka Tenders Dashboard</h1>
-    <div class="meta" id="portalMeta">Loading portal data...</div>
 
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="Search title, department, ref number...">
-      <select id="categorySelect">
-        <option value="ALL">All Categories</option>
-        <option value="WORKS">WORKS</option>
-        <option value="GOODS">GOODS</option>
-        <option value="SERVICES">SERVICES</option>
-      </select>
-      <select id="districtSelect">
-        <option value="ALL">All Cities / Districts</option>
-      </select>
+
+<!-- ======================================================
+     HEADER
+====================================================== -->
+
+<div class="header">
+
+    <div class="header-inner">
+
+        <h1>🏛 Karnataka Tender Intelligence</h1>
+
+        <p>
+            Search and analyse Karnataka Government
+            WORKS, GOODS and SERVICES tenders
+        </p>
+
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Tender Details</th>
-            <th>Department</th>
-            <th>Location</th>
-            <th>Amount</th>
-            <th>Closing Date</th>
-          </tr>
-        </thead>
-        <tbody id="tenderBody">
-          <tr>
-            <td colspan="6" class="loading">Loading tenders from tenders.json...</td>
-          </tr>
-        </tbody>
-      </table>
+</div>
+
+
+<div class="container">
+
+
+<!-- ======================================================
+     STATISTICS
+====================================================== -->
+
+<div class="stats">
+
+    <div class="stat total">
+
+        <div class="stat-label">
+            Matching Tenders
+        </div>
+
+        <div
+            class="stat-number"
+            id="totalCount"
+        >
+            0
+        </div>
+
     </div>
-  </div>
 
-  <script>
-    let allTenders = [];
 
-    async function loadTenders() {
-      const body = document.getElementById('tenderBody');
-      const meta = document.getElementById('portalMeta');
-      try {
-        const response = await fetch('/tenders.json');
+    <div class="stat works">
+
+        <div class="stat-label">
+            WORKS
+        </div>
+
+        <div
+            class="stat-number"
+            id="worksCount"
+        >
+            0
+        </div>
+
+    </div>
+
+
+    <div class="stat goods">
+
+        <div class="stat-label">
+            GOODS
+        </div>
+
+        <div
+            class="stat-number"
+            id="goodsCount"
+        >
+            0
+        </div>
+
+    </div>
+
+
+    <div class="stat services">
+
+        <div class="stat-label">
+            SERVICES
+        </div>
+
+        <div
+            class="stat-number"
+            id="servicesCount"
+        >
+            0
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     DATA INFO
+====================================================== -->
+
+<div
+    class="meta-bar"
+    id="portalMeta"
+>
+    Loading KPPP tender database...
+</div>
+
+
+<!-- ======================================================
+     FILTER PANEL
+====================================================== -->
+
+<div class="filter-panel">
+
+
+    <div class="filter-title">
+
+        <h2>
+            🔎 Tender Filters
+        </h2>
+
+        <button
+            class="reset-btn"
+            onclick="resetFilters()"
+        >
+            Reset Filters
+        </button>
+
+    </div>
+
+
+    <div class="filters">
+
+
+        <!-- SEARCH -->
+
+        <div class="filter-group search-large">
+
+            <label>
+                SEARCH
+            </label>
+
+            <input
+                id="searchInput"
+                type="text"
+                placeholder="Search tender title, reference number, department, city, location..."
+            >
+
+        </div>
+
+
+        <!-- CATEGORY -->
+
+        <div class="filter-group">
+
+            <label>
+                CATEGORY
+            </label>
+
+            <select id="categorySelect">
+
+                <option value="ALL">
+                    All Categories
+                </option>
+
+                <option value="WORKS">
+                    WORKS
+                </option>
+
+                <option value="GOODS">
+                    GOODS
+                </option>
+
+                <option value="SERVICES">
+                    SERVICES
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- CITY -->
+
+        <div class="filter-group">
+
+            <label>
+                CITY / DISTRICT
+            </label>
+
+            <select id="citySelect">
+
+                <option value="ALL">
+                    All Cities
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- DEPARTMENT -->
+
+        <div class="filter-group">
+
+            <label>
+                DEPARTMENT
+            </label>
+
+            <select id="departmentSelect">
+
+                <option value="ALL">
+                    All Departments
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="filter-group">
+
+            <label>
+                STATUS
+            </label>
+
+            <select id="statusSelect">
+
+                <option value="ALL">
+                    All Status
+                </option>
+
+                <option value="PUBLISHED">
+                    Published
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- MIN AMOUNT -->
+
+        <div class="filter-group">
+
+            <label>
+                MIN TENDER AMOUNT ₹
+            </label>
+
+            <input
+                id="minAmount"
+                type="number"
+                min="0"
+                placeholder="Example: 1000000"
+            >
+
+        </div>
+
+
+        <!-- MAX AMOUNT -->
+
+        <div class="filter-group">
+
+            <label>
+                MAX TENDER AMOUNT ₹
+            </label>
+
+            <input
+                id="maxAmount"
+                type="number"
+                min="0"
+                placeholder="Example: 50000000"
+            >
+
+        </div>
+
+
+        <!-- MIN EMD -->
+
+        <div class="filter-group">
+
+            <label>
+                MIN EMD ₹
+            </label>
+
+            <input
+                id="minEmd"
+                type="number"
+                min="0"
+                placeholder="Example: 10000"
+            >
+
+        </div>
+
+
+        <!-- MAX EMD -->
+
+        <div class="filter-group">
+
+            <label>
+                MAX EMD ₹
+            </label>
+
+            <input
+                id="maxEmd"
+                type="number"
+                min="0"
+                placeholder="Example: 500000"
+            >
+
+        </div>
+
+
+        <!-- PUBLISHED FROM -->
+
+        <div class="filter-group">
+
+            <label>
+                PUBLISHED FROM
+            </label>
+
+            <input
+                id="publishedFrom"
+                type="date"
+            >
+
+        </div>
+
+
+        <!-- PUBLISHED TO -->
+
+        <div class="filter-group">
+
+            <label>
+                PUBLISHED TO
+            </label>
+
+            <input
+                id="publishedTo"
+                type="date"
+            >
+
+        </div>
+
+
+        <!-- CLOSING FROM -->
+
+        <div class="filter-group">
+
+            <label>
+                CLOSING FROM
+            </label>
+
+            <input
+                id="closingFrom"
+                type="date"
+            >
+
+        </div>
+
+
+        <!-- CLOSING TO -->
+
+        <div class="filter-group">
+
+            <label>
+                CLOSING TO
+            </label>
+
+            <input
+                id="closingTo"
+                type="date"
+            >
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     RESULT CONTROLS
+====================================================== -->
+
+<div class="result-bar">
+
+
+    <div
+        class="result-count"
+        id="resultCount"
+    >
+        Loading...
+    </div>
+
+
+    <div class="result-controls">
+
+
+        <select id="sortSelect">
+
+            <option value="NEWEST">
+                Newest Published
+            </option>
+
+            <option value="CLOSING_SOON">
+                Closing Soon
+            </option>
+
+            <option value="AMOUNT_HIGH">
+                Highest Tender Amount
+            </option>
+
+            <option value="AMOUNT_LOW">
+                Lowest Tender Amount
+            </option>
+
+            <option value="EMD_HIGH">
+                Highest EMD
+            </option>
+
+        </select>
+
+
+        <select id="pageSizeSelect">
+
+            <option value="25">
+                25 per page
+            </option>
+
+            <option
+                value="50"
+                selected
+            >
+                50 per page
+            </option>
+
+            <option value="100">
+                100 per page
+            </option>
+
+            <option value="200">
+                200 per page
+            </option>
+
+        </select>
+
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     TABLE
+====================================================== -->
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+
+<tr>
+
+    <th>
+        Category
+    </th>
+
+    <th>
+        Tender Details
+    </th>
+
+    <th>
+        Department
+    </th>
+
+    <th>
+        City / Location
+    </th>
+
+    <th>
+        Tender Amount
+    </th>
+
+    <th>
+        EMD
+    </th>
+
+    <th>
+        Tender Fee
+    </th>
+
+    <th>
+        Published
+    </th>
+
+    <th>
+        Closing Date
+    </th>
+
+    <th>
+        Status
+    </th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="tenderBody">
+
+<tr>
+
+<td
+    colspan="10"
+    class="message"
+>
+    Loading tenders...
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- ======================================================
+     PAGINATION
+====================================================== -->
+
+<div
+    class="pagination"
+    id="pagination"
+>
+</div>
+
+
+</div>
+
+
+<script>
+
+
+/* ======================================================
+   GLOBAL STATE
+====================================================== */
+
+let allTenders = [];
+
+let filteredTenders = [];
+
+let currentPage = 1;
+
+let pageSize = 50;
+
+
+/* ======================================================
+   KARNATAKA CITY / DISTRICT DETECTION
+====================================================== */
+
+const CITY_ALIASES = {
+
+    "Bengaluru": [
+        "bengaluru",
+        "bangalore"
+    ],
+
+    "Mysuru": [
+        "mysuru",
+        "mysore"
+    ],
+
+    "Vijayapura": [
+        "vijayapura",
+        "bijapur"
+    ],
+
+    "Kalaburagi": [
+        "kalaburagi",
+        "gulbarga"
+    ],
+
+    "Belagavi": [
+        "belagavi",
+        "belgaum"
+    ],
+
+    "Ballari": [
+        "ballari",
+        "bellary"
+    ],
+
+    "Shivamogga": [
+        "shivamogga",
+        "shimoga"
+    ],
+
+    "Tumakuru": [
+        "tumakuru",
+        "tumkur"
+    ],
+
+    "Chikkamagaluru": [
+        "chikkamagaluru",
+        "chikmagalur"
+    ],
+
+    "Mangaluru": [
+        "mangaluru",
+        "mangalore"
+    ],
+
+    "Hubballi": [
+        "hubballi",
+        "hubli"
+    ],
+
+    "Dharwad": [
+        "dharwad"
+    ],
+
+    "Davangere": [
+        "davangere"
+    ],
+
+    "Chitradurga": [
+        "chitradurga"
+    ],
+
+    "Raichur": [
+        "raichur"
+    ],
+
+    "Koppal": [
+        "koppal"
+    ],
+
+    "Gadag": [
+        "gadag"
+    ],
+
+    "Haveri": [
+        "haveri"
+    ],
+
+    "Bagalkot": [
+        "bagalkot"
+    ],
+
+    "Bidar": [
+        "bidar"
+    ],
+
+    "Yadgir": [
+        "yadgir"
+    ],
+
+    "Mandya": [
+        "mandya"
+    ],
+
+    "Hassan": [
+        "hassan"
+    ],
+
+    "Kodagu": [
+        "kodagu",
+        "madikeri"
+    ],
+
+    "Udupi": [
+        "udupi"
+    ],
+
+    "Kolar": [
+        "kolar"
+    ],
+
+    "Chikkaballapur": [
+        "chikkaballapur",
+        "chikballapur"
+    ],
+
+    "Ramanagara": [
+        "ramanagara",
+        "ramanagaram"
+    ],
+
+    "Chamarajanagar": [
+        "chamarajanagar"
+    ],
+
+    "Karwar": [
+        "karwar"
+    ],
+
+    "Hiriyur": [
+        "hiriyur"
+    ],
+
+    "Hospet": [
+        "hospet",
+        "hosapete"
+    ]
+
+};
+
+
+/* ======================================================
+   LOAD DATA
+====================================================== */
+
+async function loadTenders() {
+
+    const body =
+        document.getElementById(
+            "tenderBody"
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                "/tenders.json?ts="
+                +
+                Date.now()
+            );
+
+
         if (!response.ok) {
-          throw new Error('tenders.json file not found on server. Please run the GitHub Action workflow first to generate tender data.');
+
+            throw new Error(
+                "Unable to load tenders.json"
+            );
         }
-        const data = await response.json();
-        allTenders = data.tenders || [];
-        
-        const updatedDate = data.generated_at ? new Date(data.generated_at).toLocaleString() : 'N/A';
-        meta.innerHTML = `Total Tenders: <strong>${data.count || allTenders.length}</strong> | Last Sync: <strong>${updatedDate}</strong>`;
 
-        populateDistrictDropdown(allTenders);
-        renderTenders(allTenders);
-      } catch (err) {
-        body.innerHTML = `<tr><td colspan="6" class="error" style="color:#dc2626;">⚠️ ${err.message}</td></tr>`;
-        meta.innerText = 'Unable to fetch tenders dataset';
-      }
+
+        const data =
+            await response.json();
+
+
+        allTenders =
+            Array.isArray(
+                data.tenders
+            )
+            ?
+            data.tenders
+            :
+            [];
+
+
+        /* Add derived city */
+
+        allTenders =
+            allTenders.map(
+                tender => ({
+
+                    ...tender,
+
+                    derived_city:
+                        detectCity(
+                            tender
+                        )
+
+                })
+            );
+
+
+        const updated =
+            data.generated_at
+            ?
+            new Date(
+                data.generated_at
+            ).toLocaleString(
+                "en-IN"
+            )
+            :
+            "Unknown";
+
+
+        document.getElementById(
+            "portalMeta"
+        ).innerHTML =
+
+            `Database contains <strong>${numberFormat(allTenders.length)}</strong> tenders
+             &nbsp; | &nbsp;
+             Last KPPP Sync:
+             <strong>${escapeHtml(updated)}</strong>`;
+
+
+        populateDropdowns();
+
+        applyFilters();
+
+
     }
+    catch (error) {
 
-    function populateDistrictDropdown(tenders) {
-      const select = document.getElementById('districtSelect');
-      const locations = new Set();
+        body.innerHTML = `
 
-      tenders.forEach(t => {
-        const loc = (t.district || t.city || t.location || '').trim();
-        if (loc) {
-          locations.add(loc);
-        }
-      });
+            <tr>
 
-      const sortedLocations = Array.from(locations).sort((a, b) => a.localeCompare(b));
-      select.innerHTML = '<option value="ALL">All Cities / Districts</option>' + 
-        sortedLocations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-    }
+                <td
+                    colspan="10"
+                    class="message"
+                    style="color:#dc2626;"
+                >
 
-    function renderTenders(tenders) {
-      const body = document.getElementById('tenderBody');
-      if (!tenders || tenders.length === 0) {
-        body.innerHTML = `<tr><td colspan="6" class="loading">No matching tenders found.</td></tr>`;
-        return;
-      }
+                    ⚠️
+                    ${escapeHtml(
+                        error.message
+                    )}
 
-      body.innerHTML = tenders.map(t => {
-        const catUpper = (t.category || '').toUpperCase();
-        return `
-          <tr>
-            <td><span class="badge ${catUpper}">${catUpper}</span></td>
-            <td>
-              <strong>${escapeHtml(t.title)}</strong><br>
-              <small style="color:#64748b;">Ref: ${escapeHtml(t.ref_no || t.id)}</small>
-            </td>
-            <td>${escapeHtml(t.department)}</td>
-            <td>${escapeHtml(t.district || t.city || t.location || 'Karnataka')}</td>
-            <td>${t.amount ? '₹' + t.amount.toLocaleString('en-IN') : (t.amount_display || 'Refer tender')}</td>
-            <td>${t.closing_date || 'N/A'}</td>
-          </tr>
+                </td>
+
+            </tr>
         `;
-      }).join('');
+
     }
 
-    function filterTenders() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const category = document.getElementById('categorySelect').value.toUpperCase();
-      const selectedDistrict = document.getElementById('districtSelect').value;
+}
 
-      const filtered = allTenders.filter(t => {
-        const titleMatch = (t.title || '').toLowerCase().includes(search);
-        const deptMatch = (t.department || '').toLowerCase().includes(search);
-        const refMatch = (t.ref_no || '').toLowerCase().includes(search);
-        const locMatch = (t.location || '').toLowerCase().includes(search) || 
-                         (t.district || '').toLowerCase().includes(search) || 
-                         (t.city || '').toLowerCase().includes(search);
 
-        const matchesSearch = titleMatch || deptMatch || refMatch || locMatch;
-        
-        const itemCat = (t.category || '').toUpperCase();
-        const matchesCategory = category === 'ALL' || itemCat === category;
+/* ======================================================
+   DETECT CITY
+====================================================== */
 
-        const itemLoc = (t.district || t.city || t.location || '').trim();
-        const matchesDistrict = selectedDistrict === 'ALL' || itemLoc === selectedDistrict;
+function detectCity(tender) {
 
-        return matchesSearch && matchesCategory && matchesDistrict;
-      });
+    /* Use actual city first */
 
-      renderTenders(filtered);
+    if (
+        tender.city
+        &&
+        String(
+            tender.city
+        ).trim()
+    ) {
+
+        return String(
+            tender.city
+        ).trim();
+
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    /* Then actual district */
+
+    if (
+        tender.district
+        &&
+        String(
+            tender.district
+        ).trim()
+    ) {
+
+        return String(
+            tender.district
+        ).trim();
+
     }
 
-    document.getElementById('searchInput').addEventListener('input', filterTenders);
-    document.getElementById('categorySelect').addEventListener('change', filterTenders);
-    document.getElementById('districtSelect').addEventListener('change', filterTenders);
 
-    loadTenders();
-  </script>
+    const searchableText = [
+
+        tender.location,
+
+        tender.title,
+
+        tender.department
+
+    ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+
+    for (
+        const [
+            city,
+            aliases
+        ]
+        of
+        Object.entries(
+            CITY_ALIASES
+        )
+    ) {
+
+        for (
+            const alias
+            of
+            aliases
+        ) {
+
+            if (
+                searchableText.includes(
+                    alias
+                )
+            ) {
+
+                return city;
+
+            }
+
+        }
+
+    }
+
+
+    return "Other / Unspecified";
+
+}
+
+
+/* ======================================================
+   DROPDOWNS
+====================================================== */
+
+function populateDropdowns() {
+
+    populateCityDropdown();
+
+    populateDepartmentDropdown();
+
+    populateStatusDropdown();
+
+}
+
+
+function populateCityDropdown() {
+
+    const select =
+        document.getElementById(
+            "citySelect"
+        );
+
+
+    const cities =
+        [
+            ...new Set(
+
+                allTenders
+
+                .map(
+                    tender =>
+                        tender.derived_city
+                )
+
+                .filter(Boolean)
+
+            )
+        ];
+
+
+    cities.sort(
+        (a, b) =>
+            a.localeCompare(b)
+    );
+
+
+    select.innerHTML =
+
+        `<option value="ALL">
+            All Cities
+         </option>`
+
+        +
+
+        cities.map(
+
+            city =>
+
+                `<option value="${escapeHtml(city)}">
+                    ${escapeHtml(city)}
+                 </option>`
+
+        ).join("");
+
+}
+
+
+function populateDepartmentDropdown() {
+
+    const select =
+        document.getElementById(
+            "departmentSelect"
+        );
+
+
+    const departments =
+        [
+            ...new Set(
+
+                allTenders
+
+                .map(
+                    tender =>
+                        String(
+                            tender.department
+                            ||
+                            ""
+                        ).trim()
+                )
+
+                .filter(Boolean)
+
+            )
+        ];
+
+
+    departments.sort(
+        (a, b) =>
+            a.localeCompare(b)
+    );
+
+
+    select.innerHTML =
+
+        `<option value="ALL">
+            All Departments
+         </option>`
+
+        +
+
+        departments.map(
+
+            department =>
+
+                `<option value="${escapeHtml(department)}">
+                    ${escapeHtml(department)}
+                 </option>`
+
+        ).join("");
+
+}
+
+
+function populateStatusDropdown() {
+
+    const select =
+        document.getElementById(
+            "statusSelect"
+        );
+
+
+    const statuses =
+        [
+            ...new Set(
+
+                allTenders
+
+                .map(
+                    tender =>
+                        String(
+                            tender.status
+                            ||
+                            tender.status_text
+                            ||
+                            ""
+                        )
+                        .trim()
+                        .toUpperCase()
+                )
+
+                .filter(Boolean)
+
+            )
+        ];
+
+
+    statuses.sort();
+
+
+    select.innerHTML =
+
+        `<option value="ALL">
+            All Status
+         </option>`
+
+        +
+
+        statuses.map(
+
+            status =>
+
+                `<option value="${escapeHtml(status)}">
+                    ${escapeHtml(status)}
+                 </option>`
+
+        ).join("");
+
+}
+
+
+/* ======================================================
+   FILTER LOGIC
+====================================================== */
+
+function applyFilters() {
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const category =
+        document.getElementById(
+            "categorySelect"
+        ).value;
+
+
+    const city =
+        document.getElementById(
+            "citySelect"
+        ).value;
+
+
+    const department =
+        document.getElementById(
+            "departmentSelect"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "statusSelect"
+        ).value;
+
+
+    const minAmount =
+        getNumberInput(
+            "minAmount"
+        );
+
+
+    const maxAmount =
+        getNumberInput(
+            "maxAmount"
+        );
+
+
+    const minEmd =
+        getNumberInput(
+            "minEmd"
+        );
+
+
+    const maxEmd =
+        getNumberInput(
+            "maxEmd"
+        );
+
+
+    const publishedFrom =
+        getDateInput(
+            "publishedFrom"
+        );
+
+
+    const publishedTo =
+        getDateInput(
+            "publishedTo",
+            true
+        );
+
+
+    const closingFrom =
+        getDateInput(
+            "closingFrom"
+        );
+
+
+    const closingTo =
+        getDateInput(
+            "closingTo",
+            true
+        );
+
+
+    filteredTenders =
+        allTenders.filter(
+            tender => {
+
+
+                /* SEARCH */
+
+                if (search) {
+
+                    const haystack = [
+
+                        tender.title,
+
+                        tender.ref_no,
+
+                        tender.department,
+
+                        tender.location,
+
+                        tender.city,
+
+                        tender.district,
+
+                        tender.derived_city,
+
+                        tender.category,
+
+                        tender.status
+
+                    ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+
+                    if (
+                        !haystack.includes(
+                            search
+                        )
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                /* CATEGORY */
+
+                if (
+                    category !== "ALL"
+                    &&
+                    String(
+                        tender.category
+                        ||
+                        ""
+                    ).toUpperCase()
+                    !==
+                    category
+                ) {
+
+                    return false;
+
+                }
+
+
+                /* CITY */
+
+                if (
+                    city !== "ALL"
+                    &&
+                    tender.derived_city
+                    !==
+                    city
+                ) {
+
+                    return false;
+
+                }
+
+
+                /* DEPARTMENT */
+
+                if (
+                    department !== "ALL"
+                    &&
+                    String(
+                        tender.department
+                        ||
+                        ""
+                    )
+                    !==
+                    department
+                ) {
+
+                    return false;
+
+                }
+
+
+                /* STATUS */
+
+                const itemStatus =
+                    String(
+                        tender.status
+                        ||
+                        tender.status_text
+                        ||
+                        ""
+                    )
+                    .toUpperCase();
+
+
+                if (
+                    status !== "ALL"
+                    &&
+                    itemStatus !== status
+                ) {
+
+                    return false;
+
+                }
+
+
+                /* AMOUNT */
+
+                const amount =
+                    numericValue(
+                        tender.amount
+                    );
+
+
+                if (
+                    minAmount !== null
+                ) {
+
+                    if (
+                        amount === null
+                        ||
+                        amount < minAmount
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    maxAmount !== null
+                ) {
+
+                    if (
+                        amount === null
+                        ||
+                        amount > maxAmount
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                /* EMD */
+
+                const emd =
+                    numericValue(
+                        tender.emd
+                    );
+
+
+                if (
+                    minEmd !== null
+                ) {
+
+                    if (
+                        emd === null
+                        ||
+                        emd < minEmd
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    maxEmd !== null
+                ) {
+
+                    if (
+                        emd === null
+                        ||
+                        emd > maxEmd
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                /* PUBLISHED DATE */
+
+                const publishedDate =
+                    parseKpppDate(
+                        tender.published_date
+                    );
+
+
+                if (
+                    publishedFrom
+                    &&
+                    (
+                        !publishedDate
+                        ||
+                        publishedDate
+                        <
+                        publishedFrom
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    publishedTo
+                    &&
+                    (
+                        !publishedDate
+                        ||
+                        publishedDate
+                        >
+                        publishedTo
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                /* CLOSING DATE */
+
+                const closingDate =
+                    parseKpppDate(
+                        tender.closing_date
+                    );
+
+
+                if (
+                    closingFrom
+                    &&
+                    (
+                        !closingDate
+                        ||
+                        closingDate
+                        <
+                        closingFrom
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    closingTo
+                    &&
+                    (
+                        !closingDate
+                        ||
+                        closingDate
+                        >
+                        closingTo
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    sortFilteredTenders();
+
+
+    currentPage = 1;
+
+
+    updateStats();
+
+    renderCurrentPage();
+
+}
+
+
+/* ======================================================
+   SORT
+====================================================== */
+
+function sortFilteredTenders() {
+
+    const sort =
+        document.getElementById(
+            "sortSelect"
+        ).value;
+
+
+    filteredTenders.sort(
+        (a, b) => {
+
+
+            if (
+                sort ===
+                "NEWEST"
+            ) {
+
+                return (
+                    dateTimestamp(
+                        b.published_date
+                    )
+                    -
+                    dateTimestamp(
+                        a.published_date
+                    )
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "CLOSING_SOON"
+            ) {
+
+                return (
+                    dateTimestamp(
+                        a.closing_date
+                    )
+                    -
+                    dateTimestamp(
+                        b.closing_date
+                    )
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "AMOUNT_HIGH"
+            ) {
+
+                return (
+                    numberOrZero(
+                        b.amount
+                    )
+                    -
+                    numberOrZero(
+                        a.amount
+                    )
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "AMOUNT_LOW"
+            ) {
+
+                return (
+                    numberOrHuge(
+                        a.amount
+                    )
+                    -
+                    numberOrHuge(
+                        b.amount
+                    )
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "EMD_HIGH"
+            ) {
+
+                return (
+                    numberOrZero(
+                        b.emd
+                    )
+                    -
+                    numberOrZero(
+                        a.emd
+                    )
+                );
+
+            }
+
+
+            return 0;
+
+        }
+    );
+
+}
+
+
+/* ======================================================
+   STATS
+====================================================== */
+
+function updateStats() {
+
+    const works =
+        filteredTenders.filter(
+            tender =>
+                String(
+                    tender.category
+                    ||
+                    ""
+                ).toUpperCase()
+                ===
+                "WORKS"
+        ).length;
+
+
+    const goods =
+        filteredTenders.filter(
+            tender =>
+                String(
+                    tender.category
+                    ||
+                    ""
+                ).toUpperCase()
+                ===
+                "GOODS"
+        ).length;
+
+
+    const services =
+        filteredTenders.filter(
+            tender =>
+                String(
+                    tender.category
+                    ||
+                    ""
+                ).toUpperCase()
+                ===
+                "SERVICES"
+        ).length;
+
+
+    document.getElementById(
+        "totalCount"
+    ).textContent =
+        numberFormat(
+            filteredTenders.length
+        );
+
+
+    document.getElementById(
+        "worksCount"
+    ).textContent =
+        numberFormat(
+            works
+        );
+
+
+    document.getElementById(
+        "goodsCount"
+    ).textContent =
+        numberFormat(
+            goods
+        );
+
+
+    document.getElementById(
+        "servicesCount"
+    ).textContent =
+        numberFormat(
+            services
+        );
+
+
+    document.getElementById(
+        "resultCount"
+    ).textContent =
+
+        `${numberFormat(filteredTenders.length)}
+         tenders found`;
+
+}
+
+
+/* ======================================================
+   RENDER PAGE
+====================================================== */
+
+function renderCurrentPage() {
+
+    pageSize =
+        Number(
+            document.getElementById(
+                "pageSizeSelect"
+            ).value
+        )
+        ||
+        50;
+
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                filteredTenders.length
+                /
+                pageSize
+            )
+        );
+
+
+    if (
+        currentPage >
+        totalPages
+    ) {
+
+        currentPage =
+            totalPages;
+
+    }
+
+
+    const start =
+        (
+            currentPage
+            -
+            1
+        )
+        *
+        pageSize;
+
+
+    const end =
+        start
+        +
+        pageSize;
+
+
+    const pageRows =
+        filteredTenders.slice(
+            start,
+            end
+        );
+
+
+    renderTenders(
+        pageRows
+    );
+
+
+    renderPagination(
+        totalPages
+    );
+
+}
+
+
+/* ======================================================
+   RENDER TENDERS
+====================================================== */
+
+function renderTenders(
+    tenders
+) {
+
+    const body =
+        document.getElementById(
+            "tenderBody"
+        );
+
+
+    if (
+        !tenders.length
+    ) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="10"
+                    class="message"
+                >
+
+                    No matching tenders found.
+
+                </td>
+
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    body.innerHTML =
+        tenders.map(
+            tender => {
+
+
+                const category =
+                    String(
+                        tender.category
+                        ||
+                        ""
+                    )
+                    .toUpperCase();
+
+
+                const status =
+                    tender.status_text
+                    ||
+                    tender.status
+                    ||
+                    "Published";
+
+
+                return `
+
+                <tr>
+
+
+                    <td>
+
+                        <span
+                            class="badge ${escapeHtml(category)}"
+                        >
+
+                            ${escapeHtml(category)}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="tender-title">
+
+                            ${escapeHtml(
+                                tender.title
+                                ||
+                                "Tender"
+                            )}
+
+                        </div>
+
+                        <div class="reference">
+
+                            Ref:
+                            ${escapeHtml(
+                                tender.ref_no
+                                ||
+                                tender.id
+                                ||
+                                "-"
+                            )}
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        ${escapeHtml(
+                            tender.department
+                            ||
+                            "Karnataka Government"
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+
+                            ${escapeHtml(
+                                tender.derived_city
+                                ||
+                                "-"
+                            )}
+
+                        </strong>
+
+                        <br>
+
+                        <small>
+
+                            ${escapeHtml(
+                                tender.location
+                                ||
+                                tender.district
+                                ||
+                                tender.city
+                                ||
+                                "Karnataka"
+                            )}
+
+                        </small>
+
+                    </td>
+
+
+                    <td class="money">
+
+                        ${formatMoney(
+                            tender.amount,
+                            tender.amount_display
+                        )}
+
+                    </td>
+
+
+                    <td class="money">
+
+                        ${formatMoney(
+                            tender.emd
+                        )}
+
+                    </td>
+
+
+                    <td class="money">
+
+                        ${formatMoney(
+                            tender.fee
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${escapeHtml(
+                            tender.published_date
+                            ||
+                            "-"
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+
+                            ${escapeHtml(
+                                tender.closing_date
+                                ||
+                                "-"
+                            )}
+
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="status">
+
+                            ${escapeHtml(status)}
+
+                        </span>
+
+                    </td>
+
+
+                </tr>
+
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* ======================================================
+   PAGINATION
+====================================================== */
+
+function renderPagination(
+    totalPages
+) {
+
+    const container =
+        document.getElementById(
+            "pagination"
+        );
+
+
+    if (
+        filteredTenders.length === 0
+    ) {
+
+        container.innerHTML = "";
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+
+        <button
+            class="page-btn"
+            onclick="changePage(-1)"
+            ${currentPage <= 1 ? "disabled" : ""}
+        >
+            ← Previous
+        </button>
+
+
+        <div class="page-info">
+
+            Page
+            ${currentPage}
+            of
+            ${totalPages}
+
+        </div>
+
+
+        <button
+            class="page-btn"
+            onclick="changePage(1)"
+            ${currentPage >= totalPages ? "disabled" : ""}
+        >
+            Next →
+        </button>
+
+    `;
+
+}
+
+
+function changePage(
+    direction
+) {
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                filteredTenders.length
+                /
+                pageSize
+            )
+        );
+
+
+    const newPage =
+        currentPage
+        +
+        direction;
+
+
+    if (
+        newPage < 1
+        ||
+        newPage > totalPages
+    ) {
+
+        return;
+
+    }
+
+
+    currentPage =
+        newPage;
+
+
+    renderCurrentPage();
+
+
+    window.scrollTo({
+
+        top:
+            document.querySelector(
+                ".result-bar"
+            ).offsetTop
+            -
+            15,
+
+        behavior:
+            "smooth"
+
+    });
+
+}
+
+
+/* ======================================================
+   RESET FILTERS
+====================================================== */
+
+function resetFilters() {
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+
+    document.getElementById(
+        "categorySelect"
+    ).value = "ALL";
+
+
+    document.getElementById(
+        "citySelect"
+    ).value = "ALL";
+
+
+    document.getElementById(
+        "departmentSelect"
+    ).value = "ALL";
+
+
+    document.getElementById(
+        "statusSelect"
+    ).value = "ALL";
+
+
+    document.getElementById(
+        "minAmount"
+    ).value = "";
+
+
+    document.getElementById(
+        "maxAmount"
+    ).value = "";
+
+
+    document.getElementById(
+        "minEmd"
+    ).value = "";
+
+
+    document.getElementById(
+        "maxEmd"
+    ).value = "";
+
+
+    document.getElementById(
+        "publishedFrom"
+    ).value = "";
+
+
+    document.getElementById(
+        "publishedTo"
+    ).value = "";
+
+
+    document.getElementById(
+        "closingFrom"
+    ).value = "";
+
+
+    document.getElementById(
+        "closingTo"
+    ).value = "";
+
+
+    document.getElementById(
+        "sortSelect"
+    ).value = "NEWEST";
+
+
+    currentPage = 1;
+
+
+    applyFilters();
+
+}
+
+
+/* ======================================================
+   DATE FUNCTIONS
+====================================================== */
+
+function parseKpppDate(
+    value
+) {
+
+    if (!value) {
+
+        return null;
+
+    }
+
+
+    const text =
+        String(
+            value
+        ).trim();
+
+
+    /*
+        KPPP:
+        DD-MM-YYYY HH:MM:SS
+    */
+
+    const match =
+        text.match(
+            /^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+        );
+
+
+    if (match) {
+
+        return new Date(
+
+            Number(
+                match[3]
+            ),
+
+            Number(
+                match[2]
+            )
+            -
+            1,
+
+            Number(
+                match[1]
+            ),
+
+            Number(
+                match[4]
+                ||
+                0
+            ),
+
+            Number(
+                match[5]
+                ||
+                0
+            ),
+
+            Number(
+                match[6]
+                ||
+                0
+            )
+
+        );
+
+    }
+
+
+    const parsed =
+        new Date(
+            text
+        );
+
+
+    if (
+        Number.isNaN(
+            parsed.getTime()
+        )
+    ) {
+
+        return null;
+
+    }
+
+
+    return parsed;
+
+}
+
+
+function dateTimestamp(
+    value
+) {
+
+    const date =
+        parseKpppDate(
+            value
+        );
+
+
+    return date
+        ?
+        date.getTime()
+        :
+        0;
+
+}
+
+
+function getDateInput(
+    id,
+    endOfDay = false
+) {
+
+    const value =
+        document.getElementById(
+            id
+        ).value;
+
+
+    if (!value) {
+
+        return null;
+
+    }
+
+
+    const date =
+        new Date(
+            value
+            +
+            "T00:00:00"
+        );
+
+
+    if (endOfDay) {
+
+        date.setHours(
+            23,
+            59,
+            59,
+            999
+        );
+
+    }
+
+
+    return date;
+
+}
+
+
+/* ======================================================
+   NUMBER FUNCTIONS
+====================================================== */
+
+function numericValue(
+    value
+) {
+
+    if (
+        value === null
+        ||
+        value === undefined
+        ||
+        value === ""
+    ) {
+
+        return null;
+
+    }
+
+
+    const number =
+        Number(
+            value
+        );
+
+
+    return Number.isFinite(
+        number
+    )
+        ?
+        number
+        :
+        null;
+
+}
+
+
+function getNumberInput(
+    id
+) {
+
+    const value =
+        document.getElementById(
+            id
+        ).value;
+
+
+    if (
+        value === ""
+    ) {
+
+        return null;
+
+    }
+
+
+    const number =
+        Number(
+            value
+        );
+
+
+    return Number.isFinite(
+        number
+    )
+        ?
+        number
+        :
+        null;
+
+}
+
+
+function numberOrZero(
+    value
+) {
+
+    return numericValue(
+        value
+    )
+    ??
+    0;
+
+}
+
+
+function numberOrHuge(
+    value
+) {
+
+    return numericValue(
+        value
+    )
+    ??
+    Number.MAX_SAFE_INTEGER;
+
+}
+
+
+/* ======================================================
+   MONEY FORMAT
+====================================================== */
+
+function formatMoney(
+    value,
+    fallback = null
+) {
+
+    const amount =
+        numericValue(
+            value
+        );
+
+
+    if (
+        amount !== null
+    ) {
+
+        return (
+            "₹"
+            +
+            amount.toLocaleString(
+                "en-IN"
+            )
+        );
+
+    }
+
+
+    if (
+        fallback
+        &&
+        fallback !==
+        "Refer tender"
+    ) {
+
+        return escapeHtml(
+            fallback
+        );
+
+    }
+
+
+    return `
+
+        <span class="not-available">
+
+            Refer tender
+
+        </span>
+
+    `;
+
+}
+
+
+/* ======================================================
+   HTML ESCAPE
+====================================================== */
+
+function escapeHtml(
+    value
+) {
+
+    if (
+        value === null
+        ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(
+        value
+    )
+
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+
+    .replace(
+        /</g,
+        "&lt;"
+    )
+
+    .replace(
+        />/g,
+        "&gt;"
+    )
+
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* ======================================================
+   FORMAT NUMBER
+====================================================== */
+
+function numberFormat(
+    value
+) {
+
+    return Number(
+        value
+        ||
+        0
+    ).toLocaleString(
+        "en-IN"
+    );
+
+}
+
+
+/* ======================================================
+   EVENTS
+====================================================== */
+
+const filterIds = [
+
+    "searchInput",
+
+    "categorySelect",
+
+    "citySelect",
+
+    "departmentSelect",
+
+    "statusSelect",
+
+    "minAmount",
+
+    "maxAmount",
+
+    "minEmd",
+
+    "maxEmd",
+
+    "publishedFrom",
+
+    "publishedTo",
+
+    "closingFrom",
+
+    "closingTo"
+
+];
+
+
+filterIds.forEach(
+    id => {
+
+        const element =
+            document.getElementById(
+                id
+            );
+
+
+        element.addEventListener(
+            id === "searchInput"
+            ||
+            id.includes("Amount")
+            ||
+            id.includes("Emd")
+            ?
+            "input"
+            :
+            "change",
+
+            applyFilters
+        );
+
+    }
+);
+
+
+document.getElementById(
+    "sortSelect"
+)
+.addEventListener(
+    "change",
+    () => {
+
+        sortFilteredTenders();
+
+        currentPage = 1;
+
+        renderCurrentPage();
+
+    }
+);
+
+
+document.getElementById(
+    "pageSizeSelect"
+)
+.addEventListener(
+    "change",
+    () => {
+
+        currentPage = 1;
+
+        renderCurrentPage();
+
+    }
+);
+
+
+/* ======================================================
+   START
+====================================================== */
+
+loadTenders();
+
+
+</script>
+
+
 </body>
+
 </html>
