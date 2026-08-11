@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs, urlencode, unquote
+from urllib.parse import urlparse, parse_qs, unquote
 import html
 import json
 import re
@@ -36,85 +36,84 @@ def normalise_ref(value):
     return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
 
 
-def parse_money(value):
-    if value is None:
+def parse_money(number_text, unit_text=None):
+    if number_text is None:
         return None
     try:
-        n = float(str(value).replace(",", "").strip())
-        return n if n > 0 else None
+        value = float(str(number_text).replace(",", "").strip())
     except Exception:
         return None
 
+    unit = str(unit_text or "").strip().lower()
+    if unit in {"lakh", "lakhs", "lac", "lacs"}:
+        value *= 100000
+    elif unit in {"crore", "crores", "cr"}:
+        value *= 10000000
 
-def extract_emd(text):
+    return value if value > 0 else None
+
+
+def first_money(text, patterns):
     if not text:
         return None
-
-    patterns = [
-        r"\bEMD\b\s*(?:Amount)?\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)",
-        r"Earnest\s+Money\s+Deposit\s*(?:Amount)?\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)",
-    ]
-
     for pattern in patterns:
         match = re.search(pattern, text, flags=re.I)
         if match:
-            value = parse_money(match.group(1))
+            value = parse_money(
+                match.group(1),
+                match.group(2) if match.lastindex and match.lastindex >= 2 else None,
+            )
             if value:
                 return value
     return None
+
+
+def extract_amount(text):
+    return first_money(text, [
+        r"Tender\s+(?:Amount|Value)\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+        r"Estimated\s+(?:Tender\s+)?(?:Cost|Value|Amount)\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+    ])
+
+
+def extract_emd(text):
+    return first_money(text, [
+        r"\bEMD\b\s*(?:Amount)?\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+        r"Earnest\s+Money\s+Deposit\s*(?:Amount)?\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+    ])
 
 
 def extract_fee(text):
-    if not text:
-        return None
-
-    patterns = [
-        r"Tender\s+Fee\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)",
-        r"Document\s+(?:Cost|Fees?)\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, flags=re.I)
-        if match:
-            value = parse_money(match.group(1))
-            if value:
-                return value
-    return None
+    return first_money(text, [
+        r"Tender\s+Fee\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+        r"Document\s+(?:Cost|Fees?)\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+        r"Application\s+Fee\s*[:\-]?\s*(?:INR|Rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d+)?)\s*(Crores?|Cr|Lakhs?|Lacs?)?\b",
+    ])
 
 
 def ddg_result_urls(session, tender_ref, domain):
     query = f'site:{domain} "{tender_ref}"'
-
     response = session.get(
         "https://html.duckduckgo.com/html/",
         params={"q": query},
         headers=HEADERS,
         timeout=12,
     )
-
     if response.status_code != 200:
         return []
 
     urls = []
-
     for href in re.findall(r'href=["\']([^"\']+)["\']', response.text, flags=re.I):
         href = html.unescape(href)
-
         if "uddg=" in href:
             match = re.search(r"[?&]uddg=([^&]+)", href)
             if match:
                 href = unquote(match.group(1))
-
         if href.startswith("//"):
             href = "https:" + href
-
-        if href.startswith("http") and domain in href.lower():
-            if href not in urls:
-                urls.append(href)
-
+        if href.startswith("http") and domain in href.lower() and href not in urls:
+            urls.append(href)
         if len(urls) >= 4:
             break
-
     return urls
 
 
@@ -133,32 +132,50 @@ def check_candidate(session, tender_ref, source, url):
         return None
 
     page_text = clean_text(response.text)
-    page_ref = normalise_ref(page_text)
     wanted_ref = normalise_ref(tender_ref)
 
-    # Do not accept a secondary record unless the exact tender number is
-    # visibly present on the candidate page.
-    if not wanted_ref or wanted_ref not in page_ref:
+    # Never attach secondary data unless the exact tender number is visible
+    # on the source page after punctuation/spacing normalization.
+    if not wanted_ref or wanted_ref not in normalise_ref(page_text):
         return None
 
+    amount = extract_amount(page_text)
     emd = extract_emd(page_text)
     fee = extract_fee(page_text)
 
-    if not emd and not fee:
+    if not amount and not emd and not fee:
         return None
+
+    lower_text = page_text.lower()
+    estimated = "estimated" in lower_text or "estimated cost" in lower_text
 
     return {
         "source": source,
         "url": response.url,
+        "amount": amount,
         "emd": emd,
         "tender_fee": fee,
+        "amount_estimated": bool(estimated and amount),
     }
 
 
 def lookup_secondary(tender_ref):
     session = requests.Session()
-
     attempts = []
+    fields = {
+        "amount": None,
+        "emd": None,
+        "tender_fee": None,
+    }
+
+    def save_field(name, value, source, url, estimated=False):
+        if fields[name] is None and value:
+            fields[name] = {
+                "value": value,
+                "source": source,
+                "url": url,
+                "estimated": bool(estimated) if name == "amount" else False,
+            }
 
     for source, domain in SEARCH_URLS:
         try:
@@ -171,20 +188,48 @@ def lookup_secondary(tender_ref):
 
         for url in candidates:
             result = check_candidate(session, tender_ref, source, url)
-            if result and result.get("emd"):
-                return {
-                    "success": True,
-                    "tender_ref": tender_ref,
-                    **result,
-                    "attempts": attempts,
-                }
+            if not result:
+                continue
 
-    return {
-        "success": False,
+            save_field(
+                "amount",
+                result.get("amount"),
+                source,
+                result.get("url"),
+                result.get("amount_estimated", False),
+            )
+            save_field("emd", result.get("emd"), source, result.get("url"))
+            save_field("tender_fee", result.get("tender_fee"), source, result.get("url"))
+
+            if all(fields.values()):
+                break
+
+        if all(fields.values()):
+            break
+
+    success = any(fields.values())
+    sources = sorted({
+        item["source"]
+        for item in fields.values()
+        if item and item.get("source")
+    })
+
+    response = {
+        "success": success,
         "tender_ref": tender_ref,
-        "message": "No verified secondary EMD was found for this tender number.",
+        "fields": fields,
+        "amount": fields["amount"]["value"] if fields["amount"] else None,
+        "emd": fields["emd"]["value"] if fields["emd"] else None,
+        "tender_fee": fields["tender_fee"]["value"] if fields["tender_fee"] else None,
+        "source": sources[0] if len(sources) == 1 else ("Multiple secondary sources" if sources else None),
+        "sources": sources,
         "attempts": attempts,
     }
+
+    if not success:
+        response["message"] = "No verified secondary amount, EMD or tender fee was found for this tender number."
+
+    return response
 
 
 class handler(BaseHTTPRequestHandler):
