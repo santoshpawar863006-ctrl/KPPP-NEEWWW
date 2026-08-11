@@ -32,7 +32,7 @@
   </section>
 
   <section class="history-tools">
-    <input id="historySearch" placeholder="Search tender number, work, department, location…">
+    <input id="historySearch" placeholder="Search tender number, work, department, city…">
     <select id="historyCategory">
       <option value="ALL">All categories</option>
       <option value="WORKS">WORKS</option>
@@ -40,7 +40,7 @@
       <option value="SERVICES">SERVICES</option>
     </select>
     <select id="historyCity">
-      <option value="ALL">All cities / locations</option>
+      <option value="ALL">All cities</option>
     </select>
     <select id="historyView">
       <option value="ALL">All closed + awarded</option>
@@ -61,7 +61,7 @@
           <tr>
             <th>Category</th>
             <th>Tender</th>
-            <th>Department / Location</th>
+            <th>Department / City</th>
             <th>Estimated Value</th>
             <th>Closed</th>
             <th>KPPP Status</th>
@@ -81,12 +81,12 @@
 
   <section class="contractor-panel">
     <h3>🔎 Contractor Search</h3>
-    <p style="color:#64748b;font-size:12px">Contractor names appear after a verified award-result lookup. KPPP remains the status source; external award records are clearly marked secondary.</p>
+    <p style="color:#64748b;font-size:12px">Contractor names appear only when a verified public award/AOC record is found. KPPP remains the official status source.</p>
     <input id="contractorSearch" style="width:100%;height:42px;border:1px solid #cbd5e1;border-radius:8px;padding:0 11px" placeholder="Type contractor / company name…">
     <div class="contractor-results" id="contractorResults"></div>
   </section>
 </main>
 
-<script src="/history.js?v=4" defer></script>
+<script src="/history.js?v=6" defer></script>
 </body>
 </html>
