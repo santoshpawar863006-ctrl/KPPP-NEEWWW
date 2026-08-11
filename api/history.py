@@ -15,6 +15,8 @@ ENDPOINTS = {
     "SERVICES": API_BASE + "/portal-service/services/search-eproc-tenders",
 }
 
+HISTORY_STATUSES = ("AWARDED", "CLOSED")
+
 
 def headers():
     h = {
@@ -58,7 +60,8 @@ def find_list(data):
 
 def num(v):
     try:
-        return float(str(v).replace("₹", "").replace(",", "").strip())
+        n = float(str(v).replace("₹", "").replace(",", "").strip())
+        return n if n > 0 else None
     except Exception:
         return None
 
@@ -78,12 +81,13 @@ def parse_date(v):
         return None
 
 
-def normalize(raw, category):
+def normalize(raw, category, requested_status):
     tid = str(pick(raw, "id", "tenderId", "tenderID", "tenderPk", "tenderNumber", default="")).strip()
     ref = str(pick(raw, "tenderNumber", "tenderNo", "tenderReferenceNumber", "referenceNumber", "nitNumber", default=tid)).strip()
     close = str(pick(raw, "tenderClosureDate", "closingDate", "bidSubmissionEndDate", "submissionEndDate", "lastDate", default="")).strip()
-    status = str(pick(raw, "status", default="")).strip()
+    status = str(pick(raw, "status", default=requested_status)).strip()
     status_text = str(pick(raw, "statusText", default=status)).strip()
+    upper = (status + " " + status_text + " " + requested_status).upper()
     return {
         "id": tid,
         "ref_no": ref,
@@ -99,50 +103,58 @@ def normalize(raw, category):
         "closing_date": close,
         "status": status,
         "status_text": status_text,
+        "history_status": requested_status,
+        "award_hint": any(word in upper for word in ("AWARD", "AOC", "CONTRACT")),
     }
 
 
-def fetch_category(session, category, page, size):
-    url = ENDPOINTS[category]
-    # ALL is intentionally used here because this endpoint is for history,
-    # not the live-tender dashboard.
+def request_status(session, category, status, page, size):
     response = session.post(
-        url,
+        ENDPOINTS[category],
         params={"page": page, "size": size, "order-by-tender-publish": "true"},
-        json={"category": category, "status": "ALL", "title": ""},
+        json={"category": category, "status": status, "title": ""},
         headers=headers(),
-        timeout=18,
+        timeout=10,
     )
-    response.raise_for_status()
-    return find_list(response.json())
+    total = response.headers.get("X-Total-Count")
+    if response.status_code != 200:
+        return [], {
+            "category": category,
+            "status": status,
+            "http": response.status_code,
+            "body": response.text[:180],
+        }
+    items = find_list(response.json())
+    return items, {
+        "category": category,
+        "status": status,
+        "http": 200,
+        "returned": len(items),
+        "total": total,
+    }
 
 
 def fetch_history(page, size):
     session = requests.Session()
-    now = datetime.now()
     rows = []
-    errors = []
+    attempts = []
 
     for category in ("WORKS", "GOODS", "SERVICES"):
-        try:
-            items = fetch_category(session, category, page, size)
-        except Exception as exc:
-            errors.append({"category": category, "error": str(exc)[:180]})
-            continue
+        for status in HISTORY_STATUSES:
+            try:
+                items, attempt = request_status(session, category, status, page, size)
+                attempts.append(attempt)
+            except Exception as exc:
+                attempts.append({
+                    "category": category,
+                    "status": status,
+                    "error": str(exc)[:180],
+                })
+                continue
 
-        for raw in items:
-            row = normalize(raw, category)
-            close = parse_date(row["closing_date"])
-            status_text = (row["status"] + " " + row["status_text"]).upper()
+            for raw in items:
+                rows.append(normalize(raw, category, status))
 
-            is_closed_by_date = bool(close and close < now)
-            is_closed_by_status = any(word in status_text for word in ("CLOSED", "AWARD", "AOC", "COMPLETED", "EVALUATION", "OPENED"))
-
-            if is_closed_by_date or is_closed_by_status:
-                row["award_hint"] = any(word in status_text for word in ("AWARD", "AOC", "CONTRACT"))
-                rows.append(row)
-
-    # Deduplicate and newest first.
     seen = set()
     unique = []
     for row in rows:
@@ -152,8 +164,20 @@ def fetch_history(page, size):
         seen.add(key)
         unique.append(row)
 
-    unique.sort(key=lambda r: parse_date(r.get("closing_date")) or datetime.min, reverse=True)
-    return {"success": True, "page": page, "page_size": size, "count": len(unique), "tenders": unique, "errors": errors}
+    unique.sort(
+        key=lambda r: parse_date(r.get("closing_date")) or parse_date(r.get("published_date")) or datetime.min,
+        reverse=True,
+    )
+
+    return {
+        "success": True,
+        "page": page,
+        "page_size": size,
+        "count": len(unique),
+        "tenders": unique,
+        "attempts": attempts,
+        "message": None if unique else "KPPP returned no records for the AWARDED/CLOSED status queries on this page.",
+    }
 
 
 class handler(BaseHTTPRequestHandler):
@@ -161,7 +185,7 @@ class handler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "public, max-age=900, s-maxage=900")
+        self.send_header("Cache-Control", "public, max-age=300, s-maxage=300")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -174,10 +198,9 @@ class handler(BaseHTTPRequestHandler):
         except Exception:
             page = 0
         try:
-            size = min(100, max(20, int((query.get("size", ["100"])[0] or "100"))))
+            size = min(100, max(20, int((query.get("size", ["50"])[0] or "50"))))
         except Exception:
-            size = 100
-
+            size = 50
         try:
             self.send_json(200, fetch_history(page, size))
         except Exception as exc:
