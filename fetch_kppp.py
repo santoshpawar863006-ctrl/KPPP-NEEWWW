@@ -6,87 +6,165 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 # ============================================================
-# KPPP CONFIG
+# KPPP KARNATAKA TENDER COLLECTOR
+# WORKS + GOODS + SERVICES
 # ============================================================
 
-BASE = "https://kppp.karnataka.gov.in"
 
-BASE_API = (
-    BASE
+BASE_URL = "https://kppp.karnataka.gov.in"
+
+API_BASE = (
+    BASE_URL
     + "/supplier-registration-service/v1/api"
 )
 
-OUT = Path("public/tenders.json")
+OUTPUT_FILE = Path("public/tenders.json")
+
+
+# ============================================================
+# SETTINGS
+# ============================================================
 
 PAGE_SIZE = int(
-    os.getenv("KPPP_PAGE_SIZE", "100")
+    os.getenv(
+        "KPPP_PAGE_SIZE",
+        "100"
+    )
 )
 
 MAX_PAGES = int(
-    os.getenv("KPPP_MAX_PAGES", "250")
+    os.getenv(
+        "KPPP_MAX_PAGES",
+        "100"
+    )
 )
 
-TOKEN = os.getenv(
+AUTH_TOKEN = os.getenv(
     "KPPP_AUTH_TOKEN",
     ""
 ).strip()
 
 
 # ============================================================
-# IMPORTANT:
-# KPPP HAS DIFFERENT ENDPOINTS FOR EACH CATEGORY
+# ACTUAL KPPP ENDPOINTS
 # ============================================================
 
 CATEGORY_ENDPOINTS = {
 
     "WORKS": (
-        BASE_API
+        API_BASE
         + "/portal-service/works/search-eproc-tenders"
     ),
 
     "GOODS": (
-        BASE_API
+        API_BASE
         + "/portal-service/search-eproc-tenders"
     ),
 
     "SERVICES": (
-        BASE_API
+        API_BASE
         + "/portal-service/services/search-eproc-tenders"
     ),
 }
 
 
 # ============================================================
-# REQUEST HEADERS
+# HEADERS
 # ============================================================
 
-def headers():
+def get_headers():
 
-    h = {
-        "Accept": "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-        "Origin": BASE,
-        "Referer": BASE + "/",
+    headers = {
+
+        "Accept":
+            "application/json, text/plain, */*",
+
+        "Content-Type":
+            "application/json",
+
+        "Origin":
+            BASE_URL,
+
+        "Referer":
+            BASE_URL + "/",
+
+        "Post":
+            "CONTRACTOR-EPROC-CONTRACTOR",
+
         "User-Agent": (
             "Mozilla/5.0 "
             "(Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 "
-            "Chrome/124 Safari/537.36"
+            "(KHTML, like Gecko) "
+            "Chrome/124.0 Safari/537.36"
         ),
     }
 
-    # Token is optional for public portal search.
-    if TOKEN:
-        h["Authorization"] = "Bearer " + TOKEN
+    # Token is optional for public KPPP portal searches.
+    if AUTH_TOKEN:
 
-    return h
+        headers["Authorization"] = (
+            "Bearer " + AUTH_TOKEN
+        )
+
+    return headers
 
 
 # ============================================================
-# HELPERS
+# HTTP SESSION WITH RETRY
+# ============================================================
+
+def create_session():
+
+    session = requests.Session()
+
+    retry = Retry(
+
+        total=3,
+
+        connect=3,
+
+        read=3,
+
+        backoff_factor=1,
+
+        status_forcelist=[
+            429,
+            500,
+            502,
+            503,
+            504,
+        ],
+
+        allowed_methods=[
+            "POST"
+        ],
+    )
+
+    adapter = HTTPAdapter(
+        max_retries=retry
+    )
+
+    session.mount(
+        "https://",
+        adapter
+    )
+
+    session.mount(
+        "http://",
+        adapter
+    )
+
+    return session
+
+
+# ============================================================
+# HELPER FUNCTIONS
 # ============================================================
 
 def pick(data, *keys, default=""):
@@ -98,320 +176,772 @@ def pick(data, *keys, default=""):
 
         value = data.get(key)
 
-        if value not in (None, ""):
+        if value not in (
+            None,
+            ""
+        ):
+
             return value
 
     return default
 
 
-def number(value):
+def to_number(value):
 
-    if value in (None, ""):
+    if value in (
+        None,
+        ""
+    ):
+
         return None
 
     try:
 
-        cleaned = (
-            str(value)
-            .replace(",", "")
-            .replace("₹", "")
-            .strip()
+        value = str(value)
+
+        value = value.replace(
+            "₹",
+            ""
         )
 
-        return float(cleaned)
+        value = value.replace(
+            ",",
+            ""
+        )
+
+        value = value.strip()
+
+        return float(value)
 
     except Exception:
+
         return None
 
 
-def find_list(data):
+def find_tender_list(data):
 
-    # KPPP normally returns a list directly.
-    if isinstance(data, list):
+    # KPPP often returns the array directly.
+    if isinstance(
+        data,
+        list
+    ):
+
         return data
 
-    if not isinstance(data, dict):
+    if not isinstance(
+        data,
+        dict
+    ):
+
         return []
 
-    for key in (
+    possible_keys = [
+
         "content",
+
         "items",
+
         "results",
+
         "tenders",
+
         "records",
+
         "data",
-    ):
+    ]
+
+    for key in possible_keys:
 
         value = data.get(key)
 
-        if isinstance(value, list):
+        if isinstance(
+            value,
+            list
+        ):
+
             return value
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict
+        ):
 
-            nested = find_list(value)
+            nested = find_tender_list(
+                value
+            )
 
             if nested:
+
                 return nested
 
     return []
 
 
 # ============================================================
-# NORMALIZE TENDER
+# DATE PARSER
 # ============================================================
 
-def normalize(raw, category):
+def parse_date(value):
+
+    if not value:
+
+        return datetime.min
+
+    formats = [
+
+        "%d-%m-%Y %H:%M:%S",
+
+        "%d-%m-%Y %H:%M",
+
+        "%d-%m-%Y",
+
+        "%Y-%m-%dT%H:%M:%S",
+
+        "%Y-%m-%d",
+    ]
+
+    for fmt in formats:
+
+        try:
+
+            return datetime.strptime(
+                str(value).strip(),
+                fmt
+            )
+
+        except Exception:
+
+            continue
+
+    return datetime.min
+
+
+# ============================================================
+# NORMALIZE KPPP TENDER
+# ============================================================
+
+def normalize_tender(
+    raw,
+    category
+):
 
     tender_id = str(
+
         pick(
+
             raw,
+
             "id",
+
             "tenderId",
+
             "tenderID",
+
             "tenderPk",
+
             "tenderNumber",
+
             default=""
         )
+
     ).strip()
 
-    ref_no = str(
+
+    reference_number = str(
+
         pick(
+
             raw,
+
             "tenderNumber",
+
             "tenderNo",
+
             "tenderReferenceNumber",
+
             "referenceNumber",
+
             "nitNumber",
-            default=tender_id,
+
+            default=tender_id
         )
+
     ).strip()
+
 
     title = str(
+
         pick(
+
             raw,
+
             "title",
+
             "tenderTitle",
+
             "description",
+
             "workDescription",
+
             "tenderDescription",
-            default="Tender",
+
+            "name",
+
+            default="Tender"
         )
+
     ).strip()
 
-    # KPPP actual field is deptName
+
+    # IMPORTANT:
+    # KPPP mainly returns department as "deptName"
+
     department = str(
+
         pick(
+
             raw,
+
             "deptName",
+
             "departmentName",
+
             "department",
+
             "departmentNameEn",
+
             "organisationName",
+
             "organisation",
+
             "organization",
+
             "procuringEntity",
-            default="Karnataka Government",
+
+            default="Karnataka Government"
         )
+
     ).strip()
+
 
     location = str(
+
         pick(
+
             raw,
+
             "locationName",
+
             "location",
-            "districtName",
-            "district",
+
             "placeOfWork",
-            default="Karnataka",
+
+            "districtName",
+
+            "district",
+
+            default="Karnataka"
         )
+
     ).strip()
+
 
     district = str(
+
         pick(
+
             raw,
+
             "districtName",
+
             "district",
+
+            "district_name",
+
             default=""
         )
+
     ).strip()
+
 
     city = str(
+
         pick(
+
             raw,
+
             "cityName",
+
             "city",
+
             "townName",
+
             "town",
+
             "talukName",
+
             "taluk",
+
             default=""
         )
+
     ).strip()
 
-    # KPPP uses ecv
+
+    # IMPORTANT:
+    # KPPP commonly uses "ecv"
+
     amount_raw = pick(
+
         raw,
+
         "ecv",
+
         "estimatedContractValue",
+
         "estimatedAmount",
+
         "estimatedTenderValue",
+
         "tenderValue",
+
         "estimatedCost",
+
+        "provisionalAmount",
+
         "amount",
+
         default=""
     )
 
-    published_date = str(
-        pick(
-            raw,
-            "publishedDate",
-            "publishDate",
-            "dateOfPublication",
-            "tenderPublishDate",
-            default=""
-        )
-    ).strip()
-
-    closing_date = str(
-        pick(
-            raw,
-            "tenderClosureDate",
-            "closingDate",
-            "bidSubmissionEndDate",
-            "submissionEndDate",
-            "lastDate",
-            default=""
-        )
-    ).strip()
 
     emd_raw = pick(
+
         raw,
+
         "emdAmount",
+
         "emd",
+
         "emdValue",
+
         default=""
     )
 
+
     fee_raw = pick(
+
         raw,
+
         "tenderFee",
+
         "tenderFeeAmount",
+
         "fee",
+
         default=""
     )
+
+
+    published_date = str(
+
+        pick(
+
+            raw,
+
+            "publishedDate",
+
+            "publishDate",
+
+            "dateOfPublication",
+
+            "tenderPublishDate",
+
+            default=""
+        )
+
+    ).strip()
+
+
+    closing_date = str(
+
+        pick(
+
+            raw,
+
+            "tenderClosureDate",
+
+            "closingDate",
+
+            "bidSubmissionEndDate",
+
+            "submissionEndDate",
+
+            "lastDate",
+
+            "tenderEndDate",
+
+            default=""
+        )
+
+    ).strip()
+
+
+    status = str(
+
+        pick(
+
+            raw,
+
+            "status",
+
+            default=""
+        )
+
+    ).strip()
+
+
+    status_text = str(
+
+        pick(
+
+            raw,
+
+            "statusText",
+
+            default=status
+        )
+
+    ).strip()
+
 
     return {
 
-        "id": tender_id,
+        "id":
+            tender_id,
 
-        "ref_no": ref_no,
+        "ref_no":
+            reference_number,
 
-        "title": title,
+        "title":
+            title,
 
-        # IMPORTANT:
-        # CATEGORY COMES FROM ENDPOINT,
-        # NOT FROM RAW RESPONSE.
-        "category": category,
+        # CATEGORY IS TAKEN FROM THE ENDPOINT.
+        # THIS PREVENTS EVERYTHING BECOMING GOODS.
 
-        "department": department,
+        "category":
+            category,
 
-        "location": location,
+        "department":
+            department,
 
-        "district": district,
+        "location":
+            location,
 
-        "city": city,
+        "district":
+            district,
 
-        "amount": number(amount_raw),
+        "city":
+            city,
+
+        "amount":
+            to_number(
+                amount_raw
+            ),
 
         "amount_display": (
             str(amount_raw)
-            if amount_raw not in (None, "")
-            else "Refer tender"
+
+            if amount_raw
+            not in (
+                None,
+                ""
+            )
+
+            else
+            "Refer tender"
         ),
 
-        "emd": number(emd_raw),
+        "emd":
+            to_number(
+                emd_raw
+            ),
 
-        "fee": number(fee_raw),
+        "fee":
+            to_number(
+                fee_raw
+            ),
 
-        "published_date": published_date,
+        "published_date":
+            published_date,
 
-        "closing_date": closing_date,
+        "closing_date":
+            closing_date,
 
-        "raw": raw,
+        "status":
+            status,
+
+        "status_text":
+            status_text,
+
+        "raw":
+            raw,
     }
 
 
 # ============================================================
-# PAYLOAD
+# KPPP REQUEST PAYLOAD
 # ============================================================
 
-def payload(category):
+def build_payload(
+    category,
+    status="PUBLISHED"
+):
 
-    # Minimal payload known to work with KPPP portal.
     return {
-        "category": category,
-        "status": "ALL",
-        "title": ""
+
+        "category":
+            category,
+
+        "status":
+            status,
+
+        "title":
+            "",
     }
+
+
+# ============================================================
+# MAKE ONE PAGE REQUEST
+# ============================================================
+
+def request_page(
+    session,
+    url,
+    category,
+    page,
+    status
+):
+
+    response = session.post(
+
+        url,
+
+        params={
+
+            "page":
+                page,
+
+            "size":
+                PAGE_SIZE,
+
+            "order-by-tender-publish":
+                "true",
+        },
+
+        json=build_payload(
+            category,
+            status
+        ),
+
+        headers=get_headers(),
+
+        timeout=45,
+    )
+
+    return response
 
 
 # ============================================================
 # FETCH ONE CATEGORY
 # ============================================================
 
-def fetch_category(session, category, url):
+def fetch_category(
+    session,
+    category,
+    url
+):
 
     print()
-    print("=" * 60)
-    print("FETCHING:", category)
-    print("URL:", url)
-    print("=" * 60)
+    print(
+        "=" * 70
+    )
+
+    print(
+        f"STARTING {category}"
+    )
+
+    print(
+        f"ENDPOINT: {url}"
+    )
+
+    print(
+        "=" * 70
+    )
+
 
     rows = []
 
     seen = set()
 
-    for page in range(MAX_PAGES):
+    previous_page_keys = None
 
+    expected_total = None
+
+
+    # --------------------------------------------------------
+    # First try PUBLISHED.
+    # If KPPP rejects it with HTTP 400,
+    # automatically fall back to ALL.
+    # --------------------------------------------------------
+
+    selected_status = (
+        "PUBLISHED"
+    )
+
+
+    for page in range(
+        MAX_PAGES
+    ):
+
+        print()
         print(
-            f"{category} page {page}..."
+            f"{category} | "
+            f"PAGE {page}"
         )
 
-        response = session.post(
+
+        response = request_page(
+
+            session,
 
             url,
 
-            params={
-                "page": page,
-                "size": PAGE_SIZE,
-                "order-by-tender-publish": "true",
-            },
+            category,
 
-            json=payload(category),
+            page,
 
-            headers=headers(),
-
-            timeout=60,
+            selected_status
         )
+
+
+        # ----------------------------------------------------
+        # Some KPPP category endpoints may prefer ALL.
+        # Automatically retry page 0.
+        # ----------------------------------------------------
+
+        if (
+            page == 0
+            and
+            response.status_code == 400
+            and
+            selected_status == "PUBLISHED"
+        ):
+
+            print(
+                f"{category}: "
+                f"PUBLISHED returned HTTP 400."
+            )
+
+            print(
+                f"{category}: "
+                f"Retrying with status ALL..."
+            )
+
+            selected_status = (
+                "ALL"
+            )
+
+            response = request_page(
+
+                session,
+
+                url,
+
+                category,
+
+                page,
+
+                selected_status
+            )
+
 
         print(
-            f"{category} page {page} "
+            f"{category} | "
+            f"PAGE {page} | "
             f"HTTP {response.status_code}"
         )
+
+
+        # ----------------------------------------------------
+        # HANDLE ERRORS
+        # ----------------------------------------------------
 
         if response.status_code != 200:
 
             print()
-            print("KPPP RESPONSE:")
             print(
-                response.text[:2000]
+                "KPPP ERROR RESPONSE:"
+            )
+
+            print(
+                response.text[:3000]
             )
 
             raise RuntimeError(
-                f"KPPP {category} request failed "
-                f"with HTTP {response.status_code}"
+
+                f"{category} failed "
+                f"on page {page}. "
+                f"HTTP {response.status_code}"
             )
+
+
+        # ----------------------------------------------------
+        # X-TOTAL-COUNT
+        # ----------------------------------------------------
+
+        if expected_total is None:
+
+            total_header = (
+                response.headers.get(
+                    "X-Total-Count"
+                )
+            )
+
+            if total_header:
+
+                try:
+
+                    header_number = int(
+                        total_header
+                    )
+
+                    # Ignore zero because some servers
+                    # return zero when the header is
+                    # unavailable/unreliable.
+
+                    if header_number > 0:
+
+                        expected_total = (
+                            header_number
+                        )
+
+                        print(
+                            f"{category} "
+                            f"EXPECTED TOTAL: "
+                            f"{expected_total}"
+                        )
+
+                except Exception:
+
+                    expected_total = (
+                        None
+                    )
+
+
+        # ----------------------------------------------------
+        # JSON
+        # ----------------------------------------------------
 
         try:
 
@@ -419,102 +949,315 @@ def fetch_category(session, category, url):
 
         except Exception:
 
+            print()
             print(
-                response.text[:2000]
+                response.text[:3000]
             )
 
             raise RuntimeError(
-                f"KPPP returned invalid JSON "
-                f"for {category}"
+
+                f"{category} page {page} "
+                f"returned invalid JSON."
             )
 
-        items = find_list(data)
 
-        print(
-            f"{category}: "
-            f"{len(items)} tenders on page {page}"
+        items = find_tender_list(
+            data
         )
 
+
+        print(
+            f"{category} | "
+            f"PAGE {page} | "
+            f"RETURNED {len(items)}"
+        )
+
+
+        # ----------------------------------------------------
+        # NO RESULTS = DONE
+        # ----------------------------------------------------
+
         if not items:
+
+            print(
+                f"{category}: "
+                f"NO MORE RESULTS."
+            )
+
             break
+
+
+        # ----------------------------------------------------
+        # DETECT EXACT REPEATED PAGE
+        # ----------------------------------------------------
+
+        current_page_keys = set()
 
         for raw in items:
 
-            tender = normalize(
+            raw_key = str(
+
+                pick(
+
+                    raw,
+
+                    "id",
+
+                    "tenderNumber",
+
+                    "tenderNo",
+
+                    default=""
+                )
+
+            )
+
+            if raw_key:
+
+                current_page_keys.add(
+                    raw_key
+                )
+
+
+        if (
+            previous_page_keys is not None
+            and
+            current_page_keys
+            and
+            current_page_keys
+            ==
+            previous_page_keys
+        ):
+
+            print(
+                f"{category}: "
+                f"KPPP REPEATED THE SAME PAGE."
+            )
+
+            print(
+                f"{category}: "
+                f"STOPPING PAGINATION."
+            )
+
+            break
+
+
+        previous_page_keys = (
+            current_page_keys
+        )
+
+
+        # ----------------------------------------------------
+        # ADD UNIQUE TENDERS
+        # ----------------------------------------------------
+
+        new_records = 0
+
+
+        for raw in items:
+
+            tender = normalize_tender(
+
                 raw,
+
                 category
             )
 
+
             key = (
+
                 tender["id"]
-                or tender["ref_no"]
-                or (
+
+                or
+
+                tender["ref_no"]
+
+                or
+
+                (
                     tender["title"],
-                    tender["closing_date"],
+                    tender[
+                        "closing_date"
+                    ]
                 )
             )
 
+
             if key in seen:
+
                 continue
 
-            seen.add(key)
 
-            rows.append(tender)
+            seen.add(
+                key
+            )
 
-        # Last page
-        if len(items) < PAGE_SIZE:
+            rows.append(
+                tender
+            )
+
+            new_records += 1
+
+
+        print(
+            f"{category}: "
+            f"{new_records} NEW"
+        )
+
+        print(
+            f"{category}: "
+            f"{len(rows)} TOTAL COLLECTED"
+        )
+
+
+        # ----------------------------------------------------
+        # IF PAGE CONTAINED ONLY DUPLICATES, STOP.
+        # ----------------------------------------------------
+
+        if new_records == 0:
+
+            print(
+                f"{category}: "
+                f"NO NEW RECORDS. STOPPING."
+            )
+
             break
 
-        time.sleep(0.25)
+
+        # ----------------------------------------------------
+        # BEST STOP CONDITION
+        # ----------------------------------------------------
+
+        if (
+            expected_total is not None
+            and
+            len(rows) >= expected_total
+        ):
+
+            print(
+                f"{category}: "
+                f"REACHED X-TOTAL-COUNT "
+                f"{expected_total}."
+            )
+
+            break
+
+
+        # ----------------------------------------------------
+        # NORMAL LAST PAGE
+        # ----------------------------------------------------
+
+        if len(items) < PAGE_SIZE:
+
+            print(
+                f"{category}: "
+                f"LAST PAGE DETECTED."
+            )
+
+            break
+
+
+        # Small delay to avoid hammering KPPP.
+        time.sleep(
+            0.10
+        )
+
 
     print()
     print(
-        f"{category} TOTAL FETCHED: "
+        "-" * 70
+    )
+
+    print(
+        f"{category} FINISHED"
+    )
+
+    print(
+        f"{category} TOTAL: "
         f"{len(rows)}"
     )
+
+    print(
+        "-" * 70
+    )
+
 
     return rows
 
 
 # ============================================================
-# FETCH ALL
+# FETCH ALL 3 CATEGORIES
 # ============================================================
 
 def fetch_all():
 
-    session = requests.Session()
+    session = create_session()
 
-    all_rows = []
+    all_tenders = []
 
-    global_seen = set()
+    category_results = {}
 
-    for category, url in CATEGORY_ENDPOINTS.items():
+
+    for (
+        category,
+        endpoint
+    ) in CATEGORY_ENDPOINTS.items():
+
 
         category_rows = fetch_category(
+
             session,
+
             category,
-            url
+
+            endpoint
         )
 
-        for tender in category_rows:
 
-            key = (
-                tender["id"]
-                or tender["ref_no"]
-                or (
-                    tender["title"],
-                    tender["closing_date"],
-                )
-            )
+        category_results[
+            category
+        ] = len(
+            category_rows
+        )
 
-            if key in global_seen:
-                continue
 
-            global_seen.add(key)
+        all_tenders.extend(
+            category_rows
+        )
 
-            all_rows.append(tender)
 
-    return all_rows
+    print()
+    print(
+        "=" * 70
+    )
+
+    print(
+        "RAW CATEGORY RESULTS"
+    )
+
+    print(
+        "=" * 70
+    )
+
+
+    for category in [
+
+        "WORKS",
+
+        "GOODS",
+
+        "SERVICES"
+
+    ]:
+
+        print(
+
+            f"{category}: "
+            f"{category_results.get(category, 0)}"
+        )
+
+
+    return all_tenders
 
 
 # ============================================================
@@ -524,86 +1267,163 @@ def fetch_all():
 def main():
 
     print()
-    print("=" * 60)
-    print("KPPP KARNATAKA TENDER COLLECTOR")
-    print("WORKS + GOODS + SERVICES")
-    print("=" * 60)
+    print(
+        "============================================================"
+    )
 
-    rows = fetch_all()
+    print(
+        "KPPP KARNATAKA TENDER COLLECTOR"
+    )
 
-    if not rows:
+    print(
+        "WORKS + GOODS + SERVICES"
+    )
+
+    print(
+        "============================================================"
+    )
+
+
+    start_time = time.time()
+
+
+    tenders = fetch_all()
+
+
+    if not tenders:
 
         raise RuntimeError(
+
             "KPPP returned ZERO tenders. "
-            "tenders.json was NOT overwritten."
+            "Existing tenders.json "
+            "WAS NOT overwritten."
         )
+
+
+    # ========================================================
+    # CATEGORY COUNTS
+    # ========================================================
 
     counts = Counter(
+
         tender["category"]
-        for tender in rows
+
+        for tender in tenders
     )
 
-    works = counts.get(
+
+    works_count = counts.get(
+
         "WORKS",
+
         0
     )
 
-    goods = counts.get(
+
+    goods_count = counts.get(
+
         "GOODS",
+
         0
     )
 
-    services = counts.get(
+
+    services_count = counts.get(
+
         "SERVICES",
+
         0
     )
+
 
     print()
-    print("=" * 60)
-    print("FINAL KPPP RESULTS")
-    print("=" * 60)
-
     print(
-        "TOTAL:",
-        len(rows)
+        "============================================================"
     )
 
     print(
-        "WORKS:",
-        works
+        "FINAL CATEGORY COUNTS"
     )
 
     print(
-        "GOODS:",
-        goods
+        "============================================================"
+    )
+
+
+    print(
+        f"WORKS    : "
+        f"{works_count}"
     )
 
     print(
-        "SERVICES:",
-        services
+        f"GOODS    : "
+        f"{goods_count}"
     )
 
-    # Safety check
-    if works == 0:
+    print(
+        f"SERVICES : "
+        f"{services_count}"
+    )
+
+    print(
+        f"TOTAL    : "
+        f"{len(tenders)}"
+    )
+
+
+    # ========================================================
+    # SAFETY CHECK
+    # Do NOT destroy the working database if one endpoint fails.
+    # ========================================================
+
+    if works_count == 0:
 
         raise RuntimeError(
-            "WORKS endpoint returned zero tenders. "
-            "Database NOT overwritten."
+
+            "WORKS returned 0 tenders. "
+            "Existing database WAS NOT overwritten."
         )
 
-    if goods == 0:
+
+    if goods_count == 0:
 
         raise RuntimeError(
-            "GOODS endpoint returned zero tenders. "
-            "Database NOT overwritten."
+
+            "GOODS returned 0 tenders. "
+            "Existing database WAS NOT overwritten."
         )
 
-    if services == 0:
+
+    if services_count == 0:
 
         raise RuntimeError(
-            "SERVICES endpoint returned zero tenders. "
-            "Database NOT overwritten."
+
+            "SERVICES returned 0 tenders. "
+            "Existing database WAS NOT overwritten."
         )
+
+
+    # ========================================================
+    # SORT NEWEST FIRST
+    # ========================================================
+
+    tenders.sort(
+
+        key=lambda tender: parse_date(
+
+            tender.get(
+                "published_date",
+                ""
+            )
+        ),
+
+        reverse=True
+    )
+
+
+    # ========================================================
+    # CREATE OUTPUT
+    # ========================================================
 
     output = {
 
@@ -613,75 +1433,130 @@ def main():
             ).isoformat()
         ),
 
-        "source": BASE,
+        "source":
+            BASE_URL,
 
-        "count": len(rows),
+        "count":
+            len(tenders),
 
         "category_counts": {
 
-            "WORKS": works,
+            "WORKS":
+                works_count,
 
-            "GOODS": goods,
+            "GOODS":
+                goods_count,
 
-            "SERVICES": services,
+            "SERVICES":
+                services_count,
         },
 
-        "tenders": rows,
+        "tenders":
+            tenders,
     }
 
-    OUT.parent.mkdir(
+
+    # ========================================================
+    # WRITE SAFELY
+    # ========================================================
+
+    OUTPUT_FILE.parent.mkdir(
+
         parents=True,
+
         exist_ok=True
     )
 
-    temp = OUT.with_suffix(
-        ".tmp"
+
+    temporary_file = (
+        OUTPUT_FILE.with_suffix(
+            ".tmp"
+        )
     )
 
-    temp.write_text(
+
+    temporary_file.write_text(
 
         json.dumps(
+
             output,
+
             ensure_ascii=False,
+
             indent=2
         ),
 
         encoding="utf-8"
     )
 
-    temp.replace(OUT)
+
+    temporary_file.replace(
+        OUTPUT_FILE
+    )
+
+
+    # ========================================================
+    # FINISH
+    # ========================================================
+
+    elapsed = (
+        time.time()
+        -
+        start_time
+    )
+
 
     print()
-    print("=" * 60)
-
     print(
-        "SUCCESS:",
-        len(rows),
-        "tenders saved"
+        "============================================================"
     )
 
     print(
-        "WORKS:",
-        works
+        "SUCCESS"
     )
 
     print(
-        "GOODS:",
-        goods
+        "============================================================"
     )
 
     print(
-        "SERVICES:",
-        services
+        f"TOTAL TENDERS : "
+        f"{len(tenders)}"
     )
 
     print(
-        "FILE:",
-        OUT
+        f"WORKS         : "
+        f"{works_count}"
     )
 
-    print("=" * 60)
+    print(
+        f"GOODS         : "
+        f"{goods_count}"
+    )
 
+    print(
+        f"SERVICES      : "
+        f"{services_count}"
+    )
+
+    print(
+        f"SAVED TO      : "
+        f"{OUTPUT_FILE}"
+    )
+
+    print(
+        f"TIME          : "
+        f"{elapsed:.1f} seconds"
+    )
+
+    print(
+        "============================================================"
+    )
+
+
+# ============================================================
+# RUN
+# ============================================================
 
 if __name__ == "__main__":
 
