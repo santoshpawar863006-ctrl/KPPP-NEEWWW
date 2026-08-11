@@ -1,0 +1,52 @@
+name: Collect KPPP Tenders
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run KPPP Scraper
+        env:
+          KPPP_AUTH_TOKEN: ${{ secrets.KPPP_AUTH_TOKEN }}
+          KPPP_PAGE_SIZE: "100"
+          KPPP_MAX_PAGES: "250"
+          KPPP_CATEGORIES: "WORKS,GOODS,SERVICES"
+        run: |
+          python fetch_kppp.py
+
+      - name: Commit and Push Updated Tenders
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/tenders.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update tenders database [skip ci]"
+            git push
+          else
+            echo "No changes in tender data."
+          fi
+
+      - name: Trigger Vercel Deployment
+        if: success() && secrets.VERCEL_DEPLOY_HOOK_URL != ''
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
