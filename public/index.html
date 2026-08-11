@@ -1,1145 +1,731 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <title>Karnataka Tender Intelligence</title>
 
 <style>
+*{box-sizing:border-box}
 
-* {
-    box-sizing: border-box;
+body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:#f3f6fa;
+    color:#172033;
 }
 
-body {
-    margin: 0;
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
-
-    background: #f3f6fa;
-    color: #172033;
+.header{
+    background:#0f172a;
+    color:white;
+    padding:22px;
 }
 
-
-/* ======================================================
-   HEADER
-====================================================== */
-
-.header {
-    background: #0f172a;
-    color: white;
-    padding: 24px;
+.header-inner{
+    max-width:1600px;
+    margin:auto;
 }
 
-.header-inner {
-    max-width: 1600px;
-    margin: auto;
+.header h1{
+    margin:0;
+    font-size:28px;
 }
 
-.header h1 {
-    margin: 0;
-    font-size: 28px;
+.header p{
+    margin:7px 0 0;
+    color:#cbd5e1;
 }
 
-.header p {
-    margin: 8px 0 0 0;
-    color: #cbd5e1;
+.container{
+    max-width:1600px;
+    margin:auto;
+    padding:22px;
 }
 
+/* QUICK NAV */
 
-/* ======================================================
-   MAIN
-====================================================== */
-
-.container {
-    max-width: 1600px;
-    margin: auto;
-    padding: 24px;
+.quick-nav{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
 }
 
-
-/* ======================================================
-   STATS
-====================================================== */
-
-.stats {
-    display: grid;
-    grid-template-columns:
-        repeat(4, minmax(180px, 1fr));
-
-    gap: 16px;
-    margin-bottom: 20px;
+.nav-btn{
+    border:1px solid #cbd5e1;
+    background:white;
+    color:#334155;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:700;
 }
 
-.stat {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-
-    box-shadow:
-        0 1px 4px
-        rgba(15, 23, 42, 0.08);
+.nav-btn:hover{
+    background:#f8fafc;
 }
 
-.stat-label {
-    color: #64748b;
-    font-size: 13px;
-    font-weight: 600;
+.nav-btn.active{
+    background:#2563eb;
+    color:white;
+    border-color:#2563eb;
 }
 
-.stat-number {
-    font-size: 28px;
-    font-weight: 800;
-    margin-top: 6px;
+/* STATS */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(150px,1fr));
+    gap:14px;
+    margin-bottom:18px;
 }
 
-.stat.works {
-    border-left: 5px solid #0284c7;
+.stat{
+    background:white;
+    padding:18px;
+    border-radius:11px;
+    box-shadow:0 1px 4px rgba(15,23,42,.08);
 }
 
-.stat.goods {
-    border-left: 5px solid #16a34a;
+.stat-label{
+    color:#64748b;
+    font-size:12px;
+    font-weight:700;
 }
 
-.stat.services {
-    border-left: 5px solid #d97706;
+.stat-number{
+    font-size:27px;
+    font-weight:800;
+    margin-top:5px;
 }
 
-.stat.total {
-    border-left: 5px solid #7c3aed;
+.stat.total{border-left:5px solid #7c3aed}
+.stat.works{border-left:5px solid #0284c7}
+.stat.goods{border-left:5px solid #16a34a}
+.stat.services{border-left:5px solid #d97706}
+.stat.saved{border-left:5px solid #e11d48}
+
+/* META */
+
+.meta-bar{
+    background:white;
+    padding:13px 17px;
+    border-radius:9px;
+    margin-bottom:18px;
+    font-size:14px;
+    color:#64748b;
+    box-shadow:0 1px 4px rgba(15,23,42,.06);
 }
 
+/* FILTERS */
 
-/* ======================================================
-   META
-====================================================== */
-
-.meta-bar {
-    background: white;
-    padding: 14px 18px;
-
-    border-radius: 10px;
-
-    margin-bottom: 20px;
-
-    font-size: 14px;
-
-    color: #64748b;
-
-    box-shadow:
-        0 1px 4px
-        rgba(15, 23, 42, 0.06);
+.filter-panel{
+    background:white;
+    border-radius:12px;
+    padding:19px;
+    margin-bottom:18px;
+    box-shadow:0 1px 5px rgba(15,23,42,.08);
 }
 
-
-/* ======================================================
-   FILTER PANEL
-====================================================== */
-
-.filter-panel {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-
-    box-shadow:
-        0 1px 5px
-        rgba(15, 23, 42, 0.08);
-
-    margin-bottom: 20px;
+.filter-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:17px;
+    gap:10px;
 }
 
-.filter-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 18px;
+.filter-title h2{
+    margin:0;
+    font-size:18px;
 }
 
-.filter-title h2 {
-    margin: 0;
-    font-size: 18px;
+.filters{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(190px,1fr));
+    gap:13px;
 }
 
-.filters {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(200px, 1fr));
-
-    gap: 14px;
+.filter-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
 }
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.search-large{
+    grid-column:span 2;
 }
 
-.filter-group label {
-
-    font-size: 12px;
-    font-weight: 700;
-
-    color: #475569;
+.filter-group label{
+    font-size:12px;
+    font-weight:700;
+    color:#475569;
 }
 
 .filter-group input,
-.filter-group select {
-
-    width: 100%;
-
-    padding: 11px 12px;
-
-    border:
-        1px solid #cbd5e1;
-
-    border-radius: 7px;
-
-    background: white;
-
-    font-size: 14px;
-
-    outline: none;
+.filter-group select{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid #cbd5e1;
+    border-radius:7px;
+    background:white;
+    font-size:14px;
 }
 
 .filter-group input:focus,
-.filter-group select:focus {
-
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 2px
-        rgba(37, 99, 235, 0.1);
+.filter-group select:focus{
+    outline:none;
+    border-color:#2563eb;
 }
 
-
-/* Search takes 2 columns */
-
-.search-large {
-    grid-column: span 2;
+.small-action{
+    border:1px solid #f59e0b;
+    background:#fffbeb;
+    color:#92400e;
+    border-radius:6px;
+    padding:7px 9px;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:700;
 }
 
-
-/* ======================================================
-   BUTTON
-====================================================== */
-
-.reset-btn {
-
-    border: none;
-
-    background: #ef4444;
-
-    color: white;
-
-    padding: 10px 16px;
-
-    border-radius: 7px;
-
-    cursor: pointer;
-
-    font-weight: 700;
+.small-action.saved{
+    background:#fef3c7;
+    border-color:#d97706;
 }
 
-.reset-btn:hover {
-    background: #dc2626;
+.reset-btn{
+    border:0;
+    background:#ef4444;
+    color:white;
+    padding:9px 14px;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:700;
 }
 
+/* RESULTS */
 
-/* ======================================================
-   RESULT BAR
-====================================================== */
-
-.result-bar {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    gap: 12px;
-
-    margin: 18px 0;
-
-    flex-wrap: wrap;
+.result-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin:17px 0;
 }
 
-.result-count {
-
-    font-weight: 700;
-
-    font-size: 15px;
+.result-count{
+    font-weight:700;
 }
 
-.result-controls {
-
-    display: flex;
-
-    gap: 10px;
-
-    align-items: center;
+.result-controls{
+    display:flex;
+    gap:9px;
 }
 
-.result-controls select {
-
-    padding: 8px 10px;
-
-    border-radius: 6px;
-
-    border:
-        1px solid #cbd5e1;
+.result-controls select{
+    padding:8px 9px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    background:white;
 }
 
+/* TABLE */
 
-/* ======================================================
-   TABLE
-====================================================== */
-
-.table-wrapper {
-
-    background: white;
-
-    border-radius: 12px;
-
-    overflow-x: auto;
-
-    box-shadow:
-        0 1px 6px
-        rgba(15, 23, 42, 0.08);
+.table-wrapper{
+    background:white;
+    border-radius:12px;
+    overflow-x:auto;
+    box-shadow:0 1px 6px rgba(15,23,42,.08);
 }
 
-table {
-
-    width: 100%;
-
-    border-collapse: collapse;
-
-    min-width: 1450px;
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1650px;
 }
 
-thead {
-
-    position: sticky;
-
-    top: 0;
-
-    z-index: 2;
+th{
+    background:#e9eef5;
+    color:#334155;
+    padding:12px;
+    text-align:left;
+    font-size:12px;
+    white-space:nowrap;
+    border-bottom:1px solid #cbd5e1;
 }
 
-th {
-
-    background: #e9eef5;
-
-    color: #334155;
-
-    padding: 13px 12px;
-
-    text-align: left;
-
-    font-size: 12px;
-
-    white-space: nowrap;
-
-    border-bottom:
-        1px solid #cbd5e1;
+td{
+    padding:13px 12px;
+    vertical-align:top;
+    border-bottom:1px solid #e2e8f0;
+    font-size:13px;
 }
 
-td {
-
-    padding: 14px 12px;
-
-    vertical-align: top;
-
-    border-bottom:
-        1px solid #e2e8f0;
-
-    font-size: 13px;
+tbody tr:hover{
+    background:#f8fafc;
 }
 
-tbody tr:hover {
-
-    background: #f8fafc;
+.badge{
+    display:inline-block;
+    padding:5px 8px;
+    border-radius:5px;
+    font-size:11px;
+    font-weight:800;
 }
 
+.WORKS{background:#e0f2fe;color:#0369a1}
+.GOODS{background:#dcfce7;color:#15803d}
+.SERVICES{background:#fef3c7;color:#b45309}
 
-/* ======================================================
-   CATEGORY BADGES
-====================================================== */
-
-.badge {
-
-    display: inline-block;
-
-    padding: 5px 8px;
-
-    border-radius: 5px;
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    white-space: nowrap;
+.tender-title{
+    font-weight:700;
+    line-height:1.45;
+    min-width:280px;
+    margin-bottom:5px;
 }
 
-.WORKS {
-
-    background: #e0f2fe;
-
-    color: #0369a1;
+.reference{
+    color:#64748b;
+    font-size:11px;
 }
 
-.GOODS {
-
-    background: #dcfce7;
-
-    color: #15803d;
+.money{
+    font-weight:700;
+    white-space:nowrap;
 }
 
-.SERVICES {
-
-    background: #fef3c7;
-
-    color: #b45309;
+.na{
+    color:#94a3b8;
+    font-weight:400;
 }
 
-
-/* ======================================================
-   TENDER TITLE
-====================================================== */
-
-.tender-title {
-
-    font-weight: 700;
-
-    line-height: 1.45;
-
-    margin-bottom: 5px;
-
-    min-width: 300px;
+.status{
+    background:#dcfce7;
+    color:#166534;
+    border-radius:5px;
+    padding:4px 7px;
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
 }
 
-.reference {
-
-    color: #64748b;
-
-    font-size: 11px;
+.favorite-btn{
+    border:1px solid #cbd5e1;
+    background:white;
+    padding:7px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:17px;
 }
 
-
-/* ======================================================
-   MONEY
-====================================================== */
-
-.money {
-
-    font-weight: 700;
-
-    white-space: nowrap;
+.favorite-btn.saved{
+    color:#e11d48;
+    border-color:#fda4af;
+    background:#fff1f2;
 }
 
-.not-available {
-
-    color: #94a3b8;
-
-    font-size: 12px;
+.details-btn{
+    border:0;
+    background:#2563eb;
+    color:white;
+    padding:8px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:700;
+    white-space:nowrap;
 }
 
-
-/* ======================================================
-   STATUS
-====================================================== */
-
-.status {
-
-    padding: 4px 7px;
-
-    background: #dcfce7;
-
-    color: #166534;
-
-    border-radius: 5px;
-
-    font-weight: 700;
-
-    font-size: 11px;
-
-    display: inline-block;
+.actions{
+    display:flex;
+    gap:7px;
 }
 
+/* PAGINATION */
 
-/* ======================================================
-   PAGINATION
-====================================================== */
-
-.pagination {
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    gap: 8px;
-
-    padding: 22px;
-
-    flex-wrap: wrap;
+.pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    padding:21px;
 }
 
-.page-btn {
-
-    border:
-        1px solid #cbd5e1;
-
-    background: white;
-
-    padding: 8px 12px;
-
-    border-radius: 6px;
-
-    cursor: pointer;
+.page-btn{
+    border:1px solid #cbd5e1;
+    background:white;
+    padding:8px 12px;
+    border-radius:6px;
+    cursor:pointer;
 }
 
-.page-btn:hover {
-
-    background: #f1f5f9;
+.page-btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
 }
 
-.page-btn:disabled {
-
-    opacity: 0.4;
-
-    cursor: not-allowed;
+.page-info{
+    color:#475569;
+    font-weight:700;
 }
 
-.page-info {
-
-    color: #475569;
-
-    font-weight: 600;
-
-    padding: 0 10px;
+.message{
+    text-align:center;
+    padding:45px;
+    color:#64748b;
 }
 
+/* MODAL */
 
-/* ======================================================
-   EMPTY / ERROR
-====================================================== */
-
-.message {
-
-    padding: 50px;
-
-    text-align: center;
-
-    color: #64748b;
-
-    font-size: 16px;
+.modal{
+    display:none;
+    position:fixed;
+    z-index:1000;
+    inset:0;
+    background:rgba(15,23,42,.65);
+    padding:25px;
+    overflow:auto;
 }
 
-
-/* ======================================================
-   RESPONSIVE
-====================================================== */
-
-@media (max-width: 1100px) {
-
-    .filters {
-
-        grid-template-columns:
-            repeat(2, minmax(200px, 1fr));
-    }
-
-    .stats {
-
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
+.modal.open{
+    display:block;
 }
 
-
-@media (max-width: 650px) {
-
-    .container {
-
-        padding: 12px;
-    }
-
-    .filters {
-
-        grid-template-columns:
-            1fr;
-    }
-
-    .search-large {
-
-        grid-column: span 1;
-    }
-
-    .stats {
-
-        grid-template-columns:
-            1fr 1fr;
-    }
-
-    .header {
-
-        padding: 18px;
-    }
-
-    .header h1 {
-
-        font-size: 22px;
-    }
+.modal-card{
+    max-width:950px;
+    margin:30px auto;
+    background:white;
+    border-radius:14px;
+    overflow:hidden;
 }
 
+.modal-header{
+    background:#0f172a;
+    color:white;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+}
+
+.modal-header h2{
+    margin:0;
+    font-size:20px;
+}
+
+.close-btn{
+    border:0;
+    background:transparent;
+    color:white;
+    font-size:28px;
+    cursor:pointer;
+}
+
+.modal-body{
+    padding:22px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:13px;
+    margin-bottom:22px;
+}
+
+.detail-box{
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:12px;
+}
+
+.detail-label{
+    font-size:11px;
+    color:#64748b;
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+.detail-value{
+    font-weight:700;
+    overflow-wrap:anywhere;
+}
+
+.raw-section{
+    border-top:1px solid #e2e8f0;
+    padding-top:17px;
+}
+
+.raw-table{
+    width:100%;
+    min-width:0;
+}
+
+.raw-table td{
+    padding:8px;
+}
+
+.raw-key{
+    width:35%;
+    color:#64748b;
+    font-weight:700;
+}
+
+.document-box{
+    padding:16px;
+    margin-top:18px;
+    border:1px dashed #94a3b8;
+    border-radius:9px;
+    background:#f8fafc;
+}
+
+@media(max-width:1100px){
+    .filters{grid-template-columns:repeat(2,1fr)}
+    .stats{grid-template-columns:repeat(3,1fr)}
+}
+
+@media(max-width:650px){
+    .container{padding:11px}
+    .filters{grid-template-columns:1fr}
+    .search-large{grid-column:span 1}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .detail-grid{grid-template-columns:1fr}
+}
 </style>
-
 </head>
-
 
 <body>
 
-
-<!-- ======================================================
-     HEADER
-====================================================== -->
-
 <div class="header">
-
     <div class="header-inner">
-
         <h1>🏛 Karnataka Tender Intelligence</h1>
-
-        <p>
-            Search and analyse Karnataka Government
-            WORKS, GOODS and SERVICES tenders
-        </p>
-
+        <p>Government WORKS, GOODS & SERVICES — personalised tender dashboard</p>
     </div>
-
 </div>
-
 
 <div class="container">
 
+<!-- QUICK PERSONAL VIEWS -->
 
-<!-- ======================================================
-     STATISTICS
-====================================================== -->
+<div class="quick-nav">
+
+    <button class="nav-btn active" data-view="ALL">
+        🔎 All Tenders
+    </button>
+
+    <button class="nav-btn" data-view="FAVOURITES">
+        ♥ My Saved
+    </button>
+
+    <button class="nav-btn" data-view="CITIES">
+        ⭐ My Cities
+    </button>
+
+    <button class="nav-btn" data-view="DEPARTMENTS">
+        🏢 My Departments
+    </button>
+
+</div>
+
+<!-- COUNTS -->
 
 <div class="stats">
 
     <div class="stat total">
-
-        <div class="stat-label">
-            Matching Tenders
-        </div>
-
-        <div
-            class="stat-number"
-            id="totalCount"
-        >
-            0
-        </div>
-
+        <div class="stat-label">MATCHING TENDERS</div>
+        <div class="stat-number" id="totalCount">0</div>
     </div>
-
 
     <div class="stat works">
-
-        <div class="stat-label">
-            WORKS
-        </div>
-
-        <div
-            class="stat-number"
-            id="worksCount"
-        >
-            0
-        </div>
-
+        <div class="stat-label">WORKS</div>
+        <div class="stat-number" id="worksCount">0</div>
     </div>
-
 
     <div class="stat goods">
-
-        <div class="stat-label">
-            GOODS
-        </div>
-
-        <div
-            class="stat-number"
-            id="goodsCount"
-        >
-            0
-        </div>
-
+        <div class="stat-label">GOODS</div>
+        <div class="stat-number" id="goodsCount">0</div>
     </div>
-
 
     <div class="stat services">
+        <div class="stat-label">SERVICES</div>
+        <div class="stat-number" id="servicesCount">0</div>
+    </div>
 
-        <div class="stat-label">
-            SERVICES
-        </div>
-
-        <div
-            class="stat-number"
-            id="servicesCount"
-        >
-            0
-        </div>
-
+    <div class="stat saved">
+        <div class="stat-label">♥ SAVED</div>
+        <div class="stat-number" id="savedCount">0</div>
     </div>
 
 </div>
 
-
-<!-- ======================================================
-     DATA INFO
-====================================================== -->
-
-<div
-    class="meta-bar"
-    id="portalMeta"
->
-    Loading KPPP tender database...
+<div class="meta-bar" id="portalMeta">
+    Loading KPPP tenders...
 </div>
 
-
-<!-- ======================================================
-     FILTER PANEL
-====================================================== -->
+<!-- FILTERS -->
 
 <div class="filter-panel">
 
-
     <div class="filter-title">
-
-        <h2>
-            🔎 Tender Filters
-        </h2>
-
-        <button
-            class="reset-btn"
-            onclick="resetFilters()"
-        >
-            Reset Filters
-        </button>
-
+        <h2>🔎 Tender Filters</h2>
+        <button class="reset-btn" id="resetBtn">Reset Filters</button>
     </div>
-
 
     <div class="filters">
 
-
-        <!-- SEARCH -->
-
         <div class="filter-group search-large">
-
-            <label>
-                SEARCH
-            </label>
-
+            <label>SEARCH</label>
             <input
                 id="searchInput"
                 type="text"
-                placeholder="Search tender title, reference number, department, city, location..."
+                placeholder="Title, tender number, department, city, location..."
             >
-
         </div>
 
-
-        <!-- CATEGORY -->
-
         <div class="filter-group">
-
-            <label>
-                CATEGORY
-            </label>
+            <label>CATEGORY</label>
 
             <select id="categorySelect">
-
-                <option value="ALL">
-                    All Categories
-                </option>
-
-                <option value="WORKS">
-                    WORKS
-                </option>
-
-                <option value="GOODS">
-                    GOODS
-                </option>
-
-                <option value="SERVICES">
-                    SERVICES
-                </option>
-
+                <option value="ALL">All Categories</option>
+                <option value="WORKS">WORKS</option>
+                <option value="GOODS">GOODS</option>
+                <option value="SERVICES">SERVICES</option>
             </select>
-
         </div>
 
-
-        <!-- CITY -->
-
         <div class="filter-group">
-
-            <label>
-                CITY / DISTRICT
-            </label>
+            <label>CITY / DISTRICT</label>
 
             <select id="citySelect">
-
-                <option value="ALL">
-                    All Cities
-                </option>
-
+                <option value="ALL">All Cities</option>
             </select>
 
+            <button class="small-action" id="saveCityBtn">
+                ☆ Save Selected City
+            </button>
         </div>
 
-
-        <!-- DEPARTMENT -->
-
         <div class="filter-group">
-
-            <label>
-                DEPARTMENT
-            </label>
+            <label>DEPARTMENT</label>
 
             <select id="departmentSelect">
-
-                <option value="ALL">
-                    All Departments
-                </option>
-
+                <option value="ALL">All Departments</option>
             </select>
 
+            <button class="small-action" id="saveDepartmentBtn">
+                ☆ Save Selected Department
+            </button>
         </div>
 
-
-        <!-- STATUS -->
-
         <div class="filter-group">
-
-            <label>
-                STATUS
-            </label>
+            <label>STATUS</label>
 
             <select id="statusSelect">
-
-                <option value="ALL">
-                    All Status
-                </option>
-
-                <option value="PUBLISHED">
-                    Published
-                </option>
-
+                <option value="ALL">All Status</option>
             </select>
-
         </div>
-
-
-        <!-- MIN AMOUNT -->
 
         <div class="filter-group">
-
-            <label>
-                MIN TENDER AMOUNT ₹
-            </label>
-
-            <input
-                id="minAmount"
-                type="number"
-                min="0"
-                placeholder="Example: 1000000"
-            >
-
+            <label>MIN TENDER AMOUNT ₹</label>
+            <input id="minAmount" type="number" min="0">
         </div>
-
-
-        <!-- MAX AMOUNT -->
 
         <div class="filter-group">
-
-            <label>
-                MAX TENDER AMOUNT ₹
-            </label>
-
-            <input
-                id="maxAmount"
-                type="number"
-                min="0"
-                placeholder="Example: 50000000"
-            >
-
+            <label>MAX TENDER AMOUNT ₹</label>
+            <input id="maxAmount" type="number" min="0">
         </div>
-
-
-        <!-- MIN EMD -->
 
         <div class="filter-group">
-
-            <label>
-                MIN EMD ₹
-            </label>
-
-            <input
-                id="minEmd"
-                type="number"
-                min="0"
-                placeholder="Example: 10000"
-            >
-
+            <label>MIN EMD ₹</label>
+            <input id="minEmd" type="number" min="0">
         </div>
-
-
-        <!-- MAX EMD -->
 
         <div class="filter-group">
-
-            <label>
-                MAX EMD ₹
-            </label>
-
-            <input
-                id="maxEmd"
-                type="number"
-                min="0"
-                placeholder="Example: 500000"
-            >
-
+            <label>MAX EMD ₹</label>
+            <input id="maxEmd" type="number" min="0">
         </div>
-
-
-        <!-- PUBLISHED FROM -->
 
         <div class="filter-group">
-
-            <label>
-                PUBLISHED FROM
-            </label>
-
-            <input
-                id="publishedFrom"
-                type="date"
-            >
-
+            <label>PUBLISHED FROM</label>
+            <input id="publishedFrom" type="date">
         </div>
-
-
-        <!-- PUBLISHED TO -->
 
         <div class="filter-group">
-
-            <label>
-                PUBLISHED TO
-            </label>
-
-            <input
-                id="publishedTo"
-                type="date"
-            >
-
+            <label>PUBLISHED TO</label>
+            <input id="publishedTo" type="date">
         </div>
-
-
-        <!-- CLOSING FROM -->
 
         <div class="filter-group">
-
-            <label>
-                CLOSING FROM
-            </label>
-
-            <input
-                id="closingFrom"
-                type="date"
-            >
-
+            <label>CLOSING FROM</label>
+            <input id="closingFrom" type="date">
         </div>
-
-
-        <!-- CLOSING TO -->
 
         <div class="filter-group">
-
-            <label>
-                CLOSING TO
-            </label>
-
-            <input
-                id="closingTo"
-                type="date"
-            >
-
+            <label>CLOSING TO</label>
+            <input id="closingTo" type="date">
         </div>
-
 
     </div>
 
 </div>
-
-
-<!-- ======================================================
-     RESULT CONTROLS
-====================================================== -->
 
 <div class="result-bar">
 
-
-    <div
-        class="result-count"
-        id="resultCount"
-    >
+    <div class="result-count" id="resultCount">
         Loading...
     </div>
 
-
     <div class="result-controls">
 
-
         <select id="sortSelect">
-
-            <option value="NEWEST">
-                Newest Published
-            </option>
-
-            <option value="CLOSING_SOON">
-                Closing Soon
-            </option>
-
-            <option value="AMOUNT_HIGH">
-                Highest Tender Amount
-            </option>
-
-            <option value="AMOUNT_LOW">
-                Lowest Tender Amount
-            </option>
-
-            <option value="EMD_HIGH">
-                Highest EMD
-            </option>
-
+            <option value="NEWEST">Newest Published</option>
+            <option value="CLOSING">Closing Soon</option>
+            <option value="AMOUNT_HIGH">Highest Amount</option>
+            <option value="AMOUNT_LOW">Lowest Amount</option>
+            <option value="EMD_HIGH">Highest EMD</option>
         </select>
-
 
         <select id="pageSizeSelect">
-
-            <option value="25">
-                25 per page
-            </option>
-
-            <option
-                value="50"
-                selected
-            >
-                50 per page
-            </option>
-
-            <option value="100">
-                100 per page
-            </option>
-
-            <option value="200">
-                200 per page
-            </option>
-
+            <option value="25">25 per page</option>
+            <option value="50" selected>50 per page</option>
+            <option value="100">100 per page</option>
+            <option value="200">200 per page</option>
         </select>
-
 
     </div>
 
 </div>
 
-
-<!-- ======================================================
-     TABLE
-====================================================== -->
+<!-- TABLE -->
 
 <div class="table-wrapper">
 
 <table>
 
 <thead>
-
 <tr>
-
-    <th>
-        Category
-    </th>
-
-    <th>
-        Tender Details
-    </th>
-
-    <th>
-        Department
-    </th>
-
-    <th>
-        City / Location
-    </th>
-
-    <th>
-        Tender Amount
-    </th>
-
-    <th>
-        EMD
-    </th>
-
-    <th>
-        Tender Fee
-    </th>
-
-    <th>
-        Published
-    </th>
-
-    <th>
-        Closing Date
-    </th>
-
-    <th>
-        Status
-    </th>
-
+    <th>♥</th>
+    <th>Category</th>
+    <th>Tender Details</th>
+    <th>Department</th>
+    <th>City / Location</th>
+    <th>Amount</th>
+    <th>EMD</th>
+    <th>Fee</th>
+    <th>Published</th>
+    <th>Closing</th>
+    <th>Status</th>
+    <th>Action</th>
 </tr>
-
 </thead>
-
 
 <tbody id="tenderBody">
 
 <tr>
-
-<td
-    colspan="10"
-    class="message"
->
-    Loading tenders...
+<td colspan="12" class="message">
+Loading tenders...
 </td>
-
 </tr>
 
 </tbody>
@@ -1148,298 +734,209 @@ tbody tr:hover {
 
 </div>
 
-
-<!-- ======================================================
-     PAGINATION
-====================================================== -->
-
-<div
-    class="pagination"
-    id="pagination"
->
-</div>
-
+<div class="pagination" id="pagination"></div>
 
 </div>
 
+<!-- DETAILS MODAL -->
+
+<div class="modal" id="detailsModal">
+
+<div class="modal-card">
+
+    <div class="modal-header">
+
+        <h2 id="modalTitle">
+            Tender Details
+        </h2>
+
+        <button class="close-btn" id="closeModal">
+            ×
+        </button>
+
+    </div>
+
+    <div class="modal-body" id="modalBody"></div>
+
+</div>
+
+</div>
 
 <script>
 
-
-/* ======================================================
-   GLOBAL STATE
-====================================================== */
-
 let allTenders = [];
-
 let filteredTenders = [];
-
 let currentPage = 1;
-
 let pageSize = 50;
+let activeView = "ALL";
+
+const tenderMap = new Map();
+
+const FAVORITE_TENDER_KEY = "kpppFavouriteTenders";
+const FAVORITE_CITY_KEY = "kpppFavouriteCities";
+const FAVORITE_DEPARTMENT_KEY = "kpppFavouriteDepartments";
+
+let favouriteTenders = loadSet(FAVORITE_TENDER_KEY);
+let favouriteCities = loadSet(FAVORITE_CITY_KEY);
+let favouriteDepartments = loadSet(FAVORITE_DEPARTMENT_KEY);
 
 
 /* ======================================================
-   KARNATAKA CITY / DISTRICT DETECTION
+   CITY DETECTION
 ====================================================== */
 
 const CITY_ALIASES = {
 
-    "Bengaluru": [
-        "bengaluru",
-        "bangalore"
-    ],
-
-    "Mysuru": [
-        "mysuru",
-        "mysore"
-    ],
-
-    "Vijayapura": [
-        "vijayapura",
-        "bijapur"
-    ],
-
-    "Kalaburagi": [
-        "kalaburagi",
-        "gulbarga"
-    ],
-
-    "Belagavi": [
-        "belagavi",
-        "belgaum"
-    ],
-
-    "Ballari": [
-        "ballari",
-        "bellary"
-    ],
-
-    "Shivamogga": [
-        "shivamogga",
-        "shimoga"
-    ],
-
-    "Tumakuru": [
-        "tumakuru",
-        "tumkur"
-    ],
-
-    "Chikkamagaluru": [
-        "chikkamagaluru",
-        "chikmagalur"
-    ],
-
-    "Mangaluru": [
-        "mangaluru",
-        "mangalore"
-    ],
-
-    "Hubballi": [
-        "hubballi",
-        "hubli"
-    ],
-
-    "Dharwad": [
-        "dharwad"
-    ],
-
-    "Davangere": [
-        "davangere"
-    ],
-
-    "Chitradurga": [
-        "chitradurga"
-    ],
-
-    "Raichur": [
-        "raichur"
-    ],
-
-    "Koppal": [
-        "koppal"
-    ],
-
-    "Gadag": [
-        "gadag"
-    ],
-
-    "Haveri": [
-        "haveri"
-    ],
-
-    "Bagalkot": [
-        "bagalkot"
-    ],
-
-    "Bidar": [
-        "bidar"
-    ],
-
-    "Yadgir": [
-        "yadgir"
-    ],
-
-    "Mandya": [
-        "mandya"
-    ],
-
-    "Hassan": [
-        "hassan"
-    ],
-
-    "Kodagu": [
-        "kodagu",
-        "madikeri"
-    ],
-
-    "Udupi": [
-        "udupi"
-    ],
-
-    "Kolar": [
-        "kolar"
-    ],
-
-    "Chikkaballapur": [
-        "chikkaballapur",
-        "chikballapur"
-    ],
-
-    "Ramanagara": [
-        "ramanagara",
-        "ramanagaram"
-    ],
-
-    "Chamarajanagar": [
-        "chamarajanagar"
-    ],
-
-    "Karwar": [
-        "karwar"
-    ],
-
-    "Hiriyur": [
-        "hiriyur"
-    ],
-
-    "Hospet": [
-        "hospet",
-        "hosapete"
-    ]
+    "Bengaluru":["bengaluru","bangalore"],
+    "Mysuru":["mysuru","mysore"],
+    "Vijayapura":["vijayapura","bijapur"],
+    "Bagalkot":["bagalkot"],
+    "Belagavi":["belagavi","belgaum"],
+    "Kalaburagi":["kalaburagi","gulbarga"],
+    "Bidar":["bidar"],
+    "Yadgir":["yadgir"],
+    "Raichur":["raichur"],
+    "Koppal":["koppal"],
+    "Ballari":["ballari","bellary"],
+    "Hosapete":["hosapete","hospet"],
+    "Gadag":["gadag"],
+    "Haveri":["haveri"],
+    "Dharwad":["dharwad"],
+    "Hubballi":["hubballi","hubli"],
+    "Uttara Kannada":["uttara kannada","karwar"],
+    "Udupi":["udupi"],
+    "Dakshina Kannada":["dakshina kannada","mangaluru","mangalore"],
+    "Shivamogga":["shivamogga","shimoga"],
+    "Davangere":["davangere"],
+    "Chitradurga":["chitradurga"],
+    "Tumakuru":["tumakuru","tumkur"],
+    "Chikkamagaluru":["chikkamagaluru","chikmagalur"],
+    "Hassan":["hassan"],
+    "Kodagu":["kodagu","madikeri"],
+    "Mandya":["mandya"],
+    "Chamarajanagar":["chamarajanagar"],
+    "Ramanagara":["ramanagara","ramanagaram"],
+    "Kolar":["kolar"],
+    "Chikkaballapur":["chikkaballapur","chikballapur"]
 
 };
 
 
 /* ======================================================
-   LOAD DATA
+   STORAGE
 ====================================================== */
 
-async function loadTenders() {
+function loadSet(key){
 
-    const body =
-        document.getElementById(
-            "tenderBody"
+    try{
+
+        const value =
+            JSON.parse(
+                localStorage.getItem(key) || "[]"
+            );
+
+        return new Set(
+            Array.isArray(value) ? value : []
         );
 
-    try {
+    }catch{
+
+        return new Set();
+
+    }
+
+}
+
+
+function saveSet(key,set){
+
+    localStorage.setItem(
+        key,
+        JSON.stringify([...set])
+    );
+
+}
+
+
+/* ======================================================
+   LOAD TENDERS
+====================================================== */
+
+async function loadTenders(){
+
+    try{
 
         const response =
             await fetch(
-                "/tenders.json?ts="
-                +
-                Date.now()
+                "/tenders.json?ts=" + Date.now()
             );
 
-
-        if (!response.ok) {
+        if(!response.ok){
 
             throw new Error(
                 "Unable to load tenders.json"
             );
-        }
 
+        }
 
         const data =
             await response.json();
 
-
         allTenders =
-            Array.isArray(
-                data.tenders
-            )
-            ?
-            data.tenders
-            :
-            [];
+            (data.tenders || []).map(
+                tender => {
 
+                    const prepared = {
+                        ...tender,
+                        derived_city:detectCity(tender)
+                    };
 
-        /* Add derived city */
+                    const key =
+                        tenderKey(prepared);
 
-        allTenders =
-            allTenders.map(
-                tender => ({
+                    tenderMap.set(
+                        key,
+                        prepared
+                    );
 
-                    ...tender,
+                    return prepared;
 
-                    derived_city:
-                        detectCity(
-                            tender
-                        )
-
-                })
+                }
             );
-
 
         const updated =
             data.generated_at
-            ?
-            new Date(
+            ? new Date(
                 data.generated_at
-            ).toLocaleString(
-                "en-IN"
-            )
-            :
-            "Unknown";
-
+            ).toLocaleString("en-IN")
+            : "Unknown";
 
         document.getElementById(
             "portalMeta"
         ).innerHTML =
 
-            `Database contains <strong>${numberFormat(allTenders.length)}</strong> tenders
-             &nbsp; | &nbsp;
-             Last KPPP Sync:
-             <strong>${escapeHtml(updated)}</strong>`;
-
+            `Database:
+            <strong>${formatNumber(allTenders.length)}</strong>
+            tenders
+            &nbsp; | &nbsp;
+            Last KPPP Sync:
+            <strong>${escapeHtml(updated)}</strong>`;
 
         populateDropdowns();
 
         applyFilters();
 
+    }catch(error){
 
-    }
-    catch (error) {
+        document.getElementById(
+            "tenderBody"
+        ).innerHTML =
 
-        body.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="10"
-                    class="message"
-                    style="color:#dc2626;"
-                >
-
-                    ⚠️
-                    ${escapeHtml(
-                        error.message
-                    )}
-
+            `<tr>
+                <td colspan="12" class="message">
+                    ⚠️ ${escapeHtml(error.message)}
                 </td>
-
-            </tr>
-        `;
+             </tr>`;
 
     }
 
@@ -1447,20 +944,35 @@ async function loadTenders() {
 
 
 /* ======================================================
-   DETECT CITY
+   TENDER KEY
 ====================================================== */
 
-function detectCity(tender) {
+function tenderKey(tender){
 
-    /* Use actual city first */
+    return String(
+        tender.id
+        ||
+        tender.ref_no
+        ||
+        (
+            (tender.title || "")
+            +
+            "|"
+            +
+            (tender.closing_date || "")
+        )
+    );
 
-    if (
-        tender.city
-        &&
-        String(
-            tender.city
-        ).trim()
-    ) {
+}
+
+
+/* ======================================================
+   CITY DETECTOR
+====================================================== */
+
+function detectCity(tender){
+
+    if(tender.city){
 
         return String(
             tender.city
@@ -1468,16 +980,7 @@ function detectCity(tender) {
 
     }
 
-
-    /* Then actual district */
-
-    if (
-        tender.district
-        &&
-        String(
-            tender.district
-        ).trim()
-    ) {
+    if(tender.district){
 
         return String(
             tender.district
@@ -1485,13 +988,10 @@ function detectCity(tender) {
 
     }
 
-
-    const searchableText = [
+    const text = [
 
         tender.location,
-
         tender.title,
-
         tender.department
 
     ]
@@ -1499,38 +999,23 @@ function detectCity(tender) {
     .join(" ")
     .toLowerCase();
 
+    for(
+        const [city,aliases]
+        of Object.entries(CITY_ALIASES)
+    ){
 
-    for (
-        const [
-            city,
-            aliases
-        ]
-        of
-        Object.entries(
-            CITY_ALIASES
-        )
-    ) {
+        if(
+            aliases.some(
+                alias =>
+                    text.includes(alias)
+            )
+        ){
 
-        for (
-            const alias
-            of
-            aliases
-        ) {
-
-            if (
-                searchableText.includes(
-                    alias
-                )
-            ) {
-
-                return city;
-
-            }
+            return city;
 
         }
 
     }
-
 
     return "Other / Unspecified";
 
@@ -1541,49 +1026,21 @@ function detectCity(tender) {
    DROPDOWNS
 ====================================================== */
 
-function populateDropdowns() {
+function populateDropdowns(){
 
-    populateCityDropdown();
-
-    populateDepartmentDropdown();
-
-    populateStatusDropdown();
-
-}
-
-
-function populateCityDropdown() {
-
-    const select =
-        document.getElementById(
-            "citySelect"
-        );
-
-
-    const cities =
-        [
-            ...new Set(
-
-                allTenders
-
-                .map(
-                    tender =>
-                        tender.derived_city
-                )
-
-                .filter(Boolean)
-
-            )
-        ];
-
-
-    cities.sort(
-        (a, b) =>
-            a.localeCompare(b)
+    const cities = [
+        ...new Set(
+            allTenders
+            .map(t => t.derived_city)
+            .filter(Boolean)
+        )
+    ].sort(
+        (a,b) => a.localeCompare(b)
     );
 
-
-    select.innerHTML =
+    document.getElementById(
+        "citySelect"
+    ).innerHTML =
 
         `<option value="ALL">
             All Cities
@@ -1592,54 +1049,31 @@ function populateCityDropdown() {
         +
 
         cities.map(
-
             city =>
-
                 `<option value="${escapeHtml(city)}">
                     ${escapeHtml(city)}
                  </option>`
-
         ).join("");
 
-}
 
-
-function populateDepartmentDropdown() {
-
-    const select =
-        document.getElementById(
-            "departmentSelect"
-        );
-
-
-    const departments =
-        [
-            ...new Set(
-
-                allTenders
-
-                .map(
-                    tender =>
-                        String(
-                            tender.department
-                            ||
-                            ""
-                        ).trim()
-                )
-
-                .filter(Boolean)
-
+    const departments = [
+        ...new Set(
+            allTenders
+            .map(
+                t =>
+                    String(
+                        t.department || ""
+                    ).trim()
             )
-        ];
-
-
-    departments.sort(
-        (a, b) =>
-            a.localeCompare(b)
+            .filter(Boolean)
+        )
+    ].sort(
+        (a,b) => a.localeCompare(b)
     );
 
-
-    select.innerHTML =
+    document.getElementById(
+        "departmentSelect"
+    ).innerHTML =
 
         `<option value="ALL">
             All Departments
@@ -1648,55 +1082,34 @@ function populateDepartmentDropdown() {
         +
 
         departments.map(
-
-            department =>
-
-                `<option value="${escapeHtml(department)}">
-                    ${escapeHtml(department)}
+            dept =>
+                `<option value="${escapeHtml(dept)}">
+                    ${escapeHtml(dept)}
                  </option>`
-
         ).join("");
 
-}
 
-
-function populateStatusDropdown() {
-
-    const select =
-        document.getElementById(
-            "statusSelect"
-        );
-
-
-    const statuses =
-        [
-            ...new Set(
-
-                allTenders
-
-                .map(
-                    tender =>
-                        String(
-                            tender.status
-                            ||
-                            tender.status_text
-                            ||
-                            ""
-                        )
-                        .trim()
-                        .toUpperCase()
-                )
-
-                .filter(Boolean)
-
+    const statuses = [
+        ...new Set(
+            allTenders.map(
+                t =>
+                    String(
+                        t.status
+                        ||
+                        t.status_text
+                        ||
+                        ""
+                    )
+                    .trim()
+                    .toUpperCase()
             )
-        ];
+            .filter(Boolean)
+        )
+    ].sort();
 
-
-    statuses.sort();
-
-
-    select.innerHTML =
+    document.getElementById(
+        "statusSelect"
+    ).innerHTML =
 
         `<option value="ALL">
             All Status
@@ -1705,23 +1118,249 @@ function populateStatusDropdown() {
         +
 
         statuses.map(
-
             status =>
-
                 `<option value="${escapeHtml(status)}">
                     ${escapeHtml(status)}
                  </option>`
-
         ).join("");
 
 }
 
 
 /* ======================================================
-   FILTER LOGIC
+   FAVOURITE CITY
 ====================================================== */
 
-function applyFilters() {
+function toggleSelectedCity(){
+
+    const city =
+        document.getElementById(
+            "citySelect"
+        ).value;
+
+    if(city === "ALL"){
+
+        alert(
+            "First select a city."
+        );
+
+        return;
+
+    }
+
+    if(
+        favouriteCities.has(city)
+    ){
+
+        favouriteCities.delete(city);
+
+    }else{
+
+        favouriteCities.add(city);
+
+    }
+
+    saveSet(
+        FAVORITE_CITY_KEY,
+        favouriteCities
+    );
+
+    updatePreferenceButtons();
+
+    if(activeView === "CITIES"){
+        applyFilters();
+    }
+
+}
+
+
+/* ======================================================
+   FAVOURITE DEPARTMENT
+====================================================== */
+
+function toggleSelectedDepartment(){
+
+    const department =
+        document.getElementById(
+            "departmentSelect"
+        ).value;
+
+    if(department === "ALL"){
+
+        alert(
+            "First select a department."
+        );
+
+        return;
+
+    }
+
+    if(
+        favouriteDepartments.has(
+            department
+        )
+    ){
+
+        favouriteDepartments.delete(
+            department
+        );
+
+    }else{
+
+        favouriteDepartments.add(
+            department
+        );
+
+    }
+
+    saveSet(
+        FAVORITE_DEPARTMENT_KEY,
+        favouriteDepartments
+    );
+
+    updatePreferenceButtons();
+
+    if(activeView === "DEPARTMENTS"){
+        applyFilters();
+    }
+
+}
+
+
+function updatePreferenceButtons(){
+
+    const city =
+        document.getElementById(
+            "citySelect"
+        ).value;
+
+    const cityBtn =
+        document.getElementById(
+            "saveCityBtn"
+        );
+
+    if(
+        city !== "ALL"
+        &&
+        favouriteCities.has(city)
+    ){
+
+        cityBtn.textContent =
+            "★ Favourite City";
+
+        cityBtn.classList.add(
+            "saved"
+        );
+
+    }else{
+
+        cityBtn.textContent =
+            "☆ Save Selected City";
+
+        cityBtn.classList.remove(
+            "saved"
+        );
+
+    }
+
+
+    const department =
+        document.getElementById(
+            "departmentSelect"
+        ).value;
+
+    const deptBtn =
+        document.getElementById(
+            "saveDepartmentBtn"
+        );
+
+    if(
+        department !== "ALL"
+        &&
+        favouriteDepartments.has(
+            department
+        )
+    ){
+
+        deptBtn.textContent =
+            "★ Favourite Department";
+
+        deptBtn.classList.add(
+            "saved"
+        );
+
+    }else{
+
+        deptBtn.textContent =
+            "☆ Save Selected Department";
+
+        deptBtn.classList.remove(
+            "saved"
+        );
+
+    }
+
+}
+
+
+/* ======================================================
+   FAVOURITE TENDER
+====================================================== */
+
+function toggleTenderFavourite(key){
+
+    if(
+        favouriteTenders.has(key)
+    ){
+
+        favouriteTenders.delete(key);
+
+    }else{
+
+        favouriteTenders.add(key);
+
+    }
+
+    saveSet(
+        FAVORITE_TENDER_KEY,
+        favouriteTenders
+    );
+
+    applyFilters();
+
+}
+
+
+/* ======================================================
+   VIEW MODE
+====================================================== */
+
+function setView(view){
+
+    activeView = view;
+
+    document.querySelectorAll(
+        ".nav-btn"
+    ).forEach(
+        btn =>
+            btn.classList.toggle(
+                "active",
+                btn.dataset.view === view
+            )
+    );
+
+    currentPage = 1;
+
+    applyFilters();
+
+}
+
+
+/* ======================================================
+   FILTER
+====================================================== */
+
+function applyFilters(){
 
     const search =
         document.getElementById(
@@ -1731,108 +1370,107 @@ function applyFilters() {
         .trim()
         .toLowerCase();
 
-
     const category =
         document.getElementById(
             "categorySelect"
         ).value;
-
 
     const city =
         document.getElementById(
             "citySelect"
         ).value;
 
-
     const department =
         document.getElementById(
             "departmentSelect"
         ).value;
-
 
     const status =
         document.getElementById(
             "statusSelect"
         ).value;
 
-
     const minAmount =
-        getNumberInput(
-            "minAmount"
-        );
-
+        numberInput("minAmount");
 
     const maxAmount =
-        getNumberInput(
-            "maxAmount"
-        );
-
+        numberInput("maxAmount");
 
     const minEmd =
-        getNumberInput(
-            "minEmd"
-        );
-
+        numberInput("minEmd");
 
     const maxEmd =
-        getNumberInput(
-            "maxEmd"
-        );
-
+        numberInput("maxEmd");
 
     const publishedFrom =
-        getDateInput(
-            "publishedFrom"
-        );
-
+        dateInput("publishedFrom");
 
     const publishedTo =
-        getDateInput(
-            "publishedTo",
-            true
-        );
-
+        dateInput("publishedTo",true);
 
     const closingFrom =
-        getDateInput(
-            "closingFrom"
-        );
-
+        dateInput("closingFrom");
 
     const closingTo =
-        getDateInput(
-            "closingTo",
-            true
-        );
+        dateInput("closingTo",true);
 
 
     filteredTenders =
         allTenders.filter(
             tender => {
 
+                const key =
+                    tenderKey(tender);
+
+                /* PERSONAL VIEWS */
+
+                if(
+                    activeView ===
+                    "FAVOURITES"
+                    &&
+                    !favouriteTenders.has(key)
+                ){
+                    return false;
+                }
+
+                if(
+                    activeView ===
+                    "CITIES"
+                    &&
+                    !favouriteCities.has(
+                        tender.derived_city
+                    )
+                ){
+                    return false;
+                }
+
+                if(
+                    activeView ===
+                    "DEPARTMENTS"
+                    &&
+                    !favouriteDepartments.has(
+                        tender.department
+                    )
+                ){
+                    return false;
+                }
+
 
                 /* SEARCH */
 
-                if (search) {
+                if(search){
 
-                    const haystack = [
+                    const text = [
 
                         tender.title,
-
                         tender.ref_no,
-
+                        tender.id,
                         tender.department,
-
                         tender.location,
-
                         tender.city,
-
                         tender.district,
-
                         tender.derived_city,
-
                         tender.category,
-
                         tender.status
 
                     ]
@@ -1840,262 +1478,182 @@ function applyFilters() {
                     .join(" ")
                     .toLowerCase();
 
-
-                    if (
-                        !haystack.includes(
-                            search
-                        )
-                    ) {
-
+                    if(
+                        !text.includes(search)
+                    ){
                         return false;
-
                     }
 
                 }
 
 
-                /* CATEGORY */
-
-                if (
+                if(
                     category !== "ALL"
                     &&
                     String(
-                        tender.category
-                        ||
-                        ""
+                        tender.category || ""
                     ).toUpperCase()
-                    !==
-                    category
-                ) {
-
+                    !== category
+                ){
                     return false;
-
                 }
 
 
-                /* CITY */
-
-                if (
+                if(
                     city !== "ALL"
                     &&
                     tender.derived_city
-                    !==
-                    city
-                ) {
-
+                    !== city
+                ){
                     return false;
-
                 }
 
 
-                /* DEPARTMENT */
-
-                if (
+                if(
                     department !== "ALL"
                     &&
-                    String(
-                        tender.department
-                        ||
-                        ""
-                    )
-                    !==
-                    department
-                ) {
-
+                    tender.department
+                    !== department
+                ){
                     return false;
-
                 }
 
 
-                /* STATUS */
-
-                const itemStatus =
+                const tenderStatus =
                     String(
                         tender.status
                         ||
                         tender.status_text
                         ||
                         ""
-                    )
-                    .toUpperCase();
+                    ).toUpperCase();
 
-
-                if (
+                if(
                     status !== "ALL"
                     &&
-                    itemStatus !== status
-                ) {
-
+                    tenderStatus !== status
+                ){
                     return false;
-
                 }
 
-
-                /* AMOUNT */
 
                 const amount =
                     numericValue(
                         tender.amount
                     );
 
-
-                if (
+                if(
                     minAmount !== null
-                ) {
-
-                    if (
+                    &&
+                    (
                         amount === null
                         ||
                         amount < minAmount
-                    ) {
-
-                        return false;
-
-                    }
-
+                    )
+                ){
+                    return false;
                 }
 
-
-                if (
+                if(
                     maxAmount !== null
-                ) {
-
-                    if (
+                    &&
+                    (
                         amount === null
                         ||
                         amount > maxAmount
-                    ) {
-
-                        return false;
-
-                    }
-
+                    )
+                ){
+                    return false;
                 }
 
-
-                /* EMD */
 
                 const emd =
                     numericValue(
                         tender.emd
                     );
 
-
-                if (
+                if(
                     minEmd !== null
-                ) {
-
-                    if (
+                    &&
+                    (
                         emd === null
                         ||
                         emd < minEmd
-                    ) {
-
-                        return false;
-
-                    }
-
+                    )
+                ){
+                    return false;
                 }
 
-
-                if (
+                if(
                     maxEmd !== null
-                ) {
-
-                    if (
+                    &&
+                    (
                         emd === null
                         ||
                         emd > maxEmd
-                    ) {
-
-                        return false;
-
-                    }
-
+                    )
+                ){
+                    return false;
                 }
 
 
-                /* PUBLISHED DATE */
-
-                const publishedDate =
+                const published =
                     parseKpppDate(
                         tender.published_date
                     );
 
-
-                if (
+                if(
                     publishedFrom
                     &&
                     (
-                        !publishedDate
+                        !published
                         ||
-                        publishedDate
-                        <
-                        publishedFrom
+                        published < publishedFrom
                     )
-                ) {
-
+                ){
                     return false;
-
                 }
 
-
-                if (
+                if(
                     publishedTo
                     &&
                     (
-                        !publishedDate
+                        !published
                         ||
-                        publishedDate
-                        >
-                        publishedTo
+                        published > publishedTo
                     )
-                ) {
-
+                ){
                     return false;
-
                 }
 
 
-                /* CLOSING DATE */
-
-                const closingDate =
+                const closing =
                     parseKpppDate(
                         tender.closing_date
                     );
 
-
-                if (
+                if(
                     closingFrom
                     &&
                     (
-                        !closingDate
+                        !closing
                         ||
-                        closingDate
-                        <
-                        closingFrom
+                        closing < closingFrom
                     )
-                ) {
-
+                ){
                     return false;
-
                 }
 
-
-                if (
+                if(
                     closingTo
                     &&
                     (
-                        !closingDate
+                        !closing
                         ||
-                        closingDate
-                        >
-                        closingTo
+                        closing > closingTo
                     )
-                ) {
-
+                ){
                     return false;
-
                 }
 
 
@@ -2104,16 +1662,11 @@ function applyFilters() {
             }
         );
 
-
-    sortFilteredTenders();
-
-
-    currentPage = 1;
-
+    sortTenders();
 
     updateStats();
 
-    renderCurrentPage();
+    renderPage();
 
 }
 
@@ -2122,107 +1675,73 @@ function applyFilters() {
    SORT
 ====================================================== */
 
-function sortFilteredTenders() {
+function sortTenders(){
 
-    const sort =
+    const mode =
         document.getElementById(
             "sortSelect"
         ).value;
 
-
     filteredTenders.sort(
-        (a, b) => {
+        (a,b) => {
 
-
-            if (
-                sort ===
-                "NEWEST"
-            ) {
+            if(mode === "NEWEST"){
 
                 return (
-                    dateTimestamp(
+                    timestamp(
                         b.published_date
                     )
                     -
-                    dateTimestamp(
+                    timestamp(
                         a.published_date
                     )
                 );
 
             }
 
-
-            if (
-                sort ===
-                "CLOSING_SOON"
-            ) {
+            if(mode === "CLOSING"){
 
                 return (
-                    dateTimestamp(
+                    futureTimestamp(
                         a.closing_date
                     )
                     -
-                    dateTimestamp(
+                    futureTimestamp(
                         b.closing_date
                     )
                 );
 
             }
 
-
-            if (
-                sort ===
-                "AMOUNT_HIGH"
-            ) {
+            if(mode === "AMOUNT_HIGH"){
 
                 return (
-                    numberOrZero(
-                        b.amount
-                    )
+                    numberZero(b.amount)
                     -
-                    numberOrZero(
-                        a.amount
-                    )
+                    numberZero(a.amount)
                 );
 
             }
 
-
-            if (
-                sort ===
-                "AMOUNT_LOW"
-            ) {
+            if(mode === "AMOUNT_LOW"){
 
                 return (
-                    numberOrHuge(
-                        a.amount
-                    )
+                    numberHuge(a.amount)
                     -
-                    numberOrHuge(
-                        b.amount
-                    )
+                    numberHuge(b.amount)
                 );
 
             }
 
-
-            if (
-                sort ===
-                "EMD_HIGH"
-            ) {
+            if(mode === "EMD_HIGH"){
 
                 return (
-                    numberOrZero(
-                        b.emd
-                    )
+                    numberZero(b.emd)
                     -
-                    numberOrZero(
-                        a.emd
-                    )
+                    numberZero(a.emd)
                 );
 
             }
-
 
             return 0;
 
@@ -2236,94 +1755,78 @@ function sortFilteredTenders() {
    STATS
 ====================================================== */
 
-function updateStats() {
-
-    const works =
-        filteredTenders.filter(
-            tender =>
-                String(
-                    tender.category
-                    ||
-                    ""
-                ).toUpperCase()
-                ===
-                "WORKS"
-        ).length;
-
-
-    const goods =
-        filteredTenders.filter(
-            tender =>
-                String(
-                    tender.category
-                    ||
-                    ""
-                ).toUpperCase()
-                ===
-                "GOODS"
-        ).length;
-
-
-    const services =
-        filteredTenders.filter(
-            tender =>
-                String(
-                    tender.category
-                    ||
-                    ""
-                ).toUpperCase()
-                ===
-                "SERVICES"
-        ).length;
-
+function updateStats(){
 
     document.getElementById(
         "totalCount"
     ).textContent =
-        numberFormat(
+        formatNumber(
             filteredTenders.length
         );
-
 
     document.getElementById(
         "worksCount"
     ).textContent =
-        numberFormat(
-            works
+        formatNumber(
+            filteredTenders.filter(
+                t =>
+                    String(
+                        t.category || ""
+                    ).toUpperCase()
+                    === "WORKS"
+            ).length
         );
-
 
     document.getElementById(
         "goodsCount"
     ).textContent =
-        numberFormat(
-            goods
+        formatNumber(
+            filteredTenders.filter(
+                t =>
+                    String(
+                        t.category || ""
+                    ).toUpperCase()
+                    === "GOODS"
+            ).length
         );
-
 
     document.getElementById(
         "servicesCount"
     ).textContent =
-        numberFormat(
-            services
+        formatNumber(
+            filteredTenders.filter(
+                t =>
+                    String(
+                        t.category || ""
+                    ).toUpperCase()
+                    === "SERVICES"
+            ).length
         );
 
+    document.getElementById(
+        "savedCount"
+    ).textContent =
+        formatNumber(
+            favouriteTenders.size
+        );
 
     document.getElementById(
         "resultCount"
     ).textContent =
-
-        `${numberFormat(filteredTenders.length)}
-         tenders found`;
+        formatNumber(
+            filteredTenders.length
+        )
+        +
+        " tenders found";
 
 }
 
 
 /* ======================================================
-   RENDER PAGE
+   RENDER
 ====================================================== */
 
-function renderCurrentPage() {
+function renderPage(){
 
     pageSize =
         Number(
@@ -2331,9 +1834,7 @@ function renderCurrentPage() {
                 "pageSizeSelect"
             ).value
         )
-        ||
-        50;
-
+        || 50;
 
     const totalPages =
         Math.max(
@@ -2345,45 +1846,23 @@ function renderCurrentPage() {
             )
         );
 
-
-    if (
-        currentPage >
-        totalPages
-    ) {
-
-        currentPage =
-            totalPages;
-
+    if(
+        currentPage > totalPages
+    ){
+        currentPage = totalPages;
     }
 
-
     const start =
-        (
-            currentPage
-            -
-            1
-        )
+        (currentPage - 1)
         *
         pageSize;
 
-
-    const end =
-        start
-        +
-        pageSize;
-
-
-    const pageRows =
+    renderTenders(
         filteredTenders.slice(
             start,
-            end
-        );
-
-
-    renderTenders(
-        pageRows
+            start + pageSize
+        )
     );
-
 
     renderPagination(
         totalPages
@@ -2392,58 +1871,43 @@ function renderCurrentPage() {
 }
 
 
-/* ======================================================
-   RENDER TENDERS
-====================================================== */
-
-function renderTenders(
-    tenders
-) {
+function renderTenders(tenders){
 
     const body =
         document.getElementById(
             "tenderBody"
         );
 
+    if(!tenders.length){
 
-    if (
-        !tenders.length
-    ) {
-
-        body.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="10"
-                    class="message"
-                >
-
+        body.innerHTML =
+            `<tr>
+                <td colspan="12" class="message">
                     No matching tenders found.
-
                 </td>
-
-            </tr>
-        `;
+             </tr>`;
 
         return;
 
     }
 
-
     body.innerHTML =
         tenders.map(
             tender => {
 
+                const key =
+                    tenderKey(tender);
+
+                const encodedKey =
+                    encodeURIComponent(key);
+
+                const favourite =
+                    favouriteTenders.has(key);
 
                 const category =
                     String(
-                        tender.category
-                        ||
-                        ""
-                    )
-                    .toUpperCase();
-
+                        tender.category || ""
+                    ).toUpperCase();
 
                 const status =
                     tender.status_text
@@ -2452,159 +1916,136 @@ function renderTenders(
                     ||
                     "Published";
 
-
                 return `
 
                 <tr>
 
+                <td>
 
-                    <td>
+                    <button
+                        class="favorite-btn ${favourite ? "saved" : ""}"
+                        data-action="favourite"
+                        data-key="${encodedKey}"
+                        title="Save tender"
+                    >
+                        ${favourite ? "♥" : "♡"}
+                    </button>
 
-                        <span
-                            class="badge ${escapeHtml(category)}"
-                        >
+                </td>
 
-                            ${escapeHtml(category)}
+                <td>
+                    <span class="badge ${escapeHtml(category)}">
+                        ${escapeHtml(category)}
+                    </span>
+                </td>
 
-                        </span>
+                <td>
 
-                    </td>
-
-
-                    <td>
-
-                        <div class="tender-title">
-
-                            ${escapeHtml(
-                                tender.title
-                                ||
-                                "Tender"
-                            )}
-
-                        </div>
-
-                        <div class="reference">
-
-                            Ref:
-                            ${escapeHtml(
-                                tender.ref_no
-                                ||
-                                tender.id
-                                ||
-                                "-"
-                            )}
-
-                        </div>
-
-                    </td>
-
-
-                    <td>
-
+                    <div class="tender-title">
                         ${escapeHtml(
-                            tender.department
+                            tender.title || "Tender"
+                        )}
+                    </div>
+
+                    <div class="reference">
+                        Ref:
+                        ${escapeHtml(
+                            tender.ref_no
                             ||
-                            "Karnataka Government"
-                        )}
-
-                    </td>
-
-
-                    <td>
-
-                        <strong>
-
-                            ${escapeHtml(
-                                tender.derived_city
-                                ||
-                                "-"
-                            )}
-
-                        </strong>
-
-                        <br>
-
-                        <small>
-
-                            ${escapeHtml(
-                                tender.location
-                                ||
-                                tender.district
-                                ||
-                                tender.city
-                                ||
-                                "Karnataka"
-                            )}
-
-                        </small>
-
-                    </td>
-
-
-                    <td class="money">
-
-                        ${formatMoney(
-                            tender.amount,
-                            tender.amount_display
-                        )}
-
-                    </td>
-
-
-                    <td class="money">
-
-                        ${formatMoney(
-                            tender.emd
-                        )}
-
-                    </td>
-
-
-                    <td class="money">
-
-                        ${formatMoney(
-                            tender.fee
-                        )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${escapeHtml(
-                            tender.published_date
+                            tender.id
                             ||
                             "-"
                         )}
+                    </div>
 
-                    </td>
+                </td>
 
+                <td>
+                    ${escapeHtml(
+                        tender.department
+                        ||
+                        "Karnataka Government"
+                    )}
+                </td>
 
-                    <td>
+                <td>
 
-                        <strong>
+                    <strong>
+                        ${escapeHtml(
+                            tender.derived_city
+                        )}
+                    </strong>
 
-                            ${escapeHtml(
-                                tender.closing_date
-                                ||
-                                "-"
-                            )}
+                    <br>
 
-                        </strong>
+                    <small>
+                        ${escapeHtml(
+                            tender.location
+                            ||
+                            tender.district
+                            ||
+                            tender.city
+                            ||
+                            "Karnataka"
+                        )}
+                    </small>
 
-                    </td>
+                </td>
 
+                <td class="money">
+                    ${money(
+                        tender.amount,
+                        tender.amount_display
+                    )}
+                </td>
 
-                    <td>
+                <td class="money">
+                    ${money(tender.emd)}
+                </td>
 
-                        <span class="status">
+                <td class="money">
+                    ${money(tender.fee)}
+                </td>
 
-                            ${escapeHtml(status)}
+                <td>
+                    ${escapeHtml(
+                        tender.published_date
+                        ||
+                        "-"
+                    )}
+                </td>
 
-                        </span>
+                <td>
+                    <strong>
+                        ${escapeHtml(
+                            tender.closing_date
+                            ||
+                            "-"
+                        )}
+                    </strong>
+                </td>
 
-                    </td>
+                <td>
+                    <span class="status">
+                        ${escapeHtml(status)}
+                    </span>
+                </td>
 
+                <td>
+
+                    <div class="actions">
+
+                        <button
+                            class="details-btn"
+                            data-action="details"
+                            data-key="${encodedKey}"
+                        >
+                            View Details
+                        </button>
+
+                    </div>
+
+                </td>
 
                 </tr>
 
@@ -2617,22 +2058,240 @@ function renderTenders(
 
 
 /* ======================================================
+   DETAILS
+====================================================== */
+
+function openDetails(key){
+
+    const tender =
+        tenderMap.get(key);
+
+    if(!tender){
+        return;
+    }
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        tender.title
+        ||
+        "Tender Details";
+
+
+    let rawRows = "";
+
+    if(
+        tender.raw
+        &&
+        typeof tender.raw === "object"
+    ){
+
+        rawRows =
+            Object.entries(
+                tender.raw
+            )
+            .filter(
+                ([,value]) =>
+                    value !== null
+                    &&
+                    value !== ""
+                    &&
+                    typeof value !== "object"
+            )
+            .slice(0,50)
+            .map(
+                ([field,value]) => `
+
+                    <tr>
+
+                        <td class="raw-key">
+                            ${escapeHtml(field)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(value)}
+                        </td>
+
+                    </tr>
+
+                `
+            ).join("");
+
+    }
+
+
+    document.getElementById(
+        "modalBody"
+    ).innerHTML = `
+
+        <div class="detail-grid">
+
+            ${detailBox(
+                "Category",
+                tender.category
+            )}
+
+            ${detailBox(
+                "Tender Number",
+                tender.ref_no
+                ||
+                tender.id
+            )}
+
+            ${detailBox(
+                "Department",
+                tender.department
+            )}
+
+            ${detailBox(
+                "City / District",
+                tender.derived_city
+            )}
+
+            ${detailBox(
+                "Location",
+                tender.location
+            )}
+
+            ${detailBox(
+                "Tender Amount",
+                plainMoney(
+                    tender.amount,
+                    tender.amount_display
+                )
+            )}
+
+            ${detailBox(
+                "EMD",
+                plainMoney(
+                    tender.emd
+                )
+            )}
+
+            ${detailBox(
+                "Tender Fee",
+                plainMoney(
+                    tender.fee
+                )
+            )}
+
+            ${detailBox(
+                "Published Date",
+                tender.published_date
+            )}
+
+            ${detailBox(
+                "Closing Date",
+                tender.closing_date
+            )}
+
+            ${detailBox(
+                "Status",
+                tender.status_text
+                ||
+                tender.status
+            )}
+
+        </div>
+
+
+        <div class="document-box">
+
+            <strong>
+                📂 Tender Documents
+            </strong>
+
+            <p>
+                Document retrieval will be connected
+                in the next stage using the tender's
+                KPPP detail/document endpoints.
+            </p>
+
+            <small>
+                We will add BOQ, notification,
+                specifications, corrigendum,
+                addendum and downloadable attachments
+                here when available.
+            </small>
+
+        </div>
+
+
+        ${
+            rawRows
+            ?
+            `
+
+            <div class="raw-section">
+
+                <h3>
+                    Other KPPP Details
+                </h3>
+
+                <table class="raw-table">
+
+                    <tbody>
+                        ${rawRows}
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            `
+            :
+            ""
+        }
+
+    `;
+
+
+    document.getElementById(
+        "detailsModal"
+    ).classList.add(
+        "open"
+    );
+
+}
+
+
+function detailBox(label,value){
+
+    return `
+
+        <div class="detail-box">
+
+            <div class="detail-label">
+                ${escapeHtml(label)}
+            </div>
+
+            <div class="detail-value">
+                ${escapeHtml(
+                    value
+                    ||
+                    "Not available"
+                )}
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ======================================================
    PAGINATION
 ====================================================== */
 
-function renderPagination(
-    totalPages
-) {
+function renderPagination(totalPages){
 
     const container =
         document.getElementById(
             "pagination"
         );
 
-
-    if (
-        filteredTenders.length === 0
-    ) {
+    if(!filteredTenders.length){
 
         container.innerHTML = "";
 
@@ -2640,31 +2299,24 @@ function renderPagination(
 
     }
 
-
     container.innerHTML = `
 
         <button
             class="page-btn"
-            onclick="changePage(-1)"
+            id="previousPage"
             ${currentPage <= 1 ? "disabled" : ""}
         >
             ← Previous
         </button>
 
-
-        <div class="page-info">
-
-            Page
-            ${currentPage}
-            of
-            ${totalPages}
-
-        </div>
-
+        <span class="page-info">
+            Page ${currentPage}
+            of ${totalPages}
+        </span>
 
         <button
             class="page-btn"
-            onclick="changePage(1)"
+            id="nextPage"
             ${currentPage >= totalPages ? "disabled" : ""}
         >
             Next →
@@ -2672,143 +2324,109 @@ function renderPagination(
 
     `;
 
-}
-
-
-function changePage(
-    direction
-) {
-
-    const totalPages =
-        Math.max(
-            1,
-            Math.ceil(
-                filteredTenders.length
-                /
-                pageSize
-            )
+    const previous =
+        document.getElementById(
+            "previousPage"
         );
 
+    const next =
+        document.getElementById(
+            "nextPage"
+        );
 
-    const newPage =
-        currentPage
-        +
-        direction;
+    if(previous){
 
+        previous.addEventListener(
+            "click",
+            () => {
 
-    if (
-        newPage < 1
-        ||
-        newPage > totalPages
-    ) {
+                currentPage--;
 
-        return;
+                renderPage();
+
+            }
+        );
 
     }
 
+    if(next){
 
-    currentPage =
-        newPage;
+        next.addEventListener(
+            "click",
+            () => {
 
+                currentPage++;
 
-    renderCurrentPage();
+                renderPage();
 
+            }
+        );
 
-    window.scrollTo({
-
-        top:
-            document.querySelector(
-                ".result-bar"
-            ).offsetTop
-            -
-            15,
-
-        behavior:
-            "smooth"
-
-    });
+    }
 
 }
 
 
 /* ======================================================
-   RESET FILTERS
+   RESET
 ====================================================== */
 
-function resetFilters() {
+function resetFilters(){
 
-    document.getElementById(
-        "searchInput"
-    ).value = "";
-
-
-    document.getElementById(
-        "categorySelect"
-    ).value = "ALL";
-
-
-    document.getElementById(
-        "citySelect"
-    ).value = "ALL";
-
-
-    document.getElementById(
-        "departmentSelect"
-    ).value = "ALL";
-
-
-    document.getElementById(
-        "statusSelect"
-    ).value = "ALL";
-
-
-    document.getElementById(
-        "minAmount"
-    ).value = "";
-
-
-    document.getElementById(
-        "maxAmount"
-    ).value = "";
-
-
-    document.getElementById(
-        "minEmd"
-    ).value = "";
-
-
-    document.getElementById(
-        "maxEmd"
-    ).value = "";
-
-
-    document.getElementById(
-        "publishedFrom"
-    ).value = "";
-
-
-    document.getElementById(
-        "publishedTo"
-    ).value = "";
-
-
-    document.getElementById(
-        "closingFrom"
-    ).value = "";
-
-
-    document.getElementById(
+    [
+        "searchInput",
+        "minAmount",
+        "maxAmount",
+        "minEmd",
+        "maxEmd",
+        "publishedFrom",
+        "publishedTo",
+        "closingFrom",
         "closingTo"
-    ).value = "";
 
+    ].forEach(
+        id =>
+            document.getElementById(
+                id
+            ).value = ""
+    );
+
+
+    [
+        "categorySelect",
+        "citySelect",
+        "departmentSelect",
+        "statusSelect"
+
+    ].forEach(
+        id =>
+            document.getElementById(
+                id
+            ).value = "ALL"
+    );
 
     document.getElementById(
         "sortSelect"
-    ).value = "NEWEST";
+    ).value =
+        "NEWEST";
 
+    activeView = "ALL";
+
+    document.querySelectorAll(
+        ".nav-btn"
+    ).forEach(
+        button =>
+            button.classList.toggle(
+                "active",
+                button.dataset.view
+                ===
+                "ALL"
+            )
+    );
 
     currentPage = 1;
 
+    updatePreferenceButtons();
 
     applyFilters();
 
@@ -2816,382 +2434,210 @@ function resetFilters() {
 
 
 /* ======================================================
-   DATE FUNCTIONS
+   MONEY / DATE HELPERS
 ====================================================== */
 
-function parseKpppDate(
-    value
-) {
+function numericValue(value){
 
-    if (!value) {
-
+    if(
+        value === null
+        ||
+        value === undefined
+        ||
+        value === ""
+    ){
         return null;
+    }
+
+    const n = Number(value);
+
+    return Number.isFinite(n)
+        ? n
+        : null;
+
+}
+
+
+function numberInput(id){
+
+    const value =
+        document.getElementById(id).value;
+
+    if(value === ""){
+        return null;
+    }
+
+    return numericValue(value);
+
+}
+
+
+function money(value,fallback=null){
+
+    const amount =
+        numericValue(value);
+
+    if(amount !== null){
+
+        return "₹"
+            +
+            amount.toLocaleString(
+                "en-IN"
+            );
 
     }
 
+    if(
+        fallback
+        &&
+        fallback !==
+        "Refer tender"
+    ){
+
+        return escapeHtml(fallback);
+
+    }
+
+    return `<span class="na">
+                Refer tender
+            </span>`;
+
+}
+
+
+function plainMoney(value,fallback=null){
+
+    const amount =
+        numericValue(value);
+
+    if(amount !== null){
+
+        return "₹"
+            +
+            amount.toLocaleString(
+                "en-IN"
+            );
+
+    }
+
+    return fallback
+        ||
+        "Refer tender";
+
+}
+
+
+function parseKpppDate(value){
+
+    if(!value){
+        return null;
+    }
 
     const text =
-        String(
-            value
-        ).trim();
-
-
-    /*
-        KPPP:
-        DD-MM-YYYY HH:MM:SS
-    */
+        String(value).trim();
 
     const match =
         text.match(
             /^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
         );
 
-
-    if (match) {
+    if(match){
 
         return new Date(
-
-            Number(
-                match[3]
-            ),
-
-            Number(
-                match[2]
-            )
-            -
-            1,
-
-            Number(
-                match[1]
-            ),
-
-            Number(
-                match[4]
-                ||
-                0
-            ),
-
-            Number(
-                match[5]
-                ||
-                0
-            ),
-
-            Number(
-                match[6]
-                ||
-                0
-            )
-
+            Number(match[3]),
+            Number(match[2])-1,
+            Number(match[1]),
+            Number(match[4]||0),
+            Number(match[5]||0),
+            Number(match[6]||0)
         );
 
     }
 
+    const date = new Date(text);
 
-    const parsed =
-        new Date(
-            text
-        );
-
-
-    if (
-        Number.isNaN(
-            parsed.getTime()
-        )
-    ) {
-
-        return null;
-
-    }
-
-
-    return parsed;
-
-}
-
-
-function dateTimestamp(
-    value
-) {
-
-    const date =
-        parseKpppDate(
-            value
-        );
-
-
-    return date
-        ?
+    return Number.isNaN(
         date.getTime()
-        :
-        0;
+    )
+    ? null
+    : date;
 
 }
 
 
-function getDateInput(
-    id,
-    endOfDay = false
-) {
+function dateInput(id,end=false){
 
     const value =
         document.getElementById(
             id
         ).value;
 
-
-    if (!value) {
-
+    if(!value){
         return null;
-
     }
-
 
     const date =
         new Date(
-            value
-            +
-            "T00:00:00"
+            value + "T00:00:00"
         );
 
-
-    if (endOfDay) {
+    if(end){
 
         date.setHours(
-            23,
-            59,
-            59,
-            999
+            23,59,59,999
         );
 
     }
-
 
     return date;
 
 }
 
 
-/* ======================================================
-   NUMBER FUNCTIONS
-====================================================== */
+function timestamp(value){
 
-function numericValue(
-    value
-) {
+    const date =
+        parseKpppDate(value);
 
-    if (
-        value === null
-        ||
-        value === undefined
-        ||
-        value === ""
-    ) {
-
-        return null;
-
-    }
-
-
-    const number =
-        Number(
-            value
-        );
-
-
-    return Number.isFinite(
-        number
-    )
-        ?
-        number
-        :
-        null;
+    return date
+        ? date.getTime()
+        : 0;
 
 }
 
 
-function getNumberInput(
-    id
-) {
+function futureTimestamp(value){
 
-    const value =
-        document.getElementById(
-            id
-        ).value;
+    const date =
+        parseKpppDate(value);
 
-
-    if (
-        value === ""
-    ) {
-
-        return null;
-
-    }
-
-
-    const number =
-        Number(
-            value
-        );
-
-
-    return Number.isFinite(
-        number
-    )
-        ?
-        number
-        :
-        null;
+    return date
+        ? date.getTime()
+        : Number.MAX_SAFE_INTEGER;
 
 }
 
 
-function numberOrZero(
-    value
-) {
+function numberZero(value){
 
-    return numericValue(
-        value
-    )
-    ??
-    0;
+    return numericValue(value)
+        ?? 0;
 
 }
 
 
-function numberOrHuge(
-    value
-) {
+function numberHuge(value){
 
-    return numericValue(
-        value
-    )
-    ??
-    Number.MAX_SAFE_INTEGER;
+    return numericValue(value)
+        ?? Number.MAX_SAFE_INTEGER;
 
 }
 
 
-/* ======================================================
-   MONEY FORMAT
-====================================================== */
-
-function formatMoney(
-    value,
-    fallback = null
-) {
-
-    const amount =
-        numericValue(
-            value
-        );
-
-
-    if (
-        amount !== null
-    ) {
-
-        return (
-            "₹"
-            +
-            amount.toLocaleString(
-                "en-IN"
-            )
-        );
-
-    }
-
-
-    if (
-        fallback
-        &&
-        fallback !==
-        "Refer tender"
-    ) {
-
-        return escapeHtml(
-            fallback
-        );
-
-    }
-
-
-    return `
-
-        <span class="not-available">
-
-            Refer tender
-
-        </span>
-
-    `;
-
-}
-
-
-/* ======================================================
-   HTML ESCAPE
-====================================================== */
-
-function escapeHtml(
-    value
-) {
-
-    if (
-        value === null
-        ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(
-        value
-    )
-
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-
-    .replace(
-        /</g,
-        "&lt;"
-    )
-
-    .replace(
-        />/g,
-        "&gt;"
-    )
-
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-
-    .replace(
-        /'/g,
-        "&#039;"
-    );
-
-}
-
-
-/* ======================================================
-   FORMAT NUMBER
-====================================================== */
-
-function numberFormat(
-    value
-) {
+function formatNumber(value){
 
     return Number(
-        value
-        ||
-        0
+        value || 0
     ).toLocaleString(
         "en-IN"
     );
@@ -3200,79 +2646,108 @@ function numberFormat(
 
 
 /* ======================================================
+   SECURITY
+====================================================== */
+
+function escapeHtml(value){
+
+    if(
+        value === null
+        ||
+        value === undefined
+    ){
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* ======================================================
    EVENTS
 ====================================================== */
 
-const filterIds = [
+document.querySelectorAll(
+    ".nav-btn"
+).forEach(
+    button =>
+        button.addEventListener(
+            "click",
+            () =>
+                setView(
+                    button.dataset.view
+                )
+        )
+);
 
+
+[
     "searchInput",
-
-    "categorySelect",
-
-    "citySelect",
-
-    "departmentSelect",
-
-    "statusSelect",
-
     "minAmount",
-
     "maxAmount",
-
     "minEmd",
+    "maxEmd"
 
-    "maxEmd",
+].forEach(
+    id =>
+        document.getElementById(id)
+        .addEventListener(
+            "input",
+            () => {
 
+                currentPage = 1;
+                applyFilters();
+
+            }
+        )
+);
+
+
+[
+    "categorySelect",
+    "citySelect",
+    "departmentSelect",
+    "statusSelect",
     "publishedFrom",
-
     "publishedTo",
-
     "closingFrom",
-
     "closingTo"
 
-];
-
-
-filterIds.forEach(
-    id => {
-
-        const element =
-            document.getElementById(
-                id
-            );
-
-
-        element.addEventListener(
-            id === "searchInput"
-            ||
-            id.includes("Amount")
-            ||
-            id.includes("Emd")
-            ?
-            "input"
-            :
+].forEach(
+    id =>
+        document.getElementById(id)
+        .addEventListener(
             "change",
+            () => {
 
-            applyFilters
-        );
+                currentPage = 1;
 
-    }
+                updatePreferenceButtons();
+
+                applyFilters();
+
+            }
+        )
 );
 
 
 document.getElementById(
     "sortSelect"
-)
-.addEventListener(
+).addEventListener(
     "change",
     () => {
 
-        sortFilteredTenders();
-
         currentPage = 1;
 
-        renderCurrentPage();
+        sortTenders();
+
+        renderPage();
 
     }
 );
@@ -3280,14 +2755,135 @@ document.getElementById(
 
 document.getElementById(
     "pageSizeSelect"
-)
-.addEventListener(
+).addEventListener(
     "change",
     () => {
 
         currentPage = 1;
 
-        renderCurrentPage();
+        renderPage();
+
+    }
+);
+
+
+document.getElementById(
+    "saveCityBtn"
+).addEventListener(
+    "click",
+    toggleSelectedCity
+);
+
+
+document.getElementById(
+    "saveDepartmentBtn"
+).addEventListener(
+    "click",
+    toggleSelectedDepartment
+);
+
+
+document.getElementById(
+    "resetBtn"
+).addEventListener(
+    "click",
+    resetFilters
+);
+
+
+document.getElementById(
+    "tenderBody"
+).addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "button[data-action]"
+            );
+
+        if(!button){
+            return;
+        }
+
+        const key =
+            decodeURIComponent(
+                button.dataset.key
+            );
+
+        if(
+            button.dataset.action
+            ===
+            "favourite"
+        ){
+
+            toggleTenderFavourite(key);
+
+        }
+
+        if(
+            button.dataset.action
+            ===
+            "details"
+        ){
+
+            openDetails(key);
+
+        }
+
+    }
+);
+
+
+document.getElementById(
+    "closeModal"
+).addEventListener(
+    "click",
+    () =>
+        document.getElementById(
+            "detailsModal"
+        ).classList.remove(
+            "open"
+        )
+);
+
+
+document.getElementById(
+    "detailsModal"
+).addEventListener(
+    "click",
+    event => {
+
+        if(
+            event.target.id
+            ===
+            "detailsModal"
+        ){
+
+            event.currentTarget
+            .classList.remove(
+                "open"
+            );
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Escape"){
+
+            document.getElementById(
+                "detailsModal"
+            ).classList.remove(
+                "open"
+            );
+
+        }
 
     }
 );
@@ -3299,10 +2895,7 @@ document.getElementById(
 
 loadTenders();
 
-
 </script>
 
-
 </body>
-
 </html>
