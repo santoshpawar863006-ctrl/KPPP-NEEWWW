@@ -1,6 +1,10 @@
-import json, os, time
+import json
+import os
+import time
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+
 import requests
 
 BASE = "https://kppp.karnataka.gov.in"
@@ -9,7 +13,6 @@ OUT = Path("public/tenders.json")
 TOKEN = os.getenv("KPPP_AUTH_TOKEN", "").strip()
 PAGE_SIZE = int(os.getenv("KPPP_PAGE_SIZE", "100"))
 MAX_PAGES = int(os.getenv("KPPP_MAX_PAGES", "250"))
-CATEGORIES = ["WORKS", "GOODS", "SERVICES"]
 
 
 def headers():
@@ -19,7 +22,7 @@ def headers():
         "Origin": BASE,
         "Referer": BASE + "/",
         "Post": "CONTRACTOR-EPROC-CONTRACTOR",
-        "User-Agent": "Mozilla/5.0 KPPP-Tender-Aggregator/1.0",
+        "User-Agent": "Mozilla/5.0 KPPP-Tender-Aggregator/2.0",
     }
     if TOKEN:
         h["Authorization"] = "Bearer " + TOKEN
@@ -27,172 +30,206 @@ def headers():
 
 
 def pick(d, *keys, default=""):
-    if not isinstance(d, dict): return default
-    for k in keys:
-        v = d.get(k)
-        if v not in (None, ""):
-            return v
+    if not isinstance(d, dict):
+        return default
+    for key in keys:
+        value = d.get(key)
+        if value not in (None, ""):
+            return value
     return default
 
 
 def find_list(obj):
-    if isinstance(obj, list): return obj
-    if not isinstance(obj, dict): return []
-    for k in ("content", "items", "results", "tenders", "records", "data"):
-        v = obj.get(k)
-        if isinstance(v, list) and len(v) > 0: return v
-        if isinstance(v, dict):
-            nested = find_list(v)
-            if nested: return nested
+    if isinstance(obj, list):
+        return obj
+    if not isinstance(obj, dict):
+        return []
+    for key in ("content", "items", "results", "tenders", "records", "data"):
+        value = obj.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            nested = find_list(value)
+            if nested:
+                return nested
     return []
 
 
-def number(v):
+def number(value):
     try:
-        return float(str(v).replace(",", "").replace("₹", "").strip())
+        if value in (None, ""):
+            return None
+        return float(str(value).replace(",", "").replace("₹", "").strip())
     except Exception:
         return None
 
 
-def normalize(x, cat_default):
-    tid = str(pick(x, "id", "tenderId", "tenderID", "tenderPk", "tenderNumber", "tenderNo", default="")).strip()
-    ref = str(pick(x, "tenderNumber", "tenderNo", "tenderReferenceNumber", "referenceNumber", "nitNumber", default=tid)).strip()
-    title = str(pick(x, "tenderTitle", "title", "workDescription", "description", "tenderDescription", "name", default="Tender"))
-    amount = pick(x, "estimatedContractValue", "estimatedAmount", "estimatedTenderValue", "tenderValue", "estimatedCost", "provisionalAmount", "amount", default="")
-    location = str(pick(x, "locationName", "location", "districtName", "district", "placeOfWork", default="Karnataka"))
-    district = str(pick(x, "districtName", "district", "district_name", default=""))
-    city = str(pick(x, "cityName", "city", "townName", "town", "talukName", "taluk", default=""))
-    department = str(pick(x, "departmentName", "department", "departmentNameEn", "organisationName", "organisation", "organization", "procuringEntity", default="Karnataka Government"))
-    close = str(pick(x, "tenderClosureDate", "closingDate", "bidSubmissionEndDate", "submissionEndDate", "lastDate", "tenderEndDate", default=""))
-    publish = str(pick(x, "publishedDate", "publishDate", "dateOfPublication", "tenderPublishDate", default=""))
-    emd = pick(x, "emdAmount", "emd", "emdValue", default="")
-    fee = pick(x, "tenderFee", "tenderFeeAmount", "fee", default="")
+def normalize_category(value):
+    text = str(value or "").strip().upper()
+    if text.startswith("WORK"):
+        return "WORKS"
+    if text.startswith("SERVICE"):
+        return "SERVICES"
+    if text.startswith("GOOD"):
+        return "GOODS"
+    return text or "UNKNOWN"
 
-    # Standardize category name
-    raw_cat = str(pick(x, "category", "tenderCategory", "categoryName", default=cat_default)).strip().upper()
+
+def normalize(raw):
+    tid = str(pick(raw, "id", "tenderId", "tenderID", "tenderPk", "tenderNumber", "tenderNo", default="")).strip()
+    ref = str(pick(raw, "tenderNumber", "tenderNo", "tenderReferenceNumber", "referenceNumber", "nitNumber", default=tid)).strip()
+    title = str(pick(raw, "tenderTitle", "title", "workDescription", "description", "tenderDescription", "name", default="Tender"))
+
+    # KPPP currently exposes these short field names in the public search result.
+    amount_raw = pick(
+        raw,
+        "ecv",
+        "estimatedContractValue",
+        "estimatedAmount",
+        "estimatedTenderValue",
+        "tenderValue",
+        "estimatedCost",
+        "provisionalAmount",
+        "amount",
+        default="",
+    )
+
+    category_raw = pick(raw, "category", "tenderCategory", "categoryText", default="")
+    category = normalize_category(category_raw)
+
+    department = str(
+        pick(
+            raw,
+            "deptName",
+            "departmentName",
+            "department",
+            "departmentNameEn",
+            "organisationName",
+            "organisation",
+            "organization",
+            "procuringEntity",
+            default="Karnataka Government",
+        )
+    )
+
+    location = str(pick(raw, "locationName", "location", "districtName", "district", "placeOfWork", default="Karnataka"))
+    district = str(pick(raw, "districtName", "district", "district_name", default=""))
+    city = str(pick(raw, "cityName", "city", "townName", "town", "talukName", "taluk", default=""))
+    close = str(pick(raw, "tenderClosureDate", "closingDate", "bidSubmissionEndDate", "submissionEndDate", "lastDate", "tenderEndDate", default=""))
+    publish = str(pick(raw, "publishedDate", "publishDate", "dateOfPublication", "tenderPublishDate", default=""))
+    emd = pick(raw, "emdAmount", "emd", "emdValue", default="")
+    fee = pick(raw, "tenderFee", "tenderFeeAmount", "fee", default="")
 
     return {
         "id": tid,
         "ref_no": ref,
         "title": title,
-        "category": raw_cat,
+        "category": category,
         "department": department,
         "location": location,
         "district": district,
         "city": city,
-        "amount": number(amount),
-        "amount_display": str(amount) if amount not in (None, "") else "Refer tender",
+        "amount": number(amount_raw),
+        "amount_display": str(amount_raw) if amount_raw not in (None, "") else "Refer tender",
         "emd": number(emd),
         "fee": number(fee),
         "published_date": publish,
         "closing_date": close,
-        "raw": x,
+        "raw": raw,
     }
 
 
-def generate_payloads(cat_name):
-    """Generate multiple payload format variants to ensure compatibility with KPPP search API."""
-    return [
-        {
-            "tenderNumber": "",
-            "category": cat_name.upper(),
-            "status": "PUBLISHED",
-            "deptId": None,
-            "publishedFromDate": None,
-            "publishedToDate": None,
-            "tenderType": "OPEN",
-            "title": "",
-            "location": None,
-            "tenderClosureFromDate": None,
-            "tenderClosureToDate": None,
-        },
-        {
-            "tenderNumber": "",
-            "category": cat_name.capitalize(),
-            "status": "PUBLISHED",
-            "deptId": None,
-            "publishedFromDate": None,
-            "publishedToDate": None,
-            "tenderType": "OPEN",
-            "title": "",
-            "location": None,
-            "tenderClosureFromDate": None,
-            "tenderClosureToDate": None,
-        }
-    ]
+def base_payload():
+    # IMPORTANT: do not force GOODS/WORKS/SERVICES here.
+    # The KPPP public search can return the full live list; we categorize locally
+    # from each row's own category/categoryText field.
+    return {
+        "tenderNumber": "",
+        "status": "PUBLISHED",
+        "deptId": None,
+        "publishedFromDate": None,
+        "publishedToDate": None,
+        "tenderType": "OPEN",
+        "title": "",
+        "location": None,
+        "tenderClosureFromDate": None,
+        "tenderClosureToDate": None,
+        "category": None,
+    }
 
 
 def fetch_all():
-    s = requests.Session()
-    all_rows, seen = [], set()
+    session = requests.Session()
+    rows = []
+    seen = set()
 
-    for cat in CATEGORIES:
-        print(f"--- Fetching Category: {cat} ---")
-        cat_items_found = 0
+    for page in range(MAX_PAGES):
+        response = session.post(
+            SEARCH,
+            params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"},
+            json=base_payload(),
+            headers=headers(),
+            timeout=45,
+        )
 
-        for payload_variant in generate_payloads(cat):
-            if cat_items_found > 0:
-                break # Already fetched items for this category
+        if response.status_code in (401, 403):
+            raise RuntimeError(
+                f"KPPP authentication failed (HTTP {response.status_code}). "
+                "Add/refresh the GitHub secret KPPP_AUTH_TOKEN."
+            )
 
-            for page in range(MAX_PAGES):
-                try:
-                    r = s.post(
-                        SEARCH, 
-                        params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"}, 
-                        json=payload_variant, 
-                        headers=headers(), 
-                        timeout=45
-                    )
-                    if r.status_code in (401, 403):
-                        raise RuntimeError(f"KPPP authentication failed (HTTP {r.status_code}). Check GitHub secret KPPP_AUTH_TOKEN.")
-                    r.raise_for_status()
-                    
-                    data = r.json()
-                    items = find_list(data)
-                    
-                    if not items:
-                        break
+        response.raise_for_status()
+        data = response.json()
+        items = find_list(data)
+        print(f"ALL CATEGORIES page {page}: {len(items)}")
 
-                    added_in_page = 0
-                    for raw in items:
-                        row = normalize(raw, cat)
-                        key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
-                        if key in seen:
-                            continue
-                        seen.add(key)
-                        all_rows.append(row)
-                        added_in_page += 1
+        if not items:
+            break
 
-                    cat_items_found += added_in_page
-                    print(f"Category {cat} | Page {page}: Found {len(items)} items ({added_in_page} new)")
+        for raw in items:
+            row = normalize(raw)
+            key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(row)
 
-                    if len(items) < PAGE_SIZE:
-                        break
-                    time.sleep(0.15)
-                except Exception as err:
-                    print(f"Error fetching page {page} for {cat}: {err}")
-                    break
+        if len(items) < PAGE_SIZE:
+            break
+        time.sleep(0.15)
 
-        print(f"Total unique tenders gathered for {cat}: {cat_items_found}")
-
-    return all_rows
+    return rows
 
 
 def main():
     rows = fetch_all()
     if not rows:
         raise RuntimeError("KPPP returned zero tenders. Existing public/tenders.json was NOT overwritten.")
-    
+
+    category_counts = Counter(row["category"] for row in rows)
+    print("CATEGORY COUNTS:", dict(category_counts))
+
+    # Do not silently replace the good database with another one-category result.
+    visible_categories = {c for c in ("WORKS", "GOODS", "SERVICES") if category_counts.get(c, 0) > 0}
+    if len(visible_categories) < 2:
+        raise RuntimeError(
+            "KPPP result still contains fewer than two of WORKS/GOODS/SERVICES: "
+            f"{dict(category_counts)}. Refusing to overwrite public/tenders.json."
+        )
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     temp = OUT.with_suffix(".tmp")
-    temp.write_text(json.dumps({
+    payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": SEARCH,
         "count": len(rows),
-        "tenders": rows
-    }, ensure_ascii=False, indent=2), encoding="utf-8")
+        "category_counts": dict(category_counts),
+        "tenders": rows,
+    }
+    temp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     temp.replace(OUT)
-    print(f"Saved total {len(rows)} unique tenders to {OUT}")
+    print(f"Saved {len(rows)} unique tenders to {OUT}")
+
 
 if __name__ == "__main__":
     main()
