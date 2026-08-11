@@ -5,13 +5,11 @@ import requests
 
 BASE = "https://kppp.karnataka.gov.in"
 SEARCH = BASE + "/supplier-registration-service/v1/api/portal-service/search-eproc-tenders"
-DEPARTMENTS = BASE + "/supplier-registration-service/v1/api/portal-service/departments/activeDepartment"
-CURRENT_TIME = BASE + "/supplier-registration-service/v1/api/portal-service/get-current-time"
 OUT = Path("public/tenders.json")
 TOKEN = os.getenv("KPPP_AUTH_TOKEN", "").strip()
 PAGE_SIZE = int(os.getenv("KPPP_PAGE_SIZE", "100"))
 MAX_PAGES = int(os.getenv("KPPP_MAX_PAGES", "250"))
-CATEGORIES = [x.strip().upper() for x in os.getenv("KPPP_CATEGORIES", "WORKS,GOODS,SERVICES").split(",") if x.strip()]
+CATEGORIES = ["WORKS", "GOODS", "SERVICES"]
 
 
 def headers():
@@ -42,7 +40,7 @@ def find_list(obj):
     if not isinstance(obj, dict): return []
     for k in ("content", "items", "results", "tenders", "records", "data"):
         v = obj.get(k)
-        if isinstance(v, list): return v
+        if isinstance(v, list) and len(v) > 0: return v
         if isinstance(v, dict):
             nested = find_list(v)
             if nested: return nested
@@ -56,7 +54,7 @@ def number(v):
         return None
 
 
-def normalize(x, category):
+def normalize(x, cat_default):
     tid = str(pick(x, "id", "tenderId", "tenderID", "tenderPk", "tenderNumber", "tenderNo", default="")).strip()
     ref = str(pick(x, "tenderNumber", "tenderNo", "tenderReferenceNumber", "referenceNumber", "nitNumber", default=tid)).strip()
     title = str(pick(x, "tenderTitle", "title", "workDescription", "description", "tenderDescription", "name", default="Tender"))
@@ -70,8 +68,8 @@ def normalize(x, category):
     emd = pick(x, "emdAmount", "emd", "emdValue", default="")
     fee = pick(x, "tenderFee", "tenderFeeAmount", "fee", default="")
 
-    # Force category casing to UPPERCASE for exact UI matching
-    raw_cat = str(pick(x, "category", "tenderCategory", default=category)).strip().upper()
+    # Standardize category name
+    raw_cat = str(pick(x, "category", "tenderCategory", "categoryName", default=cat_default)).strip().upper()
 
     return {
         "id": tid,
@@ -92,43 +90,91 @@ def normalize(x, category):
     }
 
 
-def payload(category):
-    return {
-        "tenderNumber": "",
-        "category": category,
-        "status": "PUBLISHED",
-        "deptId": None,
-        "publishedFromDate": None,
-        "publishedToDate": None,
-        "tenderType": "OPEN",
-        "title": "",
-        "location": None,
-        "tenderClosureFromDate": None,
-        "tenderClosureToDate": None,
-    }
+def generate_payloads(cat_name):
+    """Generate multiple payload format variants to ensure compatibility with KPPP search API."""
+    return [
+        {
+            "tenderNumber": "",
+            "category": cat_name.upper(),
+            "status": "PUBLISHED",
+            "deptId": None,
+            "publishedFromDate": None,
+            "publishedToDate": None,
+            "tenderType": "OPEN",
+            "title": "",
+            "location": None,
+            "tenderClosureFromDate": None,
+            "tenderClosureToDate": None,
+        },
+        {
+            "tenderNumber": "",
+            "category": cat_name.capitalize(),
+            "status": "PUBLISHED",
+            "deptId": None,
+            "publishedFromDate": None,
+            "publishedToDate": None,
+            "tenderType": "OPEN",
+            "title": "",
+            "location": None,
+            "tenderClosureFromDate": None,
+            "tenderClosureToDate": None,
+        }
+    ]
 
 
 def fetch_all():
     s = requests.Session()
     all_rows, seen = [], set()
+
     for cat in CATEGORIES:
-        print(f"--- {cat} ---")
-        for page in range(MAX_PAGES):
-            r = s.post(SEARCH, params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"}, json=payload(cat), headers=headers(), timeout=45)
-            if r.status_code in (401, 403):
-                raise RuntimeError(f"KPPP authentication failed (HTTP {r.status_code}). Add/refresh the GitHub secret KPPP_AUTH_TOKEN.")
-            r.raise_for_status()
-            data = r.json()
-            items = find_list(data)
-            print(f"{cat} page {page}: {len(items)}")
-            if not items: break
-            for raw in items:
-                row = normalize(raw, cat)
-                key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
-                if key in seen: continue
-                seen.add(key); all_rows.append(row)
-            if len(items) < PAGE_SIZE: break
-            time.sleep(0.15)
+        print(f"--- Fetching Category: {cat} ---")
+        cat_items_found = 0
+
+        for payload_variant in generate_payloads(cat):
+            if cat_items_found > 0:
+                break # Already fetched items for this category
+
+            for page in range(MAX_PAGES):
+                try:
+                    r = s.post(
+                        SEARCH, 
+                        params={"page": page, "size": PAGE_SIZE, "order-by-tender-publish": "true"}, 
+                        json=payload_variant, 
+                        headers=headers(), 
+                        timeout=45
+                    )
+                    if r.status_code in (401, 403):
+                        raise RuntimeError(f"KPPP authentication failed (HTTP {r.status_code}). Check GitHub secret KPPP_AUTH_TOKEN.")
+                    r.raise_for_status()
+                    
+                    data = r.json()
+                    items = find_list(data)
+                    
+                    if not items:
+                        break
+
+                    added_in_page = 0
+                    for raw in items:
+                        row = normalize(raw, cat)
+                        key = row["id"] or row["ref_no"] or (row["title"], row["closing_date"])
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        all_rows.append(row)
+                        added_in_page += 1
+
+                    cat_items_found += added_in_page
+                    print(f"Category {cat} | Page {page}: Found {len(items)} items ({added_in_page} new)")
+
+                    if len(items) < PAGE_SIZE:
+                        break
+                    time.sleep(0.15)
+                except Exception as err:
+                    print(f"Error fetching page {page} for {cat}: {err}")
+                    break
+
+        print(f"Total unique tenders gathered for {cat}: {cat_items_found}")
+
     return all_rows
 
 
@@ -136,6 +182,7 @@ def main():
     rows = fetch_all()
     if not rows:
         raise RuntimeError("KPPP returned zero tenders. Existing public/tenders.json was NOT overwritten.")
+    
     OUT.parent.mkdir(parents=True, exist_ok=True)
     temp = OUT.with_suffix(".tmp")
     temp.write_text(json.dumps({
@@ -145,7 +192,7 @@ def main():
         "tenders": rows
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     temp.replace(OUT)
-    print(f"Saved {len(rows)} unique tenders to {OUT}")
+    print(f"Saved total {len(rows)} unique tenders to {OUT}")
 
 if __name__ == "__main__":
     main()
