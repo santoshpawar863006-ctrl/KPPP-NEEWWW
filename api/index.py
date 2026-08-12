@@ -19,6 +19,19 @@ class handler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/")
         query = parse_qs(parsed.query)
 
+        if path == "/api/system_health":
+            try:
+                from api.system_health import get_system_health
+                self.send_json(200, get_system_health(), "public, max-age=300, s-maxage=300")
+            except Exception as exc:
+                self.send_json(200, {
+                    "success": False,
+                    "overall": "attention",
+                    "message": "System health check is temporarily unavailable.",
+                    "error": str(exc)[:240],
+                })
+            return
+
         if path == "/api/public_tender_detail":
             tender_ref = (query.get("tender", [""])[0] or "").strip()
             title = (query.get("title", [""])[0] or "").strip()
