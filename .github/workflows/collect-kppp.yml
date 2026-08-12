@@ -72,8 +72,6 @@ jobs:
           if new_total <= 0:
               raise SystemExit("SAFETY STOP: new tender total is zero.")
 
-          # An hourly live-tender database should not collapse suddenly.
-          # If it does, retain the previous Git version and fail this run.
           if old_total >= 500 and new_total < old_total * 0.60:
               raise SystemExit(
                   f"SAFETY STOP: total fell abnormally from {old_total} to {new_total}. "
@@ -91,7 +89,6 @@ jobs:
                       "Last good database retained."
                   )
 
-          # Catch obvious duplication/API-shape disasters in the opposite direction.
           if old_total >= 500 and new_total > old_total * 2.50:
               raise SystemExit(
                   f"SAFETY STOP: total jumped abnormally from {old_total} to {new_total}. "
@@ -158,7 +155,8 @@ jobs:
             echo "No tender or health changes."
           else
             git commit -m "Update KPPP tenders"
-            git push
+            git pull --rebase origin main
+            git push origin main
           fi
 
       - name: Trigger Vercel Deployment
