@@ -19,6 +19,14 @@ class handler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/")
         query = parse_qs(parsed.query)
 
+        if path == "/api/kppp_status_probe":
+            try:
+                from api.kppp_status_probe import probe
+                self.send_json(200, probe())
+            except Exception as exc:
+                self.send_json(200, {"success": False, "error": str(exc)[:240]})
+            return
+
         if path == "/api/tender_detail":
             category = (query.get("category", [""])[0] or "").strip()
             tender_id = (query.get("id", [""])[0] or "").strip()
