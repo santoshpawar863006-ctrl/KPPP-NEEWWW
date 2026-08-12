@@ -67,6 +67,29 @@ def add_result(results, url, title=""):
     results.append({"url": url, "title": clean_text(title)[:180], "host": host, "official": is_official(host)})
 
 
+def bing_rss_search(session, query):
+    try:
+        r = session.get(
+            "https://www.bing.com/search",
+            params={"q": query, "format": "rss", "count": "10", "setlang": "en-IN"},
+            headers=HEADERS,
+            timeout=7,
+        )
+    except Exception:
+        return []
+    if r.status_code != 200:
+        return []
+    results = []
+    for item in re.findall(r"<item>([\s\S]*?)</item>", r.text, flags=re.I):
+        lm = re.search(r"<link>([\s\S]*?)</link>", item, flags=re.I)
+        tm = re.search(r"<title>([\s\S]*?)</title>", item, flags=re.I)
+        if lm:
+            add_result(results, lm.group(1).strip(), tm.group(1).strip() if tm else "")
+        if len(results) >= 8:
+            break
+    return results
+
+
 def bing_search(session, query):
     try:
         r = session.get(
@@ -104,26 +127,19 @@ def ddg_search(session, query):
         return []
 
     results = []
-    for block in re.findall(r'<div[^>]*class=["\'][^"\']*result[^"\']*["\'][\s\S]*?</div>\s*</div>', r.text, flags=re.I):
-        m = re.search(r'<a[^>]+class=["\'][^"\']*result__a[^"\']*["\'][^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', block, flags=re.I)
-        if m:
-            add_result(results, m.group(1), m.group(2))
+    for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', r.text, flags=re.I):
+        add_result(results, m.group(1), m.group(2))
         if len(results) >= 8:
             break
-
-    if not results:
-        for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', r.text, flags=re.I):
-            add_result(results, m.group(1), m.group(2))
-            if len(results) >= 8:
-                break
     return results
 
 
 def search_public(session, query):
-    out = bing_search(session, query)
-    if out:
-        return out
-    return ddg_search(session, query)
+    for searcher in (bing_rss_search, bing_search, ddg_search):
+        out = searcher(session, query)
+        if out:
+            return out
+    return []
 
 
 def money_near(text, keyword):
