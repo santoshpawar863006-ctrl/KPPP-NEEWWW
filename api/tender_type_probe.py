@@ -11,7 +11,19 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 Chrome/124 Safari/537.36",
 }
 
-CANDIDATES = [None, "OPEN", "REGULAR", "PREQUALIFICATION", "PRE_QUALIFICATION", "QUALIFIED", "RESERVED"]
+CANDIDATES = [
+    None,
+    "OPEN",
+    "RESERVED",
+    "PREQUALIFIED",
+    "PRE_QUALIFIED",
+    "PREQUALIFICATION",
+    "PRE_QUALIFICATION",
+    "PREQUALIFY",
+    "QUALIFIED",
+    "LIMITED",
+    "RESTRICTED",
+]
 
 
 def run_probe():
@@ -35,6 +47,10 @@ def run_probe():
             }
             try:
                 data = r.json()
+                if r.status_code != 200:
+                    entry["error_json"] = data
+                    out.append(entry)
+                    continue
                 if isinstance(data, list):
                     rows = data
                 elif isinstance(data, dict):
@@ -56,14 +72,8 @@ def run_probe():
                         "procEntityType": row.get("procEntityType"),
                         "procEntityTypeText": row.get("procEntityTypeText"),
                     }
-                    interesting = {}
-                    for k, v in row.items():
-                        low = str(k).lower()
-                        if any(word in low for word in ("reserv", "qual", "tendertype", "strategy", "proc")):
-                            interesting[k] = v
-                    entry["interesting_fields"] = interesting
             except Exception:
-                entry["body"] = r.text[:500]
+                entry["body"] = r.text[:800]
             out.append(entry)
         except Exception as exc:
             out.append({"candidate": tender_type, "error": str(exc)[:200]})
