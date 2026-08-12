@@ -1,6 +1,6 @@
 import html
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 import requests
 
@@ -10,8 +10,6 @@ HEADERS = {
     "Accept-Language": "en-IN,en;q=0.9",
 }
 
-# Official/public government sources are preferred. A public indexed document
-# mirror is allowed only as fallback and never overwrites KPPP core facts.
 MIRROR_HOSTS = {"s3.nl.geostorage.net"}
 
 
@@ -51,6 +49,10 @@ def allowed_host(host):
 
 def add_result(results, url, title=""):
     url = html.unescape(str(url or "")).strip()
+    if "uddg=" in url:
+        m = re.search(r"[?&]uddg=([^&]+)", url)
+        if m:
+            url = unquote(m.group(1))
     if url.startswith("//"):
         url = "https:" + url
     if not url.startswith("http"):
@@ -85,17 +87,46 @@ def bing_search(session, query):
             add_result(results, m.group(1), m.group(2))
         if len(results) >= 8:
             break
+    return results
+
+
+def ddg_search(session, query):
+    try:
+        r = session.get(
+            "https://html.duckduckgo.com/html/",
+            params={"q": query},
+            headers=HEADERS,
+            timeout=7,
+        )
+    except Exception:
+        return []
+    if r.status_code != 200:
+        return []
+
+    results = []
+    for block in re.findall(r'<div[^>]*class=["\'][^"\']*result[^"\']*["\'][\s\S]*?</div>\s*</div>', r.text, flags=re.I):
+        m = re.search(r'<a[^>]+class=["\'][^"\']*result__a[^"\']*["\'][^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', block, flags=re.I)
+        if m:
+            add_result(results, m.group(1), m.group(2))
+        if len(results) >= 8:
+            break
 
     if not results:
-        for href in re.findall(r'href=["\'](https?://[^"\']+)["\']', r.text, flags=re.I):
-            add_result(results, href, "")
+        for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', r.text, flags=re.I):
+            add_result(results, m.group(1), m.group(2))
             if len(results) >= 8:
                 break
     return results
 
 
+def search_public(session, query):
+    out = bing_search(session, query)
+    if out:
+        return out
+    return ddg_search(session, query)
+
+
 def money_near(text, keyword):
-    # Return a numeric-looking amount only when it occurs close to the named criterion.
     pattern = rf"{keyword}.{{0,180}}?(?:rs\.?|inr|₹)\s*([0-9][0-9,]*(?:\.[0-9]+)?)\s*(crore|crores|cr|lakh|lakhs|lac|lacs)?"
     m = re.search(pattern, text, flags=re.I)
     if not m:
@@ -151,7 +182,6 @@ def extract_signals(text):
 
     if "pan card" in low or "pan and gst" in low or "gst no" in low:
         tags.append("PAN/GST document requirement found")
-
     if "technical bid" in low:
         tags.append("Technical-bid criteria found")
 
@@ -196,13 +226,12 @@ def lookup_public_details(tender_ref):
 
     candidates = []
     for query in queries:
-        for item in bing_search(session, query):
+        for item in search_public(session, query):
             if not any(x["url"] == item["url"] for x in candidates):
                 candidates.append(item)
         if len(candidates) >= 8:
             break
 
-    # Official sources first, public document mirror second.
     candidates.sort(key=lambda x: (not x.get("official", False), x.get("host", "")))
 
     sources = []
