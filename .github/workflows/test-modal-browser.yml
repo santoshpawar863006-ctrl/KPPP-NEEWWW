@@ -51,73 +51,60 @@ jobs:
           const fs = require('fs');
           const chrome = ['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(fs.existsSync);
           if (!chrome) throw new Error('No Chrome/Chromium executable found on runner');
-
           const sleep = ms => new Promise(r => setTimeout(r, ms));
-          async function responsive(page, label){
-            const result = await Promise.race([
-              page.evaluate(() => new Promise(resolve => setTimeout(() => resolve('ok'), 120))),
-              new Promise((_, reject) => setTimeout(() => reject(new Error(label+' renderer timeout')), 5000))
+          async function responsive(page,label){
+            const result=await Promise.race([
+              page.evaluate(()=>new Promise(resolve=>setTimeout(()=>resolve('ok'),120))),
+              new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' renderer timeout')),5000))
             ]);
-            if(result !== 'ok') throw new Error(label+' unexpected result');
+            if(result!=='ok') throw new Error(label+' unexpected result');
           }
 
-          (async () => {
-            const browser = await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-            const page = await browser.newPage();
+          (async()=>{
+            const browser=await puppeteer.launch({executablePath:chrome,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+            const page=await browser.newPage();
             page.setDefaultTimeout(20000);
-            page.on('pageerror', err => console.log('PAGEERROR:', err.message));
-
+            page.on('pageerror',err=>console.log('PAGEERROR:',err.message));
             const url='https://karnataka-tender-intelligence.acute-gorilla.workers.dev/';
             await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
             await page.waitForSelector('#tableBody [data-detail]',{timeout:30000});
-            await sleep(1800);
+            await sleep(1500);
 
-            const html = await page.content();
+            const html=await page.content();
             if(!html.includes('modal-stability.js')) throw new Error('Stable modal controller not deployed');
-            if(html.includes('public-web-enrichment.js') || html.includes('tenderkart-stability.js') || html.includes('bid-intelligence.js')) throw new Error('Old modal scripts are still deployed');
+            if(html.includes('public-web-enrichment.js')||html.includes('tenderkart-stability.js')||html.includes('bid-intelligence.js')) throw new Error('Old modal scripts are still deployed');
 
-            const ref='KNNL/2025-26/IW/WORK_INDENT4114/CALL-2';
-            await page.evaluate(ref => {
-              const input=document.getElementById('searchInput');
-              input.value=ref;
-              input.dispatchEvent(new Event('input',{bubbles:true}));
-            },ref);
-            await sleep(800);
             await page.click('#tableBody [data-detail]');
             await page.waitForSelector('#detailModal.open');
+            await page.waitForSelector('.stable-readiness',{timeout:10000});
             await responsive(page,'modal open');
+            const before=await page.$$eval('#modalBody .detail-section',els=>els.length);
+            if(before<2) throw new Error('Expected readiness plus KPPP detail sections');
 
-            await page.waitForSelector('#tenderKartPrimaryHost .tk-primary-section',{timeout:12000});
-            const readiness=await page.$('.stable-readiness');
-            if(!readiness) throw new Error('Stable readiness section missing');
-            await responsive(page,'after TenderKart load');
-
-            // Click TendersPlus. A verified match is optional; the important test is
-            // that the existing KPPP/readiness/TenderKart sections remain in place.
             await page.click('[data-stable-source="tendersplus"]');
-            await sleep(1800);
-            if(!(await page.$('.stable-readiness'))) throw new Error('Readiness section disappeared after TendersPlus click');
-            if(!(await page.$('#tenderKartPrimaryHost .tk-primary-section'))) throw new Error('TenderKart section disappeared after TendersPlus click');
+            await page.waitForFunction(()=>{
+              const b=document.querySelector('[data-stable-source="tendersplus"]');
+              return b && !b.disabled;
+            },{timeout:12000});
+            if(!(await page.$('.stable-readiness'))) throw new Error('Readiness disappeared after TendersPlus click');
+            if(!(await page.$('.stable-manual-tendersplus'))) throw new Error('TendersPlus result section missing');
+            const after=await page.$$eval('#modalBody .detail-section',els=>els.length);
+            if(after<before) throw new Error('KPPP/detail sections were rebuilt or removed');
             await responsive(page,'after TendersPlus click');
 
-            for(let i=0;i<2;i++){
+            for(let i=0;i<3;i++){
               await page.click('#modalClose');
               await page.waitForFunction(()=>!document.getElementById('detailModal')?.classList.contains('open'));
               await responsive(page,'modal close');
               await page.click('#tableBody [data-detail]');
               await page.waitForSelector('#detailModal.open');
+              await page.waitForSelector('.stable-readiness',{timeout:10000});
               await responsive(page,'modal reopen');
             }
             await page.click('#modalClose');
             await responsive(page,'final close');
-
-            await page.evaluate(()=>{
-              const input=document.getElementById('searchInput');
-              input.value=''; input.dispatchEvent(new Event('input',{bubbles:true}));
-            });
-            await sleep(500);
             console.log('Result count:',await page.$eval('#resultCount',el=>el.textContent||''));
-            console.log('Stable modal and source-button browser test passed.');
+            console.log('Stable View Details/TendersPlus browser test passed.');
             await browser.close();
           })().catch(err=>{console.error(err);process.exit(1);});
           NODE
