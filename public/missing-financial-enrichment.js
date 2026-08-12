@@ -4,7 +4,7 @@
   const CACHE_KEY = 'kppp_missing_financial_tenderkart_v1';
   const SUCCESS_TTL = 24 * 60 * 60 * 1000;
   const MISS_TTL = 6 * 60 * 60 * 1000;
-  const MAX_CONCURRENT = 2;
+  const MAX_CONCURRENT = 6;
   let active = 0;
   const queue = [];
   const pendingRefs = new Set();
@@ -32,9 +32,6 @@
   }
   function rowRef(row){
     return String(row.querySelector('.t-title + .muted')?.textContent || '').trim();
-  }
-  function modalOpen(){
-    return document.getElementById('detailModal')?.classList.contains('open');
   }
   function cached(ref){
     const item = cache[ref];
@@ -66,6 +63,7 @@
   function replaceDisplayedNumber(cell, value){
     if (!cell || !numeric(value)) return;
     const display = money(value);
+    if (String(cell.textContent || '').includes(display)) return;
     let target = cell.querySelector('strong')?.firstChild || cell.firstChild;
     if (target && target.nodeType === Node.TEXT_NODE) {
       target.nodeValue = display;
@@ -126,7 +124,6 @@
   }
 
   function pump(){
-    if (modalOpen()) return;
     while (active < MAX_CONCURRENT && queue.length) {
       const task = queue.shift();
       if (!task?.row?.isConnected) {
@@ -139,7 +136,6 @@
   }
 
   function processRows(){
-    if (modalOpen()) return;
     const body = document.getElementById('tableBody');
     if (!body) return;
     const rows = [...body.querySelectorAll('tr')];
@@ -171,13 +167,17 @@
   let timer = null;
   function schedule(){
     clearTimeout(timer);
-    timer = setTimeout(processRows, 80);
+    timer = setTimeout(processRows, 40);
   }
 
-  const observer = new MutationObserver(schedule);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const tableBody = document.getElementById('tableBody');
+  if(tableBody){
+    new MutationObserver(schedule).observe(tableBody, { childList: true });
+  }
   window.addEventListener('load', schedule);
-  document.addEventListener('change', schedule);
-  document.addEventListener('click', () => setTimeout(() => { if (!modalOpen()) pump(); }, 250));
+  ['categoryFilter','cityFilter','deptFilter','sortFilter','searchInput'].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.addEventListener(id==='searchInput'?'input':'change', schedule);
+  });
   schedule();
 })();
