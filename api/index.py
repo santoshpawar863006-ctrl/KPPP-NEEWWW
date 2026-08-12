@@ -27,8 +27,14 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"success": False, "message": "Provide id or nitId."})
                 return
             try:
-                from api.tender_detail import find_full_detail
-                self.send_json(200, find_full_detail(category, tender_id, nit_id))
+                from api.full_view_probe import get_full_view
+                result = get_full_view(category, tender_id, nit_id)
+                if not result.get("success"):
+                    from api.tender_detail import find_full_detail
+                    legacy = find_full_detail(category, tender_id, nit_id)
+                    if legacy.get("success"):
+                        result = legacy
+                self.send_json(200, result)
             except Exception as exc:
                 self.send_json(200, {
                     "success": False,
