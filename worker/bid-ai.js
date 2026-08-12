@@ -74,16 +74,46 @@ function cacheKeyFor(payload) {
   return new Request(`https://bid-ai-cache.invalid/review?ref=${ref}&s=${encodeURIComponent(signature)}`);
 }
 
+function contentText(value) {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return value.map(item => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item.text === 'string') return item.text;
+      if (item && typeof item.content === 'string') return item.content;
+      return '';
+    }).filter(Boolean).join('\n').trim();
+  }
+  if (value && typeof value === 'object') {
+    if (typeof value.text === 'string') return value.text.trim();
+    if (typeof value.content === 'string') return value.content.trim();
+  }
+  return '';
+}
+
+function extractFromCompletion(obj) {
+  if (!obj || typeof obj !== 'object') return '';
+  const choices = Array.isArray(obj.choices) ? obj.choices : [];
+  const first = choices[0] || {};
+  return contentText(first?.message?.content) || contentText(first?.text) || contentText(obj.output_text) || contentText(obj.response);
+}
+
 function extractText(result) {
   if (typeof result === 'string') return result.trim();
   if (!result || typeof result !== 'object') return '';
-  if (typeof result.response === 'string') return result.response.trim();
-  if (typeof result.result?.response === 'string') return result.result.response.trim();
-  const choices = Array.isArray(result.choices) ? result.choices : [];
-  const content = choices[0]?.message?.content ?? choices[0]?.text;
-  if (typeof content === 'string') return content.trim();
-  if (Array.isArray(content)) return content.map(x => typeof x === 'string' ? x : (x?.text || '')).join('\n').trim();
-  return '';
+
+  const candidates = [
+    contentText(result.response),
+    extractFromCompletion(result),
+    extractFromCompletion(result.result),
+    extractFromCompletion(result.response),
+    contentText(result.result?.response),
+    contentText(result.output_text),
+    contentText(result.result?.output_text),
+    contentText(result.output?.[0]?.content),
+    contentText(result.result?.output?.[0]?.content)
+  ];
+  return candidates.find(Boolean) || '';
 }
 
 export async function handleBidAi(request, env, ctx) {
@@ -118,7 +148,8 @@ export async function handleBidAi(request, env, ctx) {
         { role: 'user', content: user }
       ],
       temperature: 0.2,
-      max_completion_tokens: 550
+      reasoning_effort: 'low',
+      max_completion_tokens: 650
     });
     const review = extractText(result);
     if (!review) return json({ success: false, message: 'AI returned no readable review.' }, 502);
