@@ -15,9 +15,20 @@ jobs:
   smoke-test:
     runs-on: ubuntu-latest
     steps:
+      - name: Allow Cloudflare Git build to finish
+        run: sleep 25
+
       - name: Test Home Page
         run: |
-          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ | grep -q "Karnataka Tender Intelligence"
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ -o /tmp/home.html
+          grep -q "Karnataka Tender Intelligence" /tmp/home.html
+
+      - name: Verify Latest Frontend Deployment
+        run: |
+          grep -q "missing-financial-enrichment.js" /tmp/home.html
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/missing-financial-enrichment.js -o /tmp/missing-financial.js
+          grep -q "TenderKart verified" /tmp/missing-financial.js
+          echo "Latest Cloudflare frontend feature is deployed."
 
       - name: Test Live Tender Database
         run: |
