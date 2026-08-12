@@ -13,6 +13,12 @@ HEADERS = {
     "Referer": TK_BASE + "/tenders/filters",
 }
 
+SOURCE_DOMAINS = {
+    "tenderkart": ("TenderKart", "tenderkart.in"),
+    "bidassist": ("BidAssist", "bidassist.com"),
+    "tendersplus": ("TendersPlus", "tendersplus.com"),
+}
+
 
 def norm(value):
     return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
@@ -255,46 +261,82 @@ def get_tenderkart_detail(session, tender_ref, title="", department="", location
     return None, attempts
 
 
-def lookup_public_details(tender_ref, title="", department="", location=""):
+def get_web_source_detail(session, source_key, tender_ref, title="", department="", location=""):
+    source_name, domain = SOURCE_DOMAINS[source_key]
+    attempts = []
+    ref_words = base.human_ref(tender_ref)
+    short_title = base.compact_phrase(title, 11)
+    short_dept = base.compact_phrase(department, 5)
+    short_location = base.compact_phrase(location, 4)
+    queries = [
+        (f'"{tender_ref}" {source_name}', "exact tender number"),
+        (f'"{ref_words}" {source_name} Karnataka', "tender number keywords"),
+    ]
+    if short_title:
+        context = " ".join(x for x in (short_dept, short_location) if x).strip()
+        queries.append((f'"{short_title}" "{context}" {source_name} Karnataka', "title/authority/location keywords"))
+
+    seen = set()
+    for query, query_type in queries:
+        try:
+            found = base.search_public(session, query)
+        except Exception as exc:
+            attempts.append({"source": source_name, "query_type": query_type, "error": str(exc)[:100]})
+            continue
+        domain_found = [x for x in found if domain in str(x.get("host") or "").lower()]
+        attempts.append({"source": source_name, "query_type": query_type, "found": len(domain_found)})
+        for item in domain_found[:8]:
+            url = str(item.get("url") or "")
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            try:
+                verified = base.fetch_verified(session, tender_ref, item, title, department, location)
+            except Exception:
+                verified = None
+            if verified and str(verified.get("source") or "").lower() == source_name.lower():
+                return verified, attempts
+    return None, attempts
+
+
+def lookup_public_details(tender_ref, title="", department="", location="", source="all"):
     tender_ref = str(tender_ref or "").strip()
     if not tender_ref:
         return {"success": False, "message": "Tender number is required."}
+
+    source_key = str(source or "all").strip().lower()
+    if source_key not in {"all", "tenderkart", "bidassist", "tendersplus"}:
+        source_key = "all"
 
     session = requests.Session()
     sources = []
     attempts = []
 
-    tenderkart, tk_attempts = get_tenderkart_detail(session, tender_ref, title, department, location)
-    attempts.extend(tk_attempts)
-    if tenderkart:
-        sources.append(tenderkart)
+    if source_key in {"all", "tenderkart"}:
+        tenderkart, tk_attempts = get_tenderkart_detail(session, tender_ref, title, department, location)
+        attempts.extend(tk_attempts)
+        if tenderkart:
+            sources.append(tenderkart)
 
-    # BidAssist / TendersPlus / other public sources remain conservative web-search fallbacks.
-    try:
-        fallback = web_fallback.lookup_public_details(tender_ref, title, department, location)
-    except Exception:
-        fallback = {"sources": [], "attempts": []}
-    attempts.extend(fallback.get("attempts") or [])
-    for item in fallback.get("sources") or []:
-        if str(item.get("source") or "").lower() == "tenderkart":
+    for key in ("bidassist", "tendersplus"):
+        if source_key not in {"all", key}:
             continue
-        key = (item.get("source"), item.get("url"))
-        if any((x.get("source"), x.get("url")) == key for x in sources):
-            continue
-        sources.append(item)
-        if len(sources) >= 6:
-            break
+        item, item_attempts = get_web_source_detail(session, key, tender_ref, title, department, location)
+        attempts.extend(item_attempts)
+        if item:
+            sources.append(item)
 
-    priority = {"TenderKart": 0, "BidAssist": 1, "TendersPlus": 2, "Government source": 3, "Public tender document": 4}
+    priority = {"TendersPlus": 0, "TenderKart": 1, "BidAssist": 2}
     sources.sort(key=lambda x: priority.get(x.get("source"), 9))
     return {
         "success": True,
         "tender_ref": tender_ref,
+        "requested_source": source_key,
         "sources": sources,
         "source_count": len(sources),
         "attempts": attempts,
         "note": (
             "TenderKart is queried through its public website API. BidAssist and TendersPlus are searched through "
-            "their publicly indexed pages. KPPP remains the primary record; locked content is not accessed."
+            "their publicly indexed pages. Only verified public matches are returned; locked content is not accessed."
         ),
     }
