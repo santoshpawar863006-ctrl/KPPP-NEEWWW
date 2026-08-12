@@ -6,6 +6,11 @@
     const n = Number(value);
     return Number.isFinite(n) && n > 0 ? '₹' + n.toLocaleString('en-IN', {maximumFractionDigits:2}) : '—';
   };
+  const dateText = (value) => {
+    if(!value) return '';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  };
 
   function currentTender(){
     try{
@@ -41,11 +46,18 @@
     if(signals?.tender_class) rows.push(['Tender Class', signals.tender_class]);
     if(signals?.reservation) rows.push(['Reservation', signals.reservation]);
     if(signals?.kpwd_class) rows.push(['KPWD / PWD Class', signals.kpwd_class]);
-    if(signals?.bid_validity_days) rows.push(['Bid Validity', `${signals.bid_validity_days} days`]);
-    if(signals?.published_date) rows.push(['Published / Opening', signals.published_date]);
-    if(signals?.closing_date) rows.push(['Closing', signals.closing_date]);
-    if(signals?.bid_opening_date) rows.push(['Bid Opening', signals.bid_opening_date]);
+    if(signals?.form_of_contract) rows.push(['Form of Contract', signals.form_of_contract]);
+    if(signals?.tender_category) rows.push(['Tender Category', signals.tender_category]);
     if(signals?.product_category) rows.push(['Product Category', signals.product_category]);
+    if(signals?.bid_value_type) rows.push(['Bid Value Type', signals.bid_value_type]);
+    if(signals?.denomination_type) rows.push(['Denomination', signals.denomination_type]);
+    if(signals?.tax_type) rows.push(['Tax Type', signals.tax_type]);
+    if(signals?.nit_id) rows.push(['NIT ID', signals.nit_id]);
+    if(signals?.bid_validity_days) rows.push(['Bid Validity', `${signals.bid_validity_days} days`]);
+    if(signals?.published_date) rows.push(['Published', dateText(signals.published_date)]);
+    if(signals?.closing_date) rows.push(['Bid Submission End', dateText(signals.closing_date)]);
+    if(signals?.bid_opening_date) rows.push(['Bid Opening', dateText(signals.bid_opening_date)]);
+    if(signals?.download_end_date) rows.push(['Document Download Ends', dateText(signals.download_end_date)]);
     if(signals?.location) rows.push(['Location', signals.location]);
     if(signals?.contact_person) rows.push(['Contact Person', signals.contact_person]);
     if(signals?.mobile_number) rows.push(['Contact Number', signals.mobile_number]);
@@ -78,7 +90,7 @@
     body.insertAdjacentHTML('beforeend', `
       <section class="detail-section public-web-section">
         <div class="section-title"><h3>Public Tender Intelligence</h3><span class="count-chip">${sources.length} verified source${sources.length===1?'':'s'}</span></div>
-        <div class="public-web-note">Searched by tender number first, then title/department keywords. Only publicly visible information is extracted; subscriber-only or locked sections are not accessed. KPPP remains the primary record.</div>
+        <div class="public-web-note">TenderKart is searched directly through its public tender API. BidAssist and TendersPlus are searched by tender number and tender keywords. Only publicly visible information is used; KPPP remains the main tender record.</div>
         <div class="public-source-list">
           ${sources.map(source => {
             const signals = source.signals || {};
@@ -93,7 +105,9 @@
               ${rows.length ? `<div class="public-signal-grid">${rows.map(([k,v])=>`<div><span>${e(k)}</span><strong>${e(v)}</strong></div>`).join('')}</div>` : ''}
               ${signals.work_description ? `<div class="public-extra-list"><strong>Work Description</strong><p>${e(signals.work_description)}</p></div>` : ''}
               ${listBlock('Documents / Certificates Required', signals.documents_required)}
+              ${listBlock('Technical Criteria', signals.technical_criteria)}
               ${listBlock('Eligibility Conditions', signals.eligibility)}
+              ${listBlock('Tender Document Files', signals.tender_documents)}
               ${listBlock('BOQ Preview', signals.boq_preview)}
               ${tags.length ? `<div class="public-tag-row">${tags.map(tag=>`<span>${e(tag)}</span>`).join('')}</div>` : ''}
             </article>`;
