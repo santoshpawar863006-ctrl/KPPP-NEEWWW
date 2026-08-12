@@ -16,6 +16,8 @@ on:
       - "public/emd-enrichment.css"
       - "public/bid-cost-planner.js"
       - "public/bid-cost-planner.css"
+      - "public/filter-quality.js"
+      - "public/filter-quality.css"
       - ".github/workflows/test-cloudflare.yml"
 
 permissions:
@@ -41,6 +43,30 @@ jobs:
           node --check worker/index.js
           node --check public/missing-financial-enrichment.js
           node --check public/bid-cost-planner.js
+          node --check public/filter-quality.js
+
+      - name: Filter Normalization Regression Test
+        run: |
+          node - <<'NODE'
+          require('./public/filter-quality.js');
+          const q = globalThis.KPPPFilterQualityUtils;
+          if (!q) throw new Error('Filter quality utilities were not exposed');
+          const tests = [
+            ['RDPR Division Office Bagalakote', 'Bagalkot'],
+            ['BAGALKOTE TALUKA', 'Bagalkot'],
+            ['Bagalkot District', 'Bagalkot'],
+            ['Belgaum Division', 'Belagavi'],
+            ['Bijapur Taluk', 'Vijayapura'],
+            ['Gulbarga District', 'Kalaburagi']
+          ];
+          for (const [input, expected] of tests) {
+            const actual = q.canonicalDistrictFromText(input);
+            if (actual !== expected) throw new Error(`${input}: expected ${expected}, got ${actual}`);
+          }
+          const rdpr = q.canonicalDepartmentName('RDPR');
+          if (rdpr !== 'Rural Development and Panchayat Raj Department') throw new Error(`RDPR normalization failed: ${rdpr}`);
+          console.log('Filter normalization tests passed.');
+          NODE
 
       - name: Wrangler Dry Run
         run: npx wrangler deploy --dry-run --outdir cloudflare-dist
