@@ -10,12 +10,13 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
 const num = (v) => { const n = Number(String(v ?? '').replace(/[₹,]/g, '').trim()); return Number.isFinite(n) ? n : null; };
 const money = (v, fallback='Refer tender') => { const n = num(v); return n === null ? fallback : '₹' + n.toLocaleString('en-IN', {maximumFractionDigits: 2}); };
 const fmt = (v) => Number(v || 0).toLocaleString('en-IN');
 const text = (v, fallback='Not available') => (v === null || v === undefined || v === '') ? fallback : String(v);
 const first = (obj, keys, fallback=null) => { for (const k of keys) if (obj && obj[k] !== null && obj[k] !== undefined && obj[k] !== '') return obj[k]; return fallback; };
+const firstAcross = (objects, keys, fallback=null) => { for (const obj of objects) { const v=first(obj,keys,null); if(v!==null&&v!==undefined&&v!=='') return v; } return fallback; };
 const asArray = (v) => Array.isArray(v) ? v : [];
 
 const CITY_ALIASES = {
@@ -31,11 +32,16 @@ const CITY_ALIASES = {
 };
 
 function tenderKey(t){ return String(t.id || t.ref_no || `${t.title || ''}|${t.closing_date || ''}`); }
+function canonicalCity(value){
+  const s=String(value||'').trim(); if(!s) return '';
+  const low=s.toLowerCase();
+  for(const [city,aliases] of Object.entries(CITY_ALIASES)) if(aliases.some(a=>low.includes(a))) return city;
+  return '';
+}
 function detectCity(t){
-  if (t.city) return String(t.city).trim();
-  if (t.district) return String(t.district).trim();
-  const hay = [t.location,t.title,t.department].filter(Boolean).join(' ').toLowerCase();
-  for (const [city, aliases] of Object.entries(CITY_ALIASES)) if (aliases.some(a => hay.includes(a))) return city;
+  const direct=canonicalCity(t.city); if(direct) return direct;
+  const district=canonicalCity(t.district); if(district) return district;
+  const location=canonicalCity(t.location); if(location) return location;
   return 'Other / Unspecified';
 }
 function parseDate(v){
@@ -64,7 +70,7 @@ async function loadTenders(){
 }
 
 function populateFilters(){
-  fillSelect('cityFilter', [...new Set(state.all.map(t=>t.derived_city).filter(Boolean))].sort(), 'All cities / districts');
+  fillSelect('cityFilter', [...new Set(state.all.map(t=>t.derived_city).filter(c=>c&&c!=='Other / Unspecified'))].sort(), 'All cities / districts');
   fillSelect('deptFilter', [...new Set(state.all.map(t=>String(t.department||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), 'All departments');
 }
 function fillSelect(id, values, label){
@@ -149,7 +155,7 @@ async function openDetails(key){
   $('modalBody').innerHTML=renderListingFallback(tender,true);
 
   const raw=tender.raw||{};
-  const nitId=first(raw,['nitId','nitID','id','tenderId'],tender.id||'');
+  const nitId=first(raw,['nitId','nitID'],tender.nit_id||'');
   const params=new URLSearchParams({category:String(tender.category||''),id:String(tender.id||''),nitId:String(nitId||'')});
   try{
     const r=await fetch('/api/tender_detail?'+params.toString(),{cache:'no-store'});
@@ -184,42 +190,59 @@ function renderListingFallback(t,loading=false,message=''){
 }
 
 function renderLiveDetail(listing,d){
-  const nit=d.noticeInvitingTenderDTO||{}; const sched=d.tenderSchedule||{};
-  const title=first(sched,['title','description'],listing.title); if(title) $('modalTitle').textContent=title;
-  const ecv=first(sched,['ecv','provisionalAmount'],listing.amount); const emd=first(nit,['emd','emdAmount'],listing.emd); const fee=first(nit,['tenderFee','tenderFeeAmount'],listing.fee);
-  const subEst=asArray(d.tenderSubEstimateList), general=asArray(d.generalCriterionList), technical=asArray(d.technicalCriterionList), docs=asArray(d.tenderCriterionDocumentList);
-  const boq=subEst.flatMap(se=>asArray(se.itemList).map(item=>({...item,__group:se.subEstimateName||se.workCategoryName||''})));
+  const nit=d.noticeInvitingTenderDTO||{};
+  const sched=d.tenderSchedule||{};
+  const inviting=d.invitingAuthority||{};
+  const opening=d.openAuthority||{};
+  const evaluation=d.evaluationAuthority||{};
+  const appellate=d.appellateAuthority||{};
+  const title=firstAcross([sched,nit],['title','description'],listing.title); if(title) $('modalTitle').textContent=title;
+  const ecv=firstAcross([sched,nit],['ecv','estimatedContractValue','provisionalAmount'],listing.amount);
+  const emd=firstAcross([nit,sched],['emd','emdAmount'],listing.emd);
+  const fee=firstAcross([nit,sched],['tenderFee','tenderFeeAmount'],listing.fee);
+  const subEst=asArray(d.tenderSubEstimateList), general=asArray(d.generalCriterionList), technical=asArray(d.technicalCriterionList);
+  const docs=[...asArray(d.tenderCriterionDocumentList),...asArray(d.tenderFiles)];
+  const boq=subEst.flatMap(se=>asArray(se.itemList||se.tenderItemList||se.items).map(item=>({...item,__group:se.subEstimateName||se.workCategoryName||''})));
   return `<div class="live-banner success">✓ Full details loaded from KPPP</div>
-    <section class="detail-section"><div class="section-title"><h3>Overview</h3><span class="source-chip live">Live detail</span></div>
+    <section class="detail-section"><div class="section-title"><h3>Overview</h3><span class="source-chip live">Live KPPP detail</span></div>
       <div class="metric-grid">
         ${metric('Estimated Contract Value',money(ecv,'Refer tender'))}
         ${metric('EMD',money(emd,'Refer tender'))}
         ${metric('Tender Fee',money(fee,'Refer tender'))}
-        ${metric('Bid Validity',first(nit,['bidValidityPeriod']) ? first(nit,['bidValidityPeriod'])+' days' : 'Not available')}
+        ${metric('Bid Validity',firstAcross([nit,sched],['bidValidityPeriod','bidValidity']) ? firstAcross([nit,sched],['bidValidityPeriod','bidValidity'])+' days' : 'Not available')}
       </div>
       <div class="info-grid">
-        ${info('Tender Number',first(sched,['tenderNumber'],listing.ref_no||listing.id))}
-        ${info('Category',first(sched,['categoryText','category'],listing.category))}
-        ${info('Department',first(sched,['deptName'],listing.department))}
-        ${info('Location',first(sched,['locationName'],listing.location||listing.derived_city))}
-        ${info('Tender Type',first(nit,['tenderType','invitingStrategyText','invitingStrategy']))}
-        ${info('Evaluation',first(nit,['evaluationTypeText','evaluationType']))}
-        ${info('Bid Type',first(nit,['bidValueTypeText','bidValueType']))}
-        ${info('No. of Calls',first(nit,['noOfCalls']))}
+        ${info('Tender Number',firstAcross([sched,nit],['tenderNumber'],listing.ref_no||listing.id))}
+        ${info('Category',firstAcross([sched,nit],['categoryText','category'],listing.category))}
+        ${info('Department',firstAcross([sched,nit],['deptName','departmentName'],listing.department))}
+        ${info('Location',firstAcross([sched,nit],['locationName','location'],listing.location||listing.derived_city))}
+        ${info('Tender Type',firstAcross([nit,sched],['tenderType','invitingStrategyText','invitingStrategy']))}
+        ${info('Evaluation',firstAcross([nit,sched],['evaluationTypeText','evaluationType']))}
+        ${info('Commercial Bid Type',firstAcross([nit,sched],['textCommercialBidType','commercialBidType','bidValueTypeText','bidValueType']))}
+        ${info('No. of Calls',firstAcross([nit,sched],['noOfCalls','noOfCall']))}
       </div>
-      ${first(sched,['description'])?`<div class="description-box"><strong>Description</strong><p>${esc(first(sched,['description']))}</p></div>`:''}
+      ${firstAcross([sched,nit],['description'])?`<div class="description-box"><strong>Description</strong><p>${esc(firstAcross([sched,nit],['description']))}</p></div>`:''}
     </section>
 
-    <section class="detail-section"><div class="section-title"><h3>Important Dates & Contact</h3></div>
+    <section class="detail-section"><div class="section-title"><h3>Important Dates</h3></div>
       <div class="info-grid">
-        ${info('Published',first(nit,['publishedDate'],listing.published_date))}
-        ${info('Bid Submission Closes',first(nit,['tenderReceiptClose'],listing.closing_date))}
-        ${info('Query Closes',first(nit,['tenderQueryClose']))}
-        ${info('Technical Bid Opens',first(nit,['technicalBidOpen']))}
-        ${info('Pre-bid Meeting',first(nit,['preBidMeetingDate']))}
-        ${info('Contact Person',first(nit,['contactPerson']))}
-        ${info('Mobile',first(nit,['mobileNumber']))}
-        ${info('Office Number',first(nit,['officeNumber']))}
+        ${info('Published',firstAcross([nit,sched],['publishedDateStr','publishedDate'],listing.published_date))}
+        ${info('Bid Submission Closes',firstAcross([nit,sched],['tenderClosureDateStr','tenderClosureDate','tenderReceiptClose'],listing.closing_date))}
+        ${info('Query / Clarification Closes',firstAcross([nit,sched],['tenderQueryClose','tenderQueryCloseDate']))}
+        ${info('Technical Bid Opens',firstAcross([nit,sched],['technicalBidOpen','technicalBidOpenDate']))}
+        ${info('Pre-bid Meeting',firstAcross([nit,sched],['preBidMeetingDate','preBidMeeting']))}
+      </div>
+    </section>
+
+    <section class="detail-section"><div class="section-title"><h3>Authorities & Contact</h3></div>
+      <div class="info-grid">
+        ${info('Inviting Authority',firstAcross([inviting,nit],['name','authorityName','userName','createdByPost','postName']))}
+        ${info('Opening Authority',firstAcross([opening,nit],['name','authorityName','userName','createdByPost','postName']))}
+        ${info('Evaluation Authority',firstAcross([evaluation,nit],['name','authorityName','userName','createdByPost','postName']))}
+        ${info('Appellate Authority',firstAcross([appellate,nit],['name','authorityName','userName','createdByPost','postName']))}
+        ${info('Contact Person',firstAcross([nit,sched],['contactPerson','contactPersonName','tenderPublishedUserName']))}
+        ${info('Mobile',firstAcross([nit,sched],['mobileNumber','contactMobile']))}
+        ${info('Office Number',firstAcross([nit,sched],['officeNumber','contactNumber']))}
       </div>
     </section>
 
@@ -234,21 +257,21 @@ function metric(label,value){return `<div class="metric"><span>${esc(label)}</sp
 function info(label,value){return `<div class="info"><span>${esc(label)}</span><strong>${esc(text(value))}</strong></div>`;}
 
 function renderBoq(items,subEst){
-  if(!items.length) return '<section class="detail-section"><div class="section-title"><h3>BOQ / Estimate</h3></div><div class="empty-block">BOQ items were not returned for this tender.</div></section>';
-  const total=items.reduce((s,i)=>s+(num(i.netAmount)||0),0);
+  if(!items.length) return '<section class="detail-section"><div class="section-title"><h3>BOQ / Estimate</h3></div><div class="empty-block">No item-level BOQ was returned in this KPPP response.</div></section>';
+  const total=items.reduce((s,i)=>s+(num(first(i,['netAmount','amount','totalAmount']))||0),0);
   return `<section class="detail-section"><div class="section-title"><h3>BOQ / Estimate</h3><span class="count-chip">${fmt(items.length)} items</span></div>
-    ${subEst.length?`<div class="subestimate-row">${subEst.map(s=>`<div><span>${esc(text(s.workCategoryName,'Estimate'))}</span><strong>${esc(money(s.estimateTotal,'—'))}</strong></div>`).join('')}</div>`:''}
+    ${subEst.length?`<div class="subestimate-row">${subEst.map(s=>`<div><span>${esc(text(first(s,['workCategoryName','subEstimateName'],'Estimate')))}</span><strong>${esc(money(first(s,['estimateTotal','totalAmount','amount']),'—'))}</strong></div>`).join('')}</div>`:''}
     <div class="boq-wrap"><table class="boq-table"><thead><tr><th>#</th><th>Item</th><th>Description</th><th>Unit</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
-      ${items.map((i,idx)=>`<tr><td>${idx+1}</td><td><strong>${esc(text(i.itemCode,'—'))}</strong><small>${esc(text(i.categoryName,''))}</small></td><td class="desc">${esc(text(i.description,'—'))}</td><td>${esc(text(i.uomName,'—'))}</td><td class="right">${esc(text(i.quantity,'—'))}</td><td class="right">${esc(money(first(i,['finalRate','baseRate']),'—'))}</td><td class="right"><strong>${esc(money(i.netAmount,'—'))}</strong></td></tr>`).join('')}
+      ${items.map((i,idx)=>`<tr><td>${idx+1}</td><td><strong>${esc(text(first(i,['itemCode','code'],'—')))}</strong><small>${esc(text(first(i,['categoryName','eventName'],'')) )}</small></td><td class="desc">${esc(text(first(i,['description','itemDescription'],'—')))}</td><td>${esc(text(first(i,['uomName','unitName','unit'],'—')))}</td><td class="right">${esc(text(first(i,['quantity','qty'],'—')))}</td><td class="right">${esc(money(first(i,['finalRate','baseRate','rate']),'—'))}</td><td class="right"><strong>${esc(money(first(i,['netAmount','amount','totalAmount']),'—'))}</strong></td></tr>`).join('')}
     </tbody><tfoot><tr><td colspan="6">BOQ total</td><td class="right"><strong>${esc(money(total,'—'))}</strong></td></tr></tfoot></table></div>
   </section>`;
 }
 
 function renderCriteria(title,items,type){
-  const clean=items.filter(i=>first(i,['description','criterionTypeOthersValue']));
+  const clean=items.filter(i=>first(i,['description','criterionTypeOthersValue','criterionDescription']));
   if(!clean.length) return '';
   return `<section class="detail-section"><div class="section-title"><h3>${esc(title)}</h3><span class="count-chip">${clean.length}</span></div><div class="criteria-list">
-    ${clean.map(i=>`<div class="criterion"><span class="check">✓</span><div><strong>${type==='technical'?esc(text(i.criterionCategoryText||i.criterionType,'')):esc(text(i.criterionType,''))}</strong><p>${esc(text(first(i,['description','criterionTypeOthersValue'])))}</p></div></div>`).join('')}
+    ${clean.map(i=>`<div class="criterion"><span class="check">✓</span><div><strong>${type==='technical'?esc(text(i.criterionCategoryText||i.criterionType,'')):esc(text(i.criterionType,''))}</strong><p>${esc(text(first(i,['description','criterionTypeOthersValue','criterionDescription'])))}</p></div></div>`).join('')}
   </div></section>`;
 }
 
@@ -260,10 +283,10 @@ function collectNestedDocs(technical,general){
 }
 function renderDocuments(docs,technical,general){
   const all=[...docs,...collectNestedDocs(technical,general)].filter(Boolean);
-  const seen=new Set(); const unique=all.filter(d=>{const k=first(d,['documentName','name','fileName']); if(!k||seen.has(k)) return false; seen.add(k); return true;});
-  if(!unique.length) return '<section class="detail-section"><div class="section-title"><h3>Required Documents</h3></div><div class="empty-block">No document checklist was returned in this detail response.</div></section>';
-  return `<section class="detail-section"><div class="section-title"><h3>Required Documents</h3><span class="count-chip">${unique.length}</span></div><div class="document-grid">
-    ${unique.map(d=>`<div class="doc-card"><span>📄</span><div><strong>${esc(text(first(d,['documentName','name','fileName']),'Document'))}</strong><small>${esc(text(first(d,['documentTypeText','documentType']),'Tender document'))}${d.optional===false?' • Mandatory':d.optional===true?' • Listed optional':''}</small></div></div>`).join('')}
+  const seen=new Set(); const unique=all.filter(d=>{const k=first(d,['documentName','name','fileName','fileDescription']); if(!k||seen.has(k)) return false; seen.add(k); return true;});
+  if(!unique.length) return '<section class="detail-section"><div class="section-title"><h3>Tender Documents</h3></div><div class="empty-block">No document metadata was returned in this KPPP response.</div></section>';
+  return `<section class="detail-section"><div class="section-title"><h3>Tender Documents</h3><span class="count-chip">${unique.length}</span></div><div class="document-grid">
+    ${unique.map(d=>`<div class="doc-card"><span>📄</span><div><strong>${esc(text(first(d,['documentName','name','fileName','fileDescription']),'Document'))}</strong><small>${esc(text(first(d,['documentTypeText','documentType','fileType']),'KPPP tender document'))}${first(d,['id','documentId'])?` • ID ${esc(first(d,['id','documentId']))}`:''}</small></div></div>`).join('')}
   </div></section>`;
 }
 function renderOtherLive(d){
