@@ -1,0 +1,40 @@
+name: Verify Live Bid Planner AI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/probe-bid-ai.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Allow Cloudflare Git build to finish
+        run: sleep 35
+
+      - name: Verify Bid Planner Frontend
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ | grep -q "bid-cost-planner.js"
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/bid-cost-planner.js | grep -q "Bid Price & Site Cost Planner"
+
+      - name: Verify Free Workers AI Bid Review
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/api/bid_ai \
+            -H 'Content-Type: application/json' \
+            -H 'X-KPPP-Bid-AI: 1' \
+            -d '{"tender":{"ref":"KNNL/2025-26/IW/WORK_INDENT4114/CALL-2","title":"Maintenance work","category":"WORKS","department":"KNNL","city":"Karnataka","amount":846932.84,"emd":10587},"assumptions":{"direct_cost_pct":80,"overhead_pct":5,"contingency_pct":3,"local_saving_pct":0,"target_profit_margin_pct":8},"calculations":{"ecv":846932.84,"estimated_site_cost":745300.90,"break_even_bid":745300.90,"indicative_target_bid":810109.67,"expected_profit":64808.77,"target_discount_vs_ecv_pct":4.35,"max_break_even_discount_pct":12.0},"tenderkart":{"bid_validity_days":180,"boq_preview":[]}}' \
+            -o /tmp/ai.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/ai.json',encoding='utf-8'))
+          assert d.get('success') is True, d
+          assert len(d.get('review','')) > 40, d
+          print('AI model:', d.get('model'))
+          print('Review chars:', len(d.get('review','')))
+          PY
