@@ -27,10 +27,10 @@ jobs:
           grep -q "tender-list-experience.js" /tmp/home.html
           grep -q "Use View Details to open the tender" /tmp/home.html
 
-      - name: Verify Fast EMD Recovery Deployment
+      - name: Verify Current EMD Recovery Deployment
         run: |
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/missing-financial-enrichment.js -o /tmp/missing-financial.js
-          grep -q "MAX_CONCURRENT = 6" /tmp/missing-financial.js
+          grep -q "MAX_CONCURRENT = 2" /tmp/missing-financial.js
           grep -q "updateTenderState" /tmp/missing-financial.js
           grep -q "pendingRefs" /tmp/missing-financial.js
 
