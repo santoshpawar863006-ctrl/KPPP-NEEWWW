@@ -1,4 +1,4 @@
-name: Smoke Test Cloudflare Preview
+name: Smoke Test Cloudflare Live
 
 on:
   workflow_dispatch:
@@ -22,13 +22,23 @@ jobs:
         run: |
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ -o /tmp/home.html
           grep -q "Karnataka Tender Intelligence" /tmp/home.html
+          grep -q "bid-cost-planner.js" /tmp/home.html
 
-      - name: Verify Latest Frontend Deployment
+      - name: Verify Bid Planner Without AI
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/bid-cost-planner.js -o /tmp/planner.js
+          grep -q "Bid Price & Site Cost Planner" /tmp/planner.js
+          grep -q "Estimated site cost" /tmp/planner.js
+          ! grep -q "Ask AI" /tmp/planner.js
+          ! grep -q "bid_ai" /tmp/planner.js
+          ! grep -q "Workers AI" /tmp/planner.js
+          echo "Bid planner is live with no AI feature."
+
+      - name: Verify Missing Financial Enrichment
         run: |
           grep -q "missing-financial-enrichment.js" /tmp/home.html
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/missing-financial-enrichment.js -o /tmp/missing-financial.js
           grep -q "TenderKart verified" /tmp/missing-financial.js
-          echo "Latest Cloudflare frontend feature is deployed."
 
       - name: Test Live Tender Database
         run: |
