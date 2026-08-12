@@ -4,7 +4,7 @@
   const CACHE_KEY = 'kppp_missing_financial_tenderkart_v1';
   const SUCCESS_TTL = 24 * 60 * 60 * 1000;
   const MISS_TTL = 6 * 60 * 60 * 1000;
-  const MAX_CONCURRENT = 6;
+  const MAX_CONCURRENT = 2;
   let active = 0;
   const queue = [];
   const pendingRefs = new Set();
@@ -32,6 +32,9 @@
   }
   function rowRef(row){
     return String(row.querySelector('.t-title + .muted')?.textContent || '').trim();
+  }
+  function modalOpen(){
+    return document.getElementById('detailModal')?.classList.contains('open');
   }
   function cached(ref){
     const item = cache[ref];
@@ -91,7 +94,14 @@
   async function lookup(task){
     try {
       const params = new URLSearchParams({ tender: task.ref, source: 'tenderkart' });
-      const response = await fetch('/api/public_tender_detail?' + params.toString(), { cache: 'no-store' });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
+      let response;
+      try {
+        response = await fetch('/api/public_tender_detail?' + params.toString(), { cache: 'no-store', signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
       const payload = response.ok ? await response.json() : null;
       const source = Array.isArray(payload?.sources)
         ? payload.sources.find(x => String(x?.source || '').toLowerCase() === 'tenderkart')
@@ -116,6 +126,7 @@
   }
 
   function pump(){
+    if (modalOpen()) return;
     while (active < MAX_CONCURRENT && queue.length) {
       const task = queue.shift();
       if (!task?.row?.isConnected) {
@@ -128,6 +139,7 @@
   }
 
   function processRows(){
+    if (modalOpen()) return;
     const body = document.getElementById('tableBody');
     if (!body) return;
     const rows = [...body.querySelectorAll('tr')];
@@ -159,12 +171,13 @@
   let timer = null;
   function schedule(){
     clearTimeout(timer);
-    timer = setTimeout(processRows, 30);
+    timer = setTimeout(processRows, 80);
   }
 
   const observer = new MutationObserver(schedule);
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener('load', schedule);
   document.addEventListener('change', schedule);
+  document.addEventListener('click', () => setTimeout(() => { if (!modalOpen()) pump(); }, 250));
   schedule();
 })();
