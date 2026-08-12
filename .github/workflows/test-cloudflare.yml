@@ -74,10 +74,14 @@ jobs:
       - name: UI Regression Assertions
         run: |
           grep -q "MAX_CONCURRENT = 6" public/missing-financial-enrichment.js
-          grep -q "list-action-hidden" public/tender-list-experience.css
-          grep -q "openTenderKey" public/tender-list-experience.js
           grep -q "detailCompareToggle" public/tender-list-experience.js
           grep -q "stabilizePlanner" public/tender-list-experience.js
+          ! grep -q "openTenderKey" public/tender-list-experience.js
+          ! grep -q "clickable-tender-row" public/tender-list-experience.js
+          ! grep -q "list-action-hidden" public/tender-list-experience.css
+          grep -q "row-compare-btn" public/tender-list-experience.css
+          grep -q "bid-check-btn" public/tender-list-experience.css
+          grep -q "View Details" public/index.html
 
       - name: Wrangler Dry Run
         run: npx wrangler deploy --dry-run --outdir cloudflare-dist
