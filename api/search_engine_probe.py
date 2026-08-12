@@ -5,7 +5,9 @@ from urllib.parse import unquote
 import requests
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
-QUERY = '"KNNL/2025-26/IW/WORK_INDENT4114/CALL-2" TenderKart'
+REF = "KNNL/2025-26/IW/WORK_INDENT4114/CALL-2"
+QUERY = f'"{REF}" TenderKart'
+KNOWN_URL = "https://tenderkart.in/tender/3e3f8ef6-7303-41f6-92fc-4cb8501048f5"
 
 
 def urls(text):
@@ -16,27 +18,27 @@ def urls(text):
             u=unquote(u.split('url?q=',1)[1].split('&',1)[0])
         if 'tenderkart.in' in u.lower() and u not in out:
             out.append(u[:350])
-    return out[:5]
+    return out[:12]
 
 
 def run_probe():
     s=requests.Session()
-    engines=[
-        ("google", "https://www.google.com/search", {"q":QUERY,"num":"10"}),
-        ("google_in", "https://www.google.co.in/search", {"q":QUERY,"num":"10"}),
-        ("yahoo", "https://search.yahoo.com/search", {"p":QUERY}),
-        ("brave", "https://search.brave.com/search", {"q":QUERY,"source":"web"}),
-        ("mojeek", "https://www.mojeek.com/search", {"q":QUERY}),
-        ("bing", "https://www.bing.com/search", {"q":QUERY,"count":"10"}),
-        ("ddg", "https://html.duckduckgo.com/html/", {"q":QUERY}),
-    ]
     results=[]
-    for name,url,params in engines:
+    for qtype,query in [
+        ("exact", QUERY),
+        ("human", '"KNNL 2025 26 IW WORK INDENT4114 CALL 2" TenderKart Karnataka'),
+        ("title", '"Improvements to Service Road" "Main canal of TLBC" TenderKart Karnataka'),
+    ]:
         try:
-            r=s.get(url,params=params,headers={"User-Agent":UA,"Accept-Language":"en-IN,en;q=0.9"},timeout=8,allow_redirects=True)
+            r=s.get("https://search.brave.com/search",params={"q":query,"source":"web"},headers={"User-Agent":UA,"Accept-Language":"en-IN,en;q=0.9"},timeout=8,allow_redirects=True)
             text=r.text or ''
-            found=urls(text)
-            results.append({"engine":name,"http":r.status_code,"bytes":len(text),"contains_tenderkart":'tenderkart.in' in text.lower(),"urls":found})
+            results.append({"engine":"brave","query_type":qtype,"http":r.status_code,"contains_tenderkart":'tenderkart.in' in text.lower(),"urls":urls(text)})
         except Exception as exc:
-            results.append({"engine":name,"error":str(exc)[:140]})
-    return {"success":True,"query":QUERY,"results":results}
+            results.append({"engine":"brave","query_type":qtype,"error":str(exc)[:140]})
+    direct={}
+    try:
+        r=s.get(KNOWN_URL,headers={"User-Agent":UA,"Accept-Language":"en-IN,en;q=0.9"},timeout=8,allow_redirects=True)
+        direct={"http":r.status_code,"final_url":r.url,"bytes":len(r.text or ''),"contains_ref":re.sub(r'[^a-z0-9]+','',REF.lower()) in re.sub(r'[^a-z0-9]+','',(r.text or '').lower())}
+    except Exception as exc:
+        direct={"error":str(exc)[:180]}
+    return {"success":True,"results":results,"direct_tenderkart":direct}
