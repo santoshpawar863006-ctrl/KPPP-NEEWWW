@@ -14,6 +14,8 @@ on:
       - "public/index.html"
       - "public/missing-financial-enrichment.js"
       - "public/emd-enrichment.css"
+      - "public/bid-cost-planner.js"
+      - "public/bid-cost-planner.css"
       - ".github/workflows/test-cloudflare.yml"
 
 permissions:
@@ -37,7 +39,10 @@ jobs:
       - name: JavaScript Syntax Check
         run: |
           node --check worker/index.js
+          node --check worker/router.js
+          node --check worker/bid-ai.js
           node --check public/missing-financial-enrichment.js
+          node --check public/bid-cost-planner.js
 
       - name: Wrangler Dry Run
         run: npx wrangler deploy --dry-run --outdir cloudflare-dist
