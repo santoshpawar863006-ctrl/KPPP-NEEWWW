@@ -43,6 +43,14 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(200, {"success": False, "error": str(exc)[:240]})
             return
 
+        if path == "/api/bidassist_probe":
+            try:
+                from api.bidassist_probe import run_probe
+                self.send_json(200, run_probe())
+            except Exception as exc:
+                self.send_json(200, {"success": False, "error": str(exc)[:240]})
+            return
+
         if path == "/api/public_tender_detail":
             tender_ref = (query.get("tender", [""])[0] or "").strip()
             title = (query.get("title", [""])[0] or "").strip()
