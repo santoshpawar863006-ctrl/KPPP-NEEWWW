@@ -21,16 +21,26 @@ def run_probe():
             out[name]={"http":r.status_code,"final_url":r.url,"bytes":len(text),"contains_ref":norm(REF) in norm(text),"contains_title":norm(TITLE)[:45] in norm(text),"content_type":r.headers.get("content-type","")}
         except Exception as exc:
             out[name]={"error":str(exc)[:180]}
-    queries=[f'"{REF}" BidAssist',f'"{TITLE}" BidAssist Karnataka']
+    queries=[
+        f'site:bidassist.com/karnataka-tenders/public-works-department/detail "{REF}"',
+        f'site:bidassist.com/karnataka-tenders/public-works-department "{TITLE}"',
+        f'"{REF}" "Public Works Department" BidAssist Karnataka',
+        f'"{TITLE}" "Ballari" BidAssist Karnataka',
+    ]
     searches=[]
     for q in queries:
         try:
             r=s.get("https://search.brave.com/search",params={"q":q,"source":"web"},headers={"User-Agent":UA,"Accept-Language":"en-IN,en;q=0.9"},timeout=8)
+            text=r.text or ''
             urls=[]
-            for u in re.findall(r'href=["\'](https?://[^"\']+)["\']',r.text or '',flags=re.I):
+            snippets=[]
+            for u in re.findall(r'href=["\'](https?://[^"\']+)["\']',text,flags=re.I):
                 if 'bidassist.com' in u.lower() and u not in urls: urls.append(u[:350])
-                if len(urls)>=10: break
-            searches.append({"query":q,"http":r.status_code,"urls":urls})
+                if len(urls)>=12: break
+            for marker in (REF,TITLE):
+                i=text.lower().find(marker.lower())
+                if i>=0: snippets.append(re.sub(r'\s+',' ',text[max(0,i-500):i+1000])[:1500])
+            searches.append({"query":q,"http":r.status_code,"urls":urls,"contains_ref":norm(REF) in norm(text),"contains_title":norm(TITLE)[:45] in norm(text),"snippets":snippets[:2]})
         except Exception as exc:
             searches.append({"query":q,"error":str(exc)[:150]})
     out["searches"]=searches
