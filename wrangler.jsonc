@@ -1,11 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "karnataka-tender-intelligence",
-  "main": "./worker/router.js",
+  "main": "./worker/index.js",
   "compatibility_date": "2026-08-12",
-  "ai": {
-    "binding": "AI"
-  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
