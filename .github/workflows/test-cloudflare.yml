@@ -73,7 +73,7 @@ jobs:
 
       - name: UI Regression Assertions
         run: |
-          grep -q "MAX_CONCURRENT = 6" public/missing-financial-enrichment.js
+          grep -q "MAX_CONCURRENT = 2" public/missing-financial-enrichment.js
           grep -q "detailCompareToggle" public/tender-list-experience.js
           grep -q "stabilizePlanner" public/tender-list-experience.js
           ! grep -q "openTenderKey" public/tender-list-experience.js
