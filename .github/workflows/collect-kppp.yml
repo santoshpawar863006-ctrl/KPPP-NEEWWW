@@ -18,13 +18,13 @@ permissions:
 
 jobs:
   collect:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -41,92 +41,133 @@ jobs:
           KPPP_AUTH_TOKEN: ${{ secrets.KPPP_AUTH_TOKEN }}
           KPPP_PAGE_SIZE: "100"
           KPPP_MAX_PAGES: "250"
-
         run: |
           python fetch_kppp.py
+
+      - name: Validate Against Last Good Database
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          new_path = Path("public/tenders.json")
+          new = json.loads(new_path.read_text(encoding="utf-8"))
+
+          try:
+              previous_bytes = subprocess.check_output(
+                  ["git", "show", "HEAD:public/tenders.json"],
+                  stderr=subprocess.DEVNULL,
+              )
+              previous = json.loads(previous_bytes.decode("utf-8"))
+          except Exception:
+              previous = {}
+
+          new_total = int(new.get("count") or 0)
+          old_total = int(previous.get("count") or 0)
+          new_counts = new.get("category_counts") or {}
+          old_counts = previous.get("category_counts") or {}
+
+          if new_total <= 0:
+              raise SystemExit("SAFETY STOP: new tender total is zero.")
+
+          # An hourly live-tender database should not collapse suddenly.
+          # If it does, retain the previous Git version and fail this run.
+          if old_total >= 500 and new_total < old_total * 0.60:
+              raise SystemExit(
+                  f"SAFETY STOP: total fell abnormally from {old_total} to {new_total}. "
+                  "Last good database retained."
+              )
+
+          for category in ("WORKS", "GOODS", "SERVICES"):
+              old = int(old_counts.get(category) or 0)
+              current = int(new_counts.get(category) or 0)
+              if current <= 0:
+                  raise SystemExit(f"SAFETY STOP: {category} returned zero.")
+              if old >= 100 and current < old * 0.50:
+                  raise SystemExit(
+                      f"SAFETY STOP: {category} fell abnormally from {old} to {current}. "
+                      "Last good database retained."
+                  )
+
+          # Catch obvious duplication/API-shape disasters in the opposite direction.
+          if old_total >= 500 and new_total > old_total * 2.50:
+              raise SystemExit(
+                  f"SAFETY STOP: total jumped abnormally from {old_total} to {new_total}. "
+                  "Manual review required."
+              )
+
+          health = {
+              "last_success_at": datetime.now(timezone.utc).isoformat(),
+              "generated_at": new.get("generated_at"),
+              "status": "healthy",
+              "count": new_total,
+              "category_counts": {
+                  "WORKS": int(new_counts.get("WORKS") or 0),
+                  "GOODS": int(new_counts.get("GOODS") or 0),
+                  "SERVICES": int(new_counts.get("SERVICES") or 0),
+              },
+              "previous_count": old_total or None,
+              "guard": {
+                  "zero_protection": True,
+                  "abnormal_drop_protection": True,
+                  "abnormal_jump_protection": True,
+                  "last_good_source": "Git history",
+              },
+          }
+          Path("public/health.json").write_text(
+              json.dumps(health, ensure_ascii=False, indent=2),
+              encoding="utf-8",
+          )
+
+          print("================================")
+          print("COLLECTOR SAFETY CHECK PASSED")
+          print("================================")
+          print("Previous total:", old_total or "n/a")
+          print("Current total :", new_total)
+          print("WORKS         :", health["category_counts"]["WORKS"])
+          print("GOODS         :", health["category_counts"]["GOODS"])
+          print("SERVICES      :", health["category_counts"]["SERVICES"])
+          PY
 
       - name: Show Category Counts
         run: |
           python - <<'PY'
           import json
-
-          with open(
-              "public/tenders.json",
-              "r",
-              encoding="utf-8"
-          ) as f:
+          with open("public/tenders.json", "r", encoding="utf-8") as f:
               data = json.load(f)
-
           print("================================")
           print("KPPP TENDER RESULTS")
           print("================================")
-
-          print(
-              "TOTAL:",
-              data.get("count", 0)
-          )
-
-          counts = data.get(
-              "category_counts",
-              {}
-          )
-
-          print(
-              "WORKS:",
-              counts.get("WORKS", 0)
-          )
-
-          print(
-              "GOODS:",
-              counts.get("GOODS", 0)
-          )
-
-          print(
-              "SERVICES:",
-              counts.get("SERVICES", 0)
-          )
+          print("TOTAL:", data.get("count", 0))
+          counts = data.get("category_counts", {})
+          print("WORKS:", counts.get("WORKS", 0))
+          print("GOODS:", counts.get("GOODS", 0))
+          print("SERVICES:", counts.get("SERVICES", 0))
           PY
 
-      - name: Commit Updated Tenders
+      - name: Commit Updated Tenders And Health
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git config \
-            user.name \
-            "github-actions[bot]"
-
-          git config \
-            user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add public/tenders.json
+          git add public/tenders.json public/health.json
 
           if git diff --cached --quiet; then
-
-            echo "No tender changes."
-
+            echo "No tender or health changes."
           else
-
-            git commit \
-              -m "Update KPPP tenders"
-
+            git commit -m "Update KPPP tenders"
             git push
-
           fi
 
       - name: Trigger Vercel Deployment
         if: success()
         env:
           VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
-
         run: |
-
           if [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
-
-            curl -X POST \
-              "$VERCEL_DEPLOY_HOOK_URL"
-
+            curl -X POST "$VERCEL_DEPLOY_HOOK_URL"
           else
-
-            echo "Vercel deploy hook not configured."
-
+            echo "Vercel deploy hook not configured. Git integration will deploy committed changes."
           fi
