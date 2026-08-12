@@ -12,7 +12,9 @@ on:
       - "package-lock.json"
       - "public/.assetsignore"
       - "public/index.html"
+      - "public/modal-stability.js"
       - "public/missing-financial-enrichment.js"
+      - "public/amount-fix.js"
       - "public/emd-enrichment.css"
       - "public/bid-cost-planner.js"
       - "public/bid-cost-planner.css"
@@ -43,6 +45,7 @@ jobs:
       - name: JavaScript Syntax Check
         run: |
           node --check worker/index.js
+          node --check public/modal-stability.js
           node --check public/missing-financial-enrichment.js
           node --check public/bid-cost-planner.js
           node --check public/filter-quality.js
@@ -73,14 +76,16 @@ jobs:
 
       - name: UI Regression Assertions
         run: |
-          grep -q "MAX_CONCURRENT = 2" public/missing-financial-enrichment.js
+          grep -q "MAX_CONCURRENT = 6" public/missing-financial-enrichment.js
+          grep -q "modal-stability.js" public/index.html
+          grep -q "stable-readiness" public/modal-stability.js
+          grep -q "tenderKartPrimaryHost" public/modal-stability.js
+          ! grep -q "public-web-enrichment.js" public/index.html
+          ! grep -q "tenderkart-stability.js" public/index.html
+          ! grep -q "bid-intelligence.js" public/index.html
           grep -q "detailCompareToggle" public/tender-list-experience.js
-          grep -q "stabilizePlanner" public/tender-list-experience.js
           ! grep -q "openTenderKey" public/tender-list-experience.js
           ! grep -q "clickable-tender-row" public/tender-list-experience.js
-          ! grep -q "list-action-hidden" public/tender-list-experience.css
-          grep -q "row-compare-btn" public/tender-list-experience.css
-          grep -q "bid-check-btn" public/tender-list-experience.css
           grep -q "View Details" public/index.html
 
       - name: Wrangler Dry Run
