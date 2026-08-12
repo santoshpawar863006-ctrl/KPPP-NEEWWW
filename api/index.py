@@ -52,7 +52,7 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"success": False, "message": "Tender number is required."})
                 return
             try:
-                from api.public_tender_detail_v2 import lookup_public_details
+                from api.public_tender_detail_v3 import lookup_public_details
                 self.send_json(
                     200,
                     lookup_public_details(tender_ref, title, department, location),
