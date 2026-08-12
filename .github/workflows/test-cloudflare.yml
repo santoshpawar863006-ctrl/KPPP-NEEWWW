@@ -1,0 +1,38 @@
+name: Validate Cloudflare Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "worker/**"
+      - "wrangler.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - "public/.assetsignore"
+      - ".github/workflows/test-cloudflare.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: JavaScript Syntax Check
+        run: node --check worker/index.js
+
+      - name: Wrangler Dry Run
+        run: npx wrangler deploy --dry-run --outdir cloudflare-dist
