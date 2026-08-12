@@ -21,12 +21,19 @@ class handler(BaseHTTPRequestHandler):
 
         if path == "/api/public_tender_detail":
             tender_ref = (query.get("tender", [""])[0] or "").strip()
+            title = (query.get("title", [""])[0] or "").strip()
+            department = (query.get("department", [""])[0] or "").strip()
+            location = (query.get("location", [""])[0] or "").strip()
             if not tender_ref:
                 self.send_json(400, {"success": False, "message": "Tender number is required."})
                 return
             try:
                 from api.public_tender_detail import lookup_public_details
-                self.send_json(200, lookup_public_details(tender_ref), "public, max-age=3600, s-maxage=3600")
+                self.send_json(
+                    200,
+                    lookup_public_details(tender_ref, title, department, location),
+                    "public, max-age=3600, s-maxage=3600",
+                )
             except Exception as exc:
                 self.send_json(200, {
                     "success": False,
