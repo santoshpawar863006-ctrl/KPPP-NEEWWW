@@ -1,0 +1,129 @@
+name: Browser Test View Details Stability
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/test-modal-browser.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install browser driver
+        run: npm install --no-save --no-audit --no-fund puppeteer-core
+
+      - name: Allow Cloudflare Git deployment to finish
+        run: sleep 35
+
+      - name: Open and close View Details without freezing
+        run: |
+          node - <<'NODE'
+          const puppeteer = require('puppeteer-core');
+          const fs = require('fs');
+          const chrome = [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser'
+          ].find(fs.existsSync);
+          if (!chrome) throw new Error('No Chrome/Chromium executable found on runner');
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: chrome,
+              headless: true,
+              args: ['--no-sandbox', '--disable-dev-shm-usage']
+            });
+            const page = await browser.newPage();
+            page.setDefaultTimeout(15000);
+            page.on('pageerror', err => console.log('PAGEERROR:', err.message));
+            page.on('console', msg => {
+              if (msg.type() === 'error') console.log('CONSOLE ERROR:', msg.text());
+            });
+
+            const url = 'https://karnataka-tender-intelligence.acute-gorilla.workers.dev/';
+            await page.goto(url, {waitUntil: 'domcontentloaded', timeout: 30000});
+            await page.waitForSelector('#tableBody [data-detail]', {timeout: 30000});
+            await new Promise(r => setTimeout(r, 2500));
+
+            // Prefer a tender whose amount is unavailable because that was the
+            // path that could trigger the old amount MutationObserver loop.
+            let target = await page.evaluate(() => {
+              try {
+                const list = Array.isArray(globalThis.state?.all) ? globalThis.state.all : [];
+                const isMissing = v => {
+                  const s = String(v ?? '').trim().toLowerCase();
+                  return !s || s === 'n/a' || s === 'na' || s === 'refer tender' || Number(String(v).replace(/[₹,]/g,'')) === 0;
+                };
+                const t = list.find(x => isMissing(x.amount)) || list[0];
+                return t ? String(t.ref_no || t.id || '') : '';
+              } catch { return ''; }
+            });
+
+            if (target) {
+              await page.evaluate(ref => {
+                const input = document.getElementById('searchInput');
+                if (!input) return;
+                input.value = ref;
+                input.dispatchEvent(new Event('input', {bubbles:true}));
+              }, target);
+              await new Promise(r => setTimeout(r, 1200));
+            }
+
+            for (let i = 0; i < 3; i++) {
+              await page.waitForSelector('#tableBody [data-detail]', {timeout: 10000});
+              await page.click('#tableBody [data-detail]');
+              await page.waitForSelector('#detailModal.open', {timeout: 10000});
+              await new Promise(r => setTimeout(r, 1800));
+
+              // Event-loop responsiveness check while modal is open.
+              const openProbe = await Promise.race([
+                page.evaluate(() => new Promise(resolve => setTimeout(() => resolve('responsive'), 150))),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Renderer unresponsive while modal open')), 5000))
+              ]);
+              if (openProbe !== 'responsive') throw new Error('Unexpected open probe result');
+
+              await page.click('#modalClose');
+              await page.waitForFunction(() => !document.getElementById('detailModal')?.classList.contains('open'), {timeout: 10000});
+
+              // Event-loop responsiveness check after modal close.
+              const closeProbe = await Promise.race([
+                page.evaluate(() => new Promise(resolve => setTimeout(() => resolve('responsive'), 150))),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Renderer unresponsive after modal close')), 5000))
+              ]);
+              if (closeProbe !== 'responsive') throw new Error('Unexpected close probe result');
+              console.log(`View Details cycle ${i + 1}: responsive`);
+            }
+
+            // Verify normal interaction still works after repeated modal use.
+            await page.evaluate(() => {
+              const input = document.getElementById('searchInput');
+              if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('input', {bubbles:true}));
+              }
+            });
+            await new Promise(r => setTimeout(r, 500));
+            const count = await page.$eval('#resultCount', el => el.textContent || '');
+            console.log('Result count after modal cycles:', count);
+            await browser.close();
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
