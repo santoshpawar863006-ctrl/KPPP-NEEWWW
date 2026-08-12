@@ -1,0 +1,55 @@
+name: Probe Public KPPP Full Detail
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/probe-kppp-full-detail.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe known KPPP tender detail routes
+        run: |
+          python - <<'PY'
+          import json, requests
+          base='https://kppp.karnataka.gov.in/supplier-registration-service/v1/api/portal-service'
+          nit='297339'
+          headers={
+            'Accept':'application/json, text/plain, */*',
+            'Content-Type':'application/json',
+            'Origin':'https://kppp.karnataka.gov.in',
+            'Referer':'https://kppp.karnataka.gov.in/shared/viewTenderDetails',
+            'Post':'CONTRACTOR-EPROC-CONTRACTOR',
+            'User-Agent':'Mozilla/5.0'
+          }
+          routes=[
+            ('GET',f'{base}/works-tender-full-view',{'nitId':nit},None),
+            ('GET',f'{base}/works/tender-full-view',{'nitId':nit},None),
+            ('GET',f'{base}/works/full-view',{'nitId':nit},None),
+            ('GET',f'{base}/full-view',{'nitId':nit},None),
+            ('POST',f'{base}/works-tender-full-view',None,{'nitId':nit}),
+            ('POST',f'{base}/works/full-view',None,{'nitId':nit}),
+          ]
+          useful={'noticeInvitingTenderDTO','tenderSchedule','tenderSubEstimateList','generalCriterionList','technicalCriterionList','tenderCriterionDocumentList','tenderFiles','invitingAuthority'}
+          for method,url,params,body in routes:
+            try:
+              r=requests.request(method,url,params=params,json=body,headers=headers,timeout=10)
+              try: data=r.json()
+              except: data=None
+              obj=data.get('data') if isinstance(data,dict) and isinstance(data.get('data'),dict) else data
+              keys=sorted(list(obj.keys()))[:30] if isinstance(obj,dict) else []
+              hit=bool(isinstance(obj,dict) and useful.intersection(obj.keys()))
+              print(json.dumps({'method':method,'url':url,'status':r.status_code,'full_detail':hit,'keys':keys,'preview':r.text[:160].replace('\n',' ')}))
+              if hit:
+                print('FULL_DETAIL_FOUND')
+                break
+            except Exception as e:
+              print(json.dumps({'method':method,'url':url,'error':str(e)[:180]}))
+          PY
