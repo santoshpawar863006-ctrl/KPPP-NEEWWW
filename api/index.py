@@ -24,6 +24,7 @@ class handler(BaseHTTPRequestHandler):
             title = (query.get("title", [""])[0] or "").strip()
             department = (query.get("department", [""])[0] or "").strip()
             location = (query.get("location", [""])[0] or "").strip()
+            source = (query.get("source", ["all"])[0] or "all").strip()
             if not tender_ref:
                 self.send_json(400, {"success": False, "message": "Tender number is required."})
                 return
@@ -31,7 +32,7 @@ class handler(BaseHTTPRequestHandler):
                 from api.public_tender_detail_v3 import lookup_public_details
                 self.send_json(
                     200,
-                    lookup_public_details(tender_ref, title, department, location),
+                    lookup_public_details(tender_ref, title, department, location, source),
                     "public, max-age=3600, s-maxage=3600",
                 )
             except Exception as exc:
@@ -103,4 +104,4 @@ class handler(BaseHTTPRequestHandler):
                 })
             return
 
-        self.send_json(200, {"status": "API active"})
+        self.send_json(200, {"status":"API active"})
