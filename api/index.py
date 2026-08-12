@@ -19,6 +19,24 @@ class handler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/")
         query = parse_qs(parsed.query)
 
+        if path == "/api/tender_detail":
+            category = (query.get("category", [""])[0] or "").strip()
+            tender_id = (query.get("id", [""])[0] or "").strip()
+            nit_id = (query.get("nitId", [""])[0] or "").strip()
+            if not tender_id and not nit_id:
+                self.send_json(400, {"success": False, "message": "Provide id or nitId."})
+                return
+            try:
+                from api.tender_detail import find_full_detail
+                self.send_json(200, find_full_detail(category, tender_id, nit_id))
+            except Exception as exc:
+                self.send_json(200, {
+                    "success": False,
+                    "message": "KPPP full tender details are temporarily unavailable.",
+                    "error": str(exc)[:240],
+                })
+            return
+
         if path == "/api/history":
             try:
                 from api.history import fetch_history
