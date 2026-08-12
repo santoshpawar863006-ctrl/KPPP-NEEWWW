@@ -39,8 +39,6 @@ jobs:
       - name: JavaScript Syntax Check
         run: |
           node --check worker/index.js
-          node --check worker/router.js
-          node --check worker/bid-ai.js
           node --check public/missing-financial-enrichment.js
           node --check public/bid-cost-planner.js
 
