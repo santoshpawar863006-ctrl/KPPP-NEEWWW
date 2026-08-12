@@ -25,7 +25,7 @@ jobs:
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/bid-cost-planner.js -o /tmp/planner.js
           grep -q "Bid Price & Site Cost Planner" /tmp/planner.js
 
-      - name: Inspect Workers AI Bid Review
+      - name: Verify Workers AI Bid Review
         run: |
           status=$(curl -sS -o /tmp/ai.json -w '%{http_code}' https://karnataka-tender-intelligence.acute-gorilla.workers.dev/api/bid_ai \
             -H 'Content-Type: application/json' \
@@ -37,5 +37,8 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('/tmp/ai.json',encoding='utf-8'))
-          print('success=',d.get('success'),'message=',d.get('message'),'model=',d.get('model'))
+          assert d.get('success') is True, d
+          assert len(d.get('review','')) > 40, d
+          print('AI model:', d.get('model'))
+          print('Review chars:', len(d.get('review','')))
           PY
