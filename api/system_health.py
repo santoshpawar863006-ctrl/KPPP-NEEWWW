@@ -1,14 +1,13 @@
 import json
+import os
 from datetime import datetime, timezone
-from pathlib import Path
 
 import requests
 
 KPPP_BASE = "https://kppp.karnataka.gov.in"
 KPPP_WORKS = KPPP_BASE + "/supplier-registration-service/v1/api/portal-service/works/search-eproc-tenders"
 TENDERKART = "https://tenderkart.in/api/v1/tenders"
-DATA_FILE = Path(__file__).resolve().parents[1] / "public" / "tenders.json"
-HEALTH_FILE = Path(__file__).resolve().parents[1] / "public" / "health.json"
+RAW_HEALTH = "https://raw.githubusercontent.com/santoshpawar863006-ctrl/KPPP-NEEWWW/main/public/health.json"
 
 
 def _age_hours(value):
@@ -21,33 +20,48 @@ def _age_hours(value):
         return None
 
 
-def _database_status():
+def _database_status(session):
     out = {"ok": False, "status": "unknown", "age_hours": None, "count": 0, "category_counts": {}}
-    try:
-        data = json.loads(DATA_FILE.read_text(encoding="utf-8"))
-        generated = data.get("generated_at")
-        age = _age_hours(generated)
-        count = int(data.get("count") or 0)
-        counts = data.get("category_counts") or {}
-        out.update({
-            "ok": count > 0 and age is not None and age <= 6,
-            "status": "fresh" if age is not None and age <= 2 else ("stale" if age is not None and age <= 6 else "very_stale"),
-            "generated_at": generated,
-            "age_hours": round(age, 2) if age is not None else None,
-            "count": count,
-            "category_counts": {
-                "WORKS": int(counts.get("WORKS") or 0),
-                "GOODS": int(counts.get("GOODS") or 0),
-                "SERVICES": int(counts.get("SERVICES") or 0),
-            },
-        })
-    except Exception as exc:
-        out["error"] = str(exc)[:160]
-    try:
-        if HEALTH_FILE.exists():
-            out["collector"] = json.loads(HEALTH_FILE.read_text(encoding="utf-8"))
-    except Exception:
-        pass
+    urls = []
+    for env_name in ("VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_URL"):
+        host = (os.getenv(env_name) or "").strip().strip("/")
+        if host:
+            if not host.startswith("http"):
+                host = "https://" + host
+            urls.append(host + "/health.json")
+    urls.append(RAW_HEALTH)
+
+    last_error = None
+    for url in urls:
+        try:
+            r = session.get(url, headers={"Accept": "application/json", "User-Agent": "Mozilla/5.0 Chrome/124.0"}, timeout=5)
+            if r.status_code != 200:
+                last_error = f"health snapshot HTTP {r.status_code}"
+                continue
+            data = r.json()
+            stamp = data.get("last_success_at") or data.get("generated_at")
+            age = _age_hours(stamp)
+            count = int(data.get("count") or 0)
+            counts = data.get("category_counts") or {}
+            out.update({
+                "ok": count > 0 and age is not None and age <= 6,
+                "status": "fresh" if age is not None and age <= 2 else ("stale" if age is not None and age <= 6 else "very_stale"),
+                "generated_at": data.get("generated_at"),
+                "last_success_at": data.get("last_success_at"),
+                "age_hours": round(age, 2) if age is not None else None,
+                "count": count,
+                "category_counts": {
+                    "WORKS": int(counts.get("WORKS") or 0),
+                    "GOODS": int(counts.get("GOODS") or 0),
+                    "SERVICES": int(counts.get("SERVICES") or 0),
+                },
+                "collector": data,
+            })
+            return out
+        except Exception as exc:
+            last_error = str(exc)[:160]
+    if last_error:
+        out["error"] = last_error
     return out
 
 
@@ -95,7 +109,7 @@ def _probe_tenderkart(session):
 
 def get_system_health():
     session = requests.Session()
-    database = _database_status()
+    database = _database_status(session)
     kppp = _probe_kppp(session)
     tenderkart = _probe_tenderkart(session)
     overall = bool(database.get("ok") and kppp.get("ok"))
