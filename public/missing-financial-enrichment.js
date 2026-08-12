@@ -4,9 +4,10 @@
   const CACHE_KEY = 'kppp_missing_financial_tenderkart_v1';
   const SUCCESS_TTL = 24 * 60 * 60 * 1000;
   const MISS_TTL = 6 * 60 * 60 * 1000;
-  const MAX_CONCURRENT = 3;
+  const MAX_CONCURRENT = 6;
   let active = 0;
   const queue = [];
+  const pendingRefs = new Set();
 
   function loadCache(){
     try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); }
@@ -17,9 +18,6 @@
   }
   const cache = loadCache();
 
-  function esc(value){
-    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  }
   function numeric(value){
     const n = Number(String(value ?? '').replace(/[₹,]/g, '').trim());
     return Number.isFinite(n) && n > 0 ? n : null;
@@ -40,7 +38,9 @@
     if (!item) return null;
     const ttl = item.found ? SUCCESS_TTL : MISS_TTL;
     if (Date.now() - Number(item.saved_at || 0) > ttl) {
-      delete cache[ref]; saveCache(); return null;
+      delete cache[ref];
+      saveCache();
+      return null;
     }
     return item;
   }
@@ -50,19 +50,42 @@
     return cache[ref];
   }
 
-  function applyField(cell, value, sourceUrl){
+  function updateTenderState(ref, field, value){
+    if (!numeric(value)) return;
+    try {
+      const tender = Array.isArray(state?.all)
+        ? state.all.find(t => String(t?.ref_no || t?.id || '').trim() === ref)
+        : null;
+      if (tender) tender[field] = Number(value);
+    } catch {}
+  }
+
+  function replaceDisplayedNumber(cell, value){
     if (!cell || !numeric(value)) return;
-    const link = sourceUrl
-      ? `<a class="secondary-fin-source" href="${esc(sourceUrl)}" target="_blank" rel="noopener noreferrer">TenderKart verified ↗</a>`
-      : '<span class="secondary-fin-source">TenderKart verified</span>';
-    cell.innerHTML = `<strong>${money(value)}</strong><br>${link}`;
+    const display = money(value);
+    let target = cell.querySelector('strong')?.firstChild || cell.firstChild;
+    if (target && target.nodeType === Node.TEXT_NODE) {
+      target.nodeValue = display;
+    } else {
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      target = walker.nextNode();
+      if (target) target.nodeValue = display;
+      else cell.appendChild(document.createTextNode(display));
+    }
     cell.dataset.secondaryFinancial = 'tenderkart';
+    cell.title = 'Recovered from an exact verified TenderKart match';
   }
 
   function applyResult(task, result){
     if (!task?.row?.isConnected || !result?.found) return;
-    if (task.needAmount && missing(task.amountCell?.textContent)) applyField(task.amountCell, result.amount, result.url);
-    if (task.needEmd && missing(task.emdCell?.textContent)) applyField(task.emdCell, result.emd, result.url);
+    if (task.needAmount && missing(task.amountCell?.textContent) && numeric(result.amount)) {
+      replaceDisplayedNumber(task.amountCell, result.amount);
+      updateTenderState(task.ref, 'amount', result.amount);
+    }
+    if (task.needEmd && missing(task.emdCell?.textContent) && numeric(result.emd)) {
+      replaceDisplayedNumber(task.emdCell, result.emd);
+      updateTenderState(task.ref, 'emd', result.emd);
+    }
   }
 
   async function lookup(task){
@@ -70,7 +93,9 @@
       const params = new URLSearchParams({ tender: task.ref, source: 'tenderkart' });
       const response = await fetch('/api/public_tender_detail?' + params.toString(), { cache: 'no-store' });
       const payload = response.ok ? await response.json() : null;
-      const source = Array.isArray(payload?.sources) ? payload.sources.find(x => String(x?.source || '').toLowerCase() === 'tenderkart') : null;
+      const source = Array.isArray(payload?.sources)
+        ? payload.sources.find(x => String(x?.source || '').toLowerCase() === 'tenderkart')
+        : null;
       const signals = source?.signals || {};
       const result = remember(task.ref, {
         found: Boolean(source && (numeric(signals.tender_value) || numeric(signals.emd))),
@@ -84,6 +109,7 @@
     } catch {
       remember(task.ref, { found: false, amount: null, emd: null, tender_fee: null, url: null });
     } finally {
+      pendingRefs.delete(task.ref);
       active--;
       pump();
     }
@@ -92,7 +118,10 @@
   function pump(){
     while (active < MAX_CONCURRENT && queue.length) {
       const task = queue.shift();
-      if (!task?.row?.isConnected) continue;
+      if (!task?.row?.isConnected) {
+        pendingRefs.delete(task?.ref);
+        continue;
+      }
       active++;
       lookup(task);
     }
@@ -101,7 +130,8 @@
   function processRows(){
     const body = document.getElementById('tableBody');
     if (!body) return;
-    for (const row of body.querySelectorAll('tr')) {
+    const rows = [...body.querySelectorAll('tr')];
+    for (const row of rows) {
       const cells = row.querySelectorAll('td');
       if (cells.length < 6 || row.dataset.missingFinancialChecked === '1') continue;
       const ref = rowRef(row);
@@ -119,6 +149,8 @@
         applyResult(task, hit);
         continue;
       }
+      if (pendingRefs.has(ref)) continue;
+      pendingRefs.add(ref);
       queue.push(task);
     }
     pump();
@@ -127,7 +159,7 @@
   let timer = null;
   function schedule(){
     clearTimeout(timer);
-    timer = setTimeout(processRows, 80);
+    timer = setTimeout(processRows, 30);
   }
 
   const observer = new MutationObserver(schedule);
