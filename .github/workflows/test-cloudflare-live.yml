@@ -1,0 +1,70 @@
+name: Smoke Test Cloudflare Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/test-cloudflare-live.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Home Page
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ | grep -q "Karnataka Tender Intelligence"
+
+      - name: Test Live Tender Database
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/tenders.json -o /tmp/tenders.json
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/tenders.json',encoding='utf-8'))
+          assert int(data.get('count') or 0) > 1000, data.get('count')
+          print('Tender count:', data.get('count'))
+          print('Categories:', data.get('category_counts'))
+          PY
+
+      - name: Test Health Snapshot
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/health.json -o /tmp/health.json
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/health.json',encoding='utf-8'))
+          assert int(data.get('count') or 0) > 1000
+          print('Health snapshot:', data.get('status'), data.get('count'))
+          PY
+
+      - name: Test Live System Health
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/api/system_health -o /tmp/system-health.json
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/system-health.json',encoding='utf-8'))
+          assert data.get('success') is True, data
+          assert int((data.get('database') or {}).get('count') or 0) > 1000, data
+          print('Overall:', data.get('overall'))
+          print('KPPP:', data.get('kppp'))
+          print('TenderKart:', data.get('tenderkart'))
+          PY
+
+      - name: Test TenderKart Enrichment
+        run: |
+          curl -fsSL --get \
+            --data-urlencode 'tender=KNNL/2025-26/IW/WORK_INDENT4114/CALL-2' \
+            --data-urlencode 'source=tenderkart' \
+            https://karnataka-tender-intelligence.acute-gorilla.workers.dev/api/public_tender_detail \
+            -o /tmp/tk.json
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/tk.json',encoding='utf-8'))
+          assert data.get('success') is True, data
+          sources=data.get('sources') or []
+          assert any(str(x.get('source','')).lower()=='tenderkart' for x in sources), data
+          print('TenderKart enrichment verified:', len(sources))
+          PY
