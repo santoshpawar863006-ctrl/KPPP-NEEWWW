@@ -4,7 +4,14 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 * * * *"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "fetch_kppp.py"
+      - ".github/workflows/collect-kppp.yml"
 
 permissions:
   contents: write
