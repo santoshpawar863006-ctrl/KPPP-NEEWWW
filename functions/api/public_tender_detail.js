@@ -50,6 +50,17 @@ function boqLines(text, limit = 10) {
   }
   return out;
 }
+
+async function fetchWithTimeout(input, init = {}, timeoutMs = 4000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('upstream timeout'), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function tenderkartMatchesRef(detail, ref) {
   const rn = norm(ref);
   if (!rn || !detail || typeof detail !== 'object') return false;
@@ -128,40 +139,72 @@ function tenderkartSignals(detail) {
   return signals;
 }
 
-async function getTenderKart(ref, title = '', department = '') {
+async function loadTenderKartCandidate(item, ref) {
+  try {
+    const dr = await fetchWithTimeout(`${TK_BASE}/api/v1/tenders/${encodeURIComponent(item.id)}`, {
+      headers: { ...headers, 'Accept':'application/json, text/plain, */*' }
+    }, 3500);
+    if (!dr.ok) return null;
+    const detail = await dr.json();
+    if (!tenderkartMatchesRef(detail, ref)) return null;
+    return {
+      source:'TenderKart',
+      title: detail.title || item.row.title || 'TenderKart',
+      url:`${TK_BASE}/tender/${item.id}`,
+      host:'tenderkart.in',
+      official:false,
+      match_method:'direct TenderKart public API + exact KPPP reference',
+      signals:tenderkartSignals(detail)
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+async function getTenderKart(ref, title = '', department = '', lightweight = false) {
   const attempts = [];
-  const searches = [
-    { keywords: ref, state: 'Karnataka', limit: '8' },
-    { keywords: ref, limit: '8' }
-  ];
-  if (title) searches.push({ keywords: title.match(/[A-Za-z0-9]+/g)?.slice(0,14).join(' ') || title, state: 'Karnataka', limit: '8' });
+  const searches = lightweight
+    ? [{ keywords: ref, state: 'Karnataka', limit: '5' }]
+    : [
+        { keywords: ref, state: 'Karnataka', limit: '6' },
+        { keywords: ref, limit: '6' }
+      ];
   const seen = new Set();
+
   for (const params of searches) {
     const u = new URL(TK_BASE + '/api/v1/tenders');
     Object.entries(params).forEach(([k,v]) => u.searchParams.set(k,v));
     let r;
-    try { r = await fetch(u, { headers: { ...headers, 'Accept': 'application/json, text/plain, */*', 'Referer': TK_BASE + '/tenders/filters' } }); }
-    catch (e) { attempts.push({ source:'TenderKart', method:'public API', error:String(e).slice(0,100) }); continue; }
+    try {
+      r = await fetchWithTimeout(u, {
+        headers: { ...headers, 'Accept': 'application/json, text/plain, */*', 'Referer': TK_BASE + '/tenders/filters' }
+      }, lightweight ? 2500 : 3500);
+    } catch (e) {
+      attempts.push({ source:'TenderKart', method:'public API', error:'timeout_or_network_error' });
+      continue;
+    }
     attempts.push({ source:'TenderKart', method:'public API', http:r.status });
     if (!r.ok) continue;
-    let payload; try { payload = await r.json(); } catch (_) { continue; }
+    let payload;
+    try { payload = await r.json(); } catch (_) { continue; }
     const rows = Array.isArray(payload?.data) ? payload.data : [];
     const ranked = rows.map(row => {
       const id = String(row?.id || '').trim();
       if (!id || seen.has(id)) return null;
       seen.add(id);
       let score = String(row?.portal_name || '').toLowerCase() === 'karnataka' ? 20 : 0;
+      if (tenderkartMatchesRef(row, ref)) score += 100;
       if (title && norm(row?.title) === norm(title)) score += 60;
       if (department && norm(`${row?.organisation || ''} ${row?.department || ''}`).includes(norm(department).slice(0,20))) score += 15;
       return { score, id, row };
     }).filter(Boolean).sort((a,b) => b.score-a.score);
-    for (const item of ranked.slice(0,5)) {
-      let dr; try { dr = await fetch(`${TK_BASE}/api/v1/tenders/${item.id}`, { headers: { ...headers, 'Accept':'application/json, text/plain, */*' } }); } catch (_) { continue; }
-      if (!dr.ok) continue;
-      let detail; try { detail = await dr.json(); } catch (_) { continue; }
-      if (!tenderkartMatchesRef(detail, ref)) continue;
-      return [{ source:'TenderKart', title: detail.title || item.row.title || 'TenderKart', url:`${TK_BASE}/tender/${item.id}`, host:'tenderkart.in', official:false, match_method:'direct TenderKart public API + exact KPPP reference', signals:tenderkartSignals(detail) }, attempts];
-    }
+
+    const candidates = ranked.slice(0, lightweight ? 2 : 3);
+    if (!candidates.length) continue;
+
+    const results = await Promise.all(candidates.map(item => loadTenderKartCandidate(item, ref)));
+    const match = results.find(Boolean);
+    if (match) return [match, attempts];
   }
   return [null, attempts];
 }
@@ -177,7 +220,9 @@ async function searchSource(sourceKey, ref, title = '', department = '', locatio
   for (const q of queries) {
     const u = new URL('https://www.bing.com/search');
     u.searchParams.set('q', q); u.searchParams.set('format','rss'); u.searchParams.set('count','10'); u.searchParams.set('setlang','en-IN');
-    let r; try { r = await fetch(u, { headers }); } catch (e) { attempts.push({source:sourceName,error:String(e).slice(0,100)}); continue; }
+    let r;
+    try { r = await fetchWithTimeout(u, { headers }, 4500); }
+    catch (e) { attempts.push({source:sourceName,error:'timeout_or_network_error'}); continue; }
     if (!r.ok) { attempts.push({source:sourceName,http:r.status}); continue; }
     const xml = await r.text();
     const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].map(m => m[1]);
@@ -209,7 +254,10 @@ export async function onRequestGet(context) {
 
   const sources = [], attempts = [];
   if (source === 'all' || source === 'tenderkart') {
-    const [item, a] = await getTenderKart(ref, title, department); attempts.push(...a); if (item) sources.push(item);
+    const lightweight = !title && !department && !location;
+    const [item, a] = await getTenderKart(ref, title, department, lightweight);
+    attempts.push(...a);
+    if (item) sources.push(item);
   }
   for (const key of ['bidassist','tendersplus']) {
     if (source !== 'all' && source !== key) continue;
@@ -224,7 +272,7 @@ export async function onRequestGet(context) {
     sources,
     source_count:sources.length,
     attempts,
-    note:'TenderKart is queried through its public website API. BidAssist and TendersPlus use public search results. Locked content is not accessed.'
+    note:'TenderKart lookup is bounded for fast Cloudflare responses. BidAssist and TendersPlus use public search results. Locked content is not accessed.'
   });
 }
 
