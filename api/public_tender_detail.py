@@ -1,4 +1,5 @@
 import html
+import os
 import re
 from urllib.parse import urlparse, unquote
 
@@ -10,6 +11,9 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-IN,en;q=0.9",
 }
+
+TENDERKART_API_KEY = os.getenv("TENDERKART_API_KEY", "").strip()
+TENDERKART_LOOKUP = "https://tenderkart.in/api/v1/client/tenders/lookup"
 
 SOURCE_HOSTS = {
     "tenderkart.in": "TenderKart",
@@ -106,7 +110,7 @@ def add_result(results, url, title="", snippet=""):
         {
             "url": url,
             "title": clean_text(title)[:180],
-            "snippet": clean_text(snippet)[:700],
+            "snippet": clean_text(snippet)[:800],
             "host": host,
             "source": source_name(host),
             "official": is_official(host),
@@ -167,6 +171,11 @@ def bing_search(session, query):
             add_result(results, m.group(1), m.group(2), sm.group(1) if sm else "")
         if len(results) >= 10:
             break
+    if not results:
+        for m in re.finditer(r'href=["\'](https?://[^"\']+)["\']', r.text, flags=re.I):
+            add_result(results, m.group(1), "", "")
+            if len(results) >= 10:
+                break
     return results
 
 
@@ -194,15 +203,24 @@ def ddg_search(session, query):
             add_result(results, m.group(1), m.group(2), sm.group(1) if sm else "")
         if len(results) >= 10:
             break
+    if not results:
+        for m in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>', r.text, flags=re.I):
+            add_result(results, m.group(1), m.group(2), "")
+            if len(results) >= 10:
+                break
     return results
 
 
 def search_public(session, query):
+    combined = []
     for searcher in (bing_rss_search, bing_search, ddg_search):
         out = searcher(session, query)
-        if out:
-            return out
-    return []
+        for item in out:
+            if not any(x["url"] == item["url"] for x in combined):
+                combined.append(item)
+        if combined:
+            break
+    return combined
 
 
 def parse_money_value(raw, unit=""):
@@ -274,7 +292,7 @@ def useful_document_lines(lines):
     for line in raw:
         if re.match(r"^(required|optional)\b", line, flags=re.I):
             line = re.sub(r"^(required|optional)\s+", "", line, flags=re.I).strip()
-            if 4 <= len(line) <= 260 and line not in out:
+            if 4 <= len(line) <= 300 and line not in out:
                 out.append(line)
         if len(out) >= 12:
             break
@@ -287,7 +305,7 @@ def useful_eligibility_lines(lines):
     ignore = {"show all criteria", "show all", "subscribe to view"}
     for line in raw:
         low = line.lower().strip()
-        if low in ignore or len(line) < 12 or len(line) > 360:
+        if low in ignore or len(line) < 12 or len(line) > 420:
             continue
         if line not in out:
             out.append(line)
@@ -301,7 +319,7 @@ def useful_boq_lines(lines):
     out = []
     for line in raw:
         low = line.lower()
-        if len(line) < 8 or len(line) > 260:
+        if len(line) < 8 or len(line) > 300:
             continue
         if any(x in low for x in ("search boq", "refer documents", "user do not have access", "invalid")):
             continue
@@ -318,8 +336,8 @@ def extract_signals(text, lines=None):
     signals = {}
     tags = []
 
-    tender_value = money_after(text, [r"tender\s+value", r"tender\s+amount"])
-    emd = money_after(text, [r"emd(?:\s+fee)?"])
+    tender_value = money_after(text, [r"tender\s+value", r"estimated\s+tender\s+value", r"tender\s+amount"])
+    emd = money_after(text, [r"emd(?:\s+fee)?", r"emd\s+amount"])
     fee = money_after(text, [r"tender\s+fee", r"document\s+cost"])
     if tender_value:
         signals["tender_value"] = tender_value
@@ -328,11 +346,11 @@ def extract_signals(text, lines=None):
     if fee:
         signals["tender_fee"] = fee
 
-    if re.search(r"\btender\s+type\s+reserved\b", low):
+    if re.search(r"\btender\s+type\s*[:\-]?\s*reserved\b", low):
         signals["tender_class"] = "Reserved"
-    elif re.search(r"\btender\s+type\s+open\b", low):
+    elif re.search(r"\btender\s+type\s*[:\-]?\s*open\b", low):
         signals["tender_class"] = "Regular / Open"
-    elif re.search(r"\btender\s+type\s+restricted\b", low):
+    elif re.search(r"\btender\s+type\s*[:\-]?\s*restricted\b", low):
         signals["tender_class"] = "Qualified / Restricted"
 
     if re.search(r"reservation\s+(?:sc|scheduled caste)|reserved.*scheduled caste|belonging sc category", low, flags=re.I):
@@ -356,24 +374,24 @@ def extract_signals(text, lines=None):
     elif "kpwd registration" in low or "pwd registration" in low:
         tags.append("KPWD/PWD registration requirement found")
 
-    validity = re.search(r"bid\s+validity.{0,100}?([0-9]{1,4})\s*days?", text, flags=re.I)
+    validity = re.search(r"(?:bid\s+(?:offer\s+)?validity).{0,100}?([0-9]{1,4})\s*days?", text, flags=re.I)
     if validity:
         signals["bid_validity_days"] = int(validity.group(1))
         tags.append("Bid-validity period found")
 
     for key, labels in (
-        ("published_date", ["Published", "Opening Date"]),
-        ("closing_date", ["Closing Date", "Closing Soon"]),
-        ("bid_opening_date", ["Bid Opening"]),
+        ("published_date", ["Published", "Published Date", "Opening Date"]),
+        ("closing_date", ["Closing Date", "Bid Submission End Date", "Closing Soon"]),
+        ("bid_opening_date", ["Bid Opening", "Bid Opening Date"]),
         ("location", ["Location"]),
         ("product_category", ["Product Category"]),
-        ("work_description", ["Work Description"]),
+        ("work_description", ["Work Description", "Description", "Summary"]),
         ("contact_person", ["Contact Person"]),
-        ("mobile_number", ["Mobile Number"]),
+        ("mobile_number", ["Mobile Number", "Office Number"]),
         ("tender_id", ["Tender ID", "Tender Id"]),
     ):
         value = value_after_label(lines, labels)
-        if value and len(value) <= 500:
+        if value and len(value) <= 600:
             signals[key] = value
 
     docs = useful_document_lines(lines)
@@ -403,7 +421,8 @@ def tender_match(tender_ref, text, title="", department="", location=""):
     hit = sum(1 for w in title_words if w in text_low)
     context_terms = [w for w in re.findall(r"[a-z0-9]+", f"{department} {location}".lower()) if len(w) >= 5]
     context_hit = any(w in text_low for w in context_terms[:10]) if context_terms else True
-    if hit >= max(4, int(len(title_words) * 0.65)) and context_hit and "kppp" in text_low:
+    source_context = any(x in text_low for x in ("kppp", "karnataka", "tender"))
+    if hit >= max(4, int(len(title_words) * 0.65)) and context_hit and source_context:
         return True, "title + authority/location"
     return False, ""
 
@@ -445,9 +464,71 @@ def fetch_verified(session, tender_ref, item, title="", department="", location=
     return None
 
 
+def find_key(obj, wanted):
+    wanted = {x.lower() for x in wanted}
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if str(key).lower() in wanted and value:
+                return value
+        for value in obj.values():
+            found = find_key(value, wanted)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for value in obj:
+            found = find_key(value, wanted)
+            if found:
+                return found
+    return None
+
+
+def tenderkart_api_lookup(session, tender_ref, title="", department="", location=""):
+    attempt = {"source": "TenderKart API", "configured": bool(TENDERKART_API_KEY)}
+    if not TENDERKART_API_KEY:
+        return None, attempt
+    try:
+        r = session.get(
+            TENDERKART_LOOKUP,
+            params={"tender_id": tender_ref},
+            headers={
+                "X-API-Key": TENDERKART_API_KEY,
+                "Accept": "application/json",
+                "User-Agent": HEADERS["User-Agent"],
+            },
+            timeout=8,
+        )
+    except Exception as exc:
+        attempt["error"] = str(exc)[:120]
+        return None, attempt
+    attempt["http"] = r.status_code
+    if r.status_code != 200:
+        return None, attempt
+    try:
+        payload = r.json()
+    except Exception:
+        return None, attempt
+    public_url = find_key(payload, {"tenderkart_url", "public_url", "url"})
+    if not public_url or "tenderkart.in/tender/" not in str(public_url):
+        return None, attempt
+    item = {
+        "url": str(public_url),
+        "title": str(find_key(payload, {"title", "tender_title"}) or "TenderKart"),
+        "snippet": "",
+        "host": "tenderkart.in",
+        "source": "TenderKart",
+        "official": False,
+    }
+    verified = fetch_verified(session, tender_ref, item, title, department, location)
+    return verified, attempt
+
+
 def compact_phrase(value, max_words=10):
     words = re.findall(r"[A-Za-z0-9]+", str(value or ""))
     return " ".join(words[:max_words])
+
+
+def human_ref(value):
+    return re.sub(r"[/_\-]+", " ", str(value or "")).strip()
 
 
 def lookup_public_details(tender_ref, title="", department="", location=""):
@@ -456,48 +537,70 @@ def lookup_public_details(tender_ref, title="", department="", location=""):
         return {"success": False, "message": "Tender number is required."}
 
     session = requests.Session()
-    short_title = compact_phrase(title, 9)
+    short_title = compact_phrase(title, 10)
     short_dept = compact_phrase(department, 5)
+    ref_words = human_ref(tender_ref)
+
+    candidates = []
+    source_attempts = []
+    direct, api_attempt = tenderkart_api_lookup(session, tender_ref, title, department, location)
+    source_attempts.append(api_attempt)
+    if direct:
+        candidates.append({
+            "url": direct["url"],
+            "title": direct.get("title", "TenderKart"),
+            "snippet": "",
+            "host": direct.get("host", "tenderkart.in"),
+            "source": "TenderKart",
+            "official": False,
+            "_verified": direct,
+        })
 
     exact_specs = [
-        ("TenderKart", "tenderkart.in", f'site:tenderkart.in/tender "{tender_ref}"', "tender number"),
-        ("BidAssist", "bidassist.com", f'site:bidassist.com/karnataka-tenders "{tender_ref}"', "tender number"),
-        ("TendersPlus", "tendersplus.com", f'site:tendersplus.com/tenders-full-details "{tender_ref}"', "tender number"),
+        ("TenderKart", "tenderkart.in", f'"{tender_ref}" TenderKart', "exact tender number"),
+        ("BidAssist", "bidassist.com", f'"{tender_ref}" BidAssist', "exact tender number"),
+        ("TendersPlus", "tendersplus.com", f'"{tender_ref}" TendersPlus', "exact tender number"),
+    ]
+    human_specs = [
+        ("TenderKart", "tenderkart.in", f'"{ref_words}" TenderKart Karnataka', "tender number keywords"),
+        ("BidAssist", "bidassist.com", f'"{ref_words}" BidAssist Karnataka', "tender number keywords"),
+        ("TendersPlus", "tendersplus.com", f'"{ref_words}" TendersPlus Karnataka', "tender number keywords"),
     ]
     title_specs = []
     if short_title:
         title_specs = [
-            ("TenderKart", "tenderkart.in", f'site:tenderkart.in/tender "{short_title}" "{short_dept}" Karnataka', "title keywords"),
-            ("BidAssist", "bidassist.com", f'site:bidassist.com/karnataka-tenders "{short_title}" "{short_dept}" Karnataka', "title keywords"),
-            ("TendersPlus", "tendersplus.com", f'site:tendersplus.com/tenders-full-details "{short_title}" "{short_dept}" Karnataka', "title keywords"),
+            ("TenderKart", "tenderkart.in", f'"{short_title}" "{short_dept}" TenderKart Karnataka', "title/department keywords"),
+            ("BidAssist", "bidassist.com", f'"{short_title}" "{short_dept}" BidAssist Karnataka', "title/department keywords"),
+            ("TendersPlus", "tendersplus.com", f'"{short_title}" "{short_dept}" TendersPlus Karnataka', "title/department keywords"),
         ]
     fallback_specs = [
-        ("Government", "karnataka.gov.in", f'"{tender_ref}" site:karnataka.gov.in', "tender number"),
-        ("Public document", "s3.nl.geostorage.net", f'"{tender_ref}" site:s3.nl.geostorage.net', "tender number"),
+        ("Government", "karnataka.gov.in", f'"{tender_ref}" Karnataka government tender', "exact tender number"),
+        ("Public document", "s3.nl.geostorage.net", f'"{tender_ref}" KPPP tender document', "exact tender number"),
     ]
-
-    candidates = []
-    source_attempts = []
 
     def run_specs(specs):
         if not specs:
             return
         with ThreadPoolExecutor(max_workers=min(6, len(specs))) as pool:
-            futures = {pool.submit(search_public, session, query): (expected, domain, qtype) for expected, domain, query, qtype in specs}
+            futures = {
+                pool.submit(search_public, session, query): (expected, domain, qtype)
+                for expected, domain, query, qtype in specs
+            }
             for future in as_completed(futures):
                 expected, domain, qtype = futures[future]
                 try:
                     found = future.result()
                 except Exception:
                     found = []
-                source_attempts.append({"source": expected, "query_type": qtype, "found": len(found)})
-                for item in found:
-                    if expected not in {"Government", "Public document"} and domain not in item.get("host", ""):
-                        continue
+                domain_found = [x for x in found if domain in x.get("host", "")]
+                source_attempts.append({"source": expected, "query_type": qtype, "found": len(domain_found)})
+                for item in domain_found:
                     if not any(x["url"] == item["url"] for x in candidates):
                         candidates.append(item)
 
     run_specs(exact_specs)
+    if len(candidates) < 2:
+        run_specs(human_specs)
     if len(candidates) < 2 and title_specs:
         run_specs(title_specs)
     if not candidates:
@@ -508,10 +611,21 @@ def lookup_public_details(tender_ref, title="", department="", location=""):
 
     sources = []
     seen_sources = set()
-    to_check = candidates[:8]
+    for item in candidates:
+        if item.get("_verified"):
+            verified = item["_verified"]
+            key = (verified.get("source"), verified.get("url"))
+            if key not in seen_sources:
+                seen_sources.add(key)
+                sources.append(verified)
+
+    to_check = [x for x in candidates if not x.get("_verified")][:9]
     if to_check:
         with ThreadPoolExecutor(max_workers=min(6, len(to_check))) as pool:
-            futures = [pool.submit(fetch_verified, session, tender_ref, item, title, department, location) for item in to_check]
+            futures = [
+                pool.submit(fetch_verified, session, tender_ref, item, title, department, location)
+                for item in to_check
+            ]
             for future in as_completed(futures):
                 try:
                     verified = future.result()
