@@ -3,88 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#07111f">
 <title>Karnataka Tender Intelligence</title>
 <link rel="stylesheet" href="/app.css">
 <link rel="stylesheet" href="/workspace.css?v=20260812a">
 <link rel="stylesheet" href="/analysis-tools.css?v=20260812a">
 <link rel="stylesheet" href="/bid-intelligence.css?v=20260812a">
-<link rel="stylesheet" href="/premium-ui.css?v=20260812a">
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-mark">K</div>
-      <div class="brand-copy">
-        <h1>Karnataka Tender Intelligence</h1>
-        <p>KPPP contractor workspace • Live tender discovery, analysis and bid readiness</p>
-      </div>
+      <h1>🏛 Karnataka Tender Intelligence</h1>
+      <p>Government WORKS, GOODS & SERVICES — contractor-focused tender dashboard</p>
     </div>
-    <div class="header-actions">
-      <button class="header-btn" id="uiSearchJump" type="button" title="Keyboard shortcut: /">⌕ Search <span style="opacity:.55">/</span></button>
-      <div class="live-chip"><span class="dot"></span> KPPP Connected</div>
-    </div>
+    <div class="live-chip"><span class="dot"></span> KPPP Tender Intelligence</div>
   </div>
 </header>
 
-<nav class="ui-nav" aria-label="Tender workspace navigation">
-  <div class="ui-nav-inner">
-    <button type="button" data-ui-nav="dashboard"><span>▦</span> Dashboard</button>
-    <button type="button" data-ui-nav="live"><span class="nav-dot"></span> Live Tenders</button>
-    <button type="button" data-ui-nav="saved"><span>♥</span> Saved</button>
-    <button type="button" data-ui-nav="closing"><span>◷</span> Closing Soon</button>
-    <button type="button" data-ui-nav="analytics"><span>⌁</span> Analytics</button>
-    <a href="/history.html"><span>↺</span> Closed / Awarded</a>
-  </div>
-</nav>
-
 <main class="shell">
-  <section class="dashboard-hero">
-    <div class="hero-copy">
-      <div class="hero-eyebrow">Karnataka procurement intelligence</div>
-      <h2>Find the right tender faster. Compare it. Decide with clarity.</h2>
-      <p>One contractor-focused workspace for KPPP tenders, advanced filtering, saved opportunities, comparisons, analytics and bid-readiness checks.</p>
-    </div>
-    <div class="hero-highlights">
-      <div class="hero-highlight"><span>Coverage</span><strong>Works • Goods • Services</strong><small>Karnataka-focused KPPP tender discovery</small></div>
-      <div class="hero-highlight"><span>Workflow</span><strong>Search → Compare → Bid Check</strong><small>Designed around contractor decisions</small></div>
-      <div class="hero-highlight"><span>Data</span><strong>Automatic KPPP Sync</strong><small>Fresh tender database throughout the day</small></div>
-    </div>
-  </section>
-
   <div class="quickbar">
     <div class="quick-cats">
       <button data-cat="ALL">All Tenders</button>
       <button data-cat="WORKS">WORKS</button>
       <button data-cat="GOODS">GOODS</button>
       <button data-cat="SERVICES">SERVICES</button>
-      <a class="history-link" href="/history.html">🏆 Closed / Awarded</a>
+      <a href="/history.html" style="border:1px solid #7c3aed;background:#f5f3ff;color:#6d28d9;border-radius:9px;padding:10px 13px;font-weight:800;text-decoration:none">🏆 Closed / Awarded Tenders</a>
     </div>
     <div class="sync" id="syncText">Loading tender database…</div>
   </div>
 
-  <section class="stats" id="dashboardStats">
-    <div class="stat"><span>Matching Tenders</span><strong id="statTotal">0</strong></div>
+  <section class="stats">
+    <div class="stat"><span>Matching</span><strong id="statTotal">0</strong></div>
     <div class="stat"><span>Works</span><strong id="statWorks">0</strong></div>
     <div class="stat"><span>Goods</span><strong id="statGoods">0</strong></div>
     <div class="stat"><span>Services</span><strong id="statServices">0</strong></div>
-    <div class="stat"><span>Closing ≤ 7 Days</span><strong id="statSoon">0</strong></div>
-    <div class="stat"><span>Saved Tenders</span><strong id="statSaved">0</strong></div>
+    <div class="stat"><span>Closing ≤ 7 days</span><strong id="statSoon">0</strong></div>
+    <div class="stat"><span>Saved</span><strong id="statSaved">0</strong></div>
   </section>
 
-  <section class="filters" id="filterPanel">
-    <div class="filter-shell-head">
-      <div class="filter-shell-title">
-        <div class="filter-icon">⌕</div>
-        <div><strong>Find the right tender</strong><small>Combine search, location, department, value, EMD and date filters</small></div>
-      </div>
-      <div class="filter-head-actions">
-        <span class="active-filter-count" id="activeFilterCount">0</span>
-        <button class="reset-btn" id="resetBtn" type="button">Reset</button>
-        <button class="filter-collapse-btn" id="filterCollapseBtn" type="button" aria-expanded="true">Hide filters</button>
-      </div>
-    </div>
+  <section class="filters">
     <div class="filter-grid">
       <div class="field">
         <label>SEARCH</label>
@@ -116,21 +73,11 @@
         </select>
       </div>
     </div>
+    <div style="margin-top:12px;display:flex;justify-content:flex-end"><button class="reset-btn" id="resetBtn">Reset filters</button></div>
   </section>
 
   <section class="results" id="resultsPanel">
-    <div class="results-head">
-      <div class="results-title-wrap">
-        <div class="results-icon">☷</div>
-        <div class="results-copy"><strong id="resultCount">Loading…</strong><span class="sync">Open a tender for full available KPPP information and bid-readiness tools</span></div>
-      </div>
-      <div class="result-tools">
-        <div class="view-switch" aria-label="Tender view">
-          <button id="viewTableBtn" class="active" type="button">☷ Table</button>
-          <button id="viewCardsBtn" type="button">▦ Cards</button>
-        </div>
-      </div>
-    </div>
+    <div class="results-head"><strong id="resultCount">Loading…</strong><span class="sync">Click “View Details” for complete available KPPP tender information</span></div>
     <div class="table-wrap">
       <table class="tender-table">
         <thead>
@@ -158,14 +105,11 @@
   </div>
 </div>
 
-<button class="back-to-top" id="backToTop" type="button" aria-label="Back to top">↑</button>
-
 <script src="/app.js?v=20260812b" defer></script>
 <script src="/detail-enrichment.js?v=20260812b" defer></script>
 <script src="/workspace.js?v=20260812a" defer></script>
 <script src="/analysis-tools.js?v=20260812a" defer></script>
 <script src="/amount-fix.js?v=20260812a" defer></script>
 <script src="/bid-intelligence.js?v=20260812a" defer></script>
-<script src="/premium-ui.js?v=20260812a" defer></script>
 </body>
 </html>
