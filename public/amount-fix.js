@@ -98,7 +98,12 @@
       const shown = positiveNumber(strong.textContent);
       if(shown !== null) return;
 
-      strong.textContent = recovered !== null ? formatMoney(recovered) : 'Refer tender';
+      const desired = recovered !== null ? formatMoney(recovered) : 'Refer tender';
+      // Critical guard: never rewrite identical text. Without this, MutationObserver
+      // can observe our own textContent write and repeatedly trigger itself.
+      if(String(strong.textContent || '').trim() !== desired){
+        strong.textContent = desired;
+      }
     });
   }
 
@@ -112,6 +117,8 @@
 
   const modal = document.getElementById('modalBody');
   if(modal){
-    new MutationObserver(fixVisibleEstimatedAmount).observe(modal, {childList:true, subtree:true, characterData:true});
+    // Child-list changes are enough because View Details replaces/inserts sections.
+    // Do not observe characterData; that made normal text changes unnecessarily wake this fixer.
+    new MutationObserver(fixVisibleEstimatedAmount).observe(modal, {childList:true, subtree:true});
   }
 })();
