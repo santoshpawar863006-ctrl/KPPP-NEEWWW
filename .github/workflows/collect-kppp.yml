@@ -11,6 +11,7 @@ on:
       - main
     paths:
       - "fetch_kppp.py"
+      - "fix_financial_fields.py"
       - ".github/workflows/collect-kppp.yml"
 
 permissions:
@@ -43,6 +44,10 @@ jobs:
           KPPP_MAX_PAGES: "250"
         run: |
           python fetch_kppp.py
+
+      - name: Prefer Positive KPPP Financial Fields
+        run: |
+          python fix_financial_fields.py
 
       - name: Validate Against Last Good Database
         run: |
