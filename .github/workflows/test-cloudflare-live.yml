@@ -16,13 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Allow Cloudflare Git build to finish
-        run: sleep 25
+        run: sleep 30
 
       - name: Test Home Page
         run: |
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ -o /tmp/home.html
           grep -q "Karnataka Tender Intelligence" /tmp/home.html
           grep -q "bid-cost-planner.js" /tmp/home.html
+          grep -q "filter-quality.js" /tmp/home.html
+          grep -q "filter-quality.css" /tmp/home.html
+
+      - name: Verify Filter Quality Deployment
+        run: |
+          curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/filter-quality.js -o /tmp/filter-quality.js
+          grep -q "bagalakote" /tmp/filter-quality.js
+          grep -q "advancedFilterDropdown" /tmp/filter-quality.js
+          grep -q "main-tender-class-field" /tmp/filter-quality.js
+          grep -q "Rural Development and Panchayat Raj Department" /tmp/filter-quality.js
+          echo "City/department normalization and filter layout fix is live."
 
       - name: Verify Bid Planner Without AI
         run: |
@@ -40,15 +51,22 @@ jobs:
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/missing-financial-enrichment.js -o /tmp/missing-financial.js
           grep -q "TenderKart verified" /tmp/missing-financial.js
 
-      - name: Test Live Tender Database
+      - name: Test Live Tender Database And RDPR Sample
         run: |
           curl -fsSL https://karnataka-tender-intelligence.acute-gorilla.workers.dev/tenders.json -o /tmp/tenders.json
           python - <<'PY'
           import json
           data=json.load(open('/tmp/tenders.json',encoding='utf-8'))
           assert int(data.get('count') or 0) > 1000, data.get('count')
+          ref='RDPR/2026-27/RD/WORK_INDENT27965'
+          matches=[t for t in data.get('tenders',[]) if t.get('ref_no')==ref]
+          assert matches, f'{ref} missing from live database'
+          t=matches[0]
+          assert 'Rural Development and Panchayat Raj' in str(t.get('department') or ''), t
+          text=' '.join(str(t.get(k) or '') for k in ('title','location','district','city')).lower()
+          assert 'bagalkot' in text or 'bagalkote' in text or 'bagalakote' in text, t
           print('Tender count:', data.get('count'))
-          print('Categories:', data.get('category_counts'))
+          print('RDPR sample:', t.get('ref_no'), t.get('department'), t.get('location'))
           PY
 
       - name: Test Health Snapshot
