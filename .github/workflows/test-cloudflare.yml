@@ -11,6 +11,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - "public/.assetsignore"
+      - "public/index.html"
+      - "public/missing-financial-enrichment.js"
+      - "public/emd-enrichment.css"
       - ".github/workflows/test-cloudflare.yml"
 
 permissions:
@@ -32,7 +35,9 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: JavaScript Syntax Check
-        run: node --check worker/index.js
+        run: |
+          node --check worker/index.js
+          node --check public/missing-financial-enrichment.js
 
       - name: Wrangler Dry Run
         run: npx wrangler deploy --dry-run --outdir cloudflare-dist
