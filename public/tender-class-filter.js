@@ -38,7 +38,6 @@
       try { applyFilters(); } catch {}
     });
 
-    // Main reset should also reset the tender class.
     document.getElementById('resetBtn')?.addEventListener('click', () => {
       if(select) select.value = 'ALL';
       setTimeout(() => { try { applyFilters(); } catch {} }, 0);
@@ -60,10 +59,20 @@
     renderWrapped = true;
   }
 
+  function loadContractorFit(){
+    if(document.getElementById('contractorFitFilter') || document.querySelector('script[data-contractor-fit-loader]')) return;
+    const script = document.createElement('script');
+    script.src = '/contractor-fit-filter.js?v=20260813a';
+    script.defer = true;
+    script.dataset.contractorFitLoader = '1';
+    document.head.appendChild(script);
+  }
+
   function install(){
     wrapRender();
     const fieldReady = installField();
     installed = fieldReady && renderWrapped;
+    if(installed) loadContractorFit();
     return installed;
   }
 
