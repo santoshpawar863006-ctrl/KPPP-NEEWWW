@@ -111,6 +111,42 @@
     return `<section class="tk-subsection"><div class="tk-subhead"><h4>${esc(title)}</h4><span>${items.length}</span></div><div class="tk-table-wrap"><table class="tk-table"><tbody>${items.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x)}</td></tr>`).join('')}</tbody></table></div></section>`;
   }
 
+  function documentLabel(item){
+    if(typeof item === 'string') return item;
+    if(item && typeof item === 'object'){
+      return String(item.label || item.name || item.document_name || item.title || '').trim();
+    }
+    return String(item || '').trim();
+  }
+
+  function tenderDocumentsSection(items, tenderKartUrl){
+    if(!Array.isArray(items)||!items.length) return '';
+    const safeUrl=String(tenderKartUrl||'').startsWith('http')?tenderKartUrl:'';
+    const note = safeUrl
+      ? 'File names come from TenderKart’s public data. To download the real PDFs/ZIP, open TenderKart, sign in there, then download.'
+      : 'File names are listed below. Open the matched TenderKart page (when available) to sign in and download.';
+    const headAction = safeUrl
+      ? `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" class="tk-doc-open-all">Open tender on TenderKart to download ↗</a>`
+      : '';
+    const rows = items.map((item,i)=>{
+      const label=documentLabel(item) || `Document ${i+1}`;
+      const action = safeUrl
+        ? `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" class="tk-doc-download">Download on TenderKart ↗</a>`
+        : `<span class="tk-doc-unavailable">TenderKart link unavailable</span>`;
+      return `<tr><td>${i+1}</td><td><div class="tk-doc-name">${esc(label)}</div><div class="tk-doc-hint">Sign in on TenderKart if prompted</div></td><td class="tk-doc-action">${action}</td></tr>`;
+    }).join('');
+    return `<section class="tk-subsection tk-docs-section">
+      <div class="tk-subhead">
+        <div>
+          <h4>Tender Document Files</h4>
+          <p class="tk-docs-note">${esc(note)}</p>
+        </div>
+        <div class="tk-docs-head-actions"><span>${items.length}</span>${headAction}</div>
+      </div>
+      <div class="tk-table-wrap"><table class="tk-table tk-docs-table"><thead><tr><th>#</th><th>Document</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </section>`;
+  }
+
   function renderTenderKart(tender,source){
     const host=document.getElementById('tenderKartPrimaryHost');
     if(!host) return;
@@ -121,6 +157,7 @@
     }
     const s=source.signals||{};
     const safeUrl=String(source.url||'').startsWith('http')?source.url:'#';
+    const hasTkUrl=String(source.url||'').startsWith('http');
     host.dataset.tenderRef=ref;
     host.innerHTML=`<section class="detail-section tk-primary-section">
       <div class="tk-primary-head"><div><div class="tk-eyebrow">VERIFIED TENDERKART ENRICHMENT</div><h3>TenderKart Details</h3><p>Loaded once into a separate stable area. KPPP details below are not rebuilt when this section loads.</p></div><a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" class="tk-source-link">Open TenderKart ↗</a></div>
@@ -131,25 +168,27 @@
       ${numbered('Mandatory Documents / Certificates',s.documents_required)}
       ${numbered('Technical Criteria',s.technical_criteria)}
       ${numbered('Eligibility Conditions',s.eligibility)}
-      ${numbered('Tender Document Files',s.tender_documents)}
+      ${tenderDocumentsSection(s.tender_documents, hasTkUrl ? source.url : '')}
       ${numbered('BOQ / Work Item Preview',s.boq_preview)}
-      <div class="tk-source-foot">Source: <strong>TenderKart</strong> • ${esc(source.match_method||'verified tender match')} • Cross-check with KPPP before bidding.</div>
+      <div class="tk-source-foot">Source: <strong>TenderKart</strong> • ${esc(source.match_method||'verified tender match')} • Cross-check with KPPP before bidding. Document downloads require TenderKart login on their site.</div>
     </section>`;
   }
 
   function renderManualSource(tender,sourceKey,payload){
-    const body=document.getElementById('modalBody'); if(!body) return;
+    const body=document.getElementById('enrichmentExtraHost') || document.getElementById('modalBody'); if(!body) return;
     const cls='stable-manual-'+sourceKey;
     body.querySelector('.'+cls)?.remove();
     const source=firstSource(payload,sourceKey);
     const display=sourceName(sourceKey);
     if(!source){
       body.insertAdjacentHTML('beforeend',`<section class="detail-section public-web-section ${cls}"><div class="section-title"><h3>${esc(display)} Search</h3><span class="count-chip">No verified match</span></div><div class="empty-block">No verified public ${esc(display)} match was found for this exact tender. Existing KPPP/TenderKart details are unchanged.</div></section>`);
+      try { window.KPPPDetailLayout?.scheduleOrganize?.(); } catch {}
       return;
     }
     const s=source.signals||{};
     const safeUrl=String(source.url||'').startsWith('http')?source.url:'#';
     body.insertAdjacentHTML('beforeend',`<section class="detail-section public-web-section ${cls}"><div class="section-title"><h3>${esc(display)} Public Data</h3><span class="count-chip">Verified match</span></div><div class="public-source-card"><div class="public-source-head"><div><strong>${esc(source.title||display)}</strong><small>${esc(source.match_method||'verified match')}</small></div><a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">Open ${esc(display)} ↗</a></div>${rows([['Tender Value',money(s.tender_value)],['EMD',money(s.emd)],['Tender Fee',money(s.tender_fee)],['Tender Class',s.tender_class],['Reservation',s.reservation],['Location',s.location]])}</div></section>`);
+    try { window.KPPPDetailLayout?.scheduleOrganize?.(); } catch {}
   }
 
   function readiness(t){
@@ -171,15 +210,17 @@
   }
 
   function renderReadiness(t){
-    const body=document.getElementById('modalBody'); if(!body) return;
-    body.querySelector('.bid-intelligence')?.remove();
+    const host=document.getElementById('summaryReadinessHost') || document.getElementById('modalBody');
+    if(!host) return;
+    host.querySelector('.bid-intelligence')?.remove();
     const r=readiness(t);
-    body.insertAdjacentHTML('afterbegin',`<section class="detail-section bid-intelligence stable-readiness">
-      <div class="bid-intel-head"><div><h3>Should I Bid? — Readiness Check</h3><p>Lightweight decision support. It does not re-render KPPP or TenderKart details.</p></div><div class="bid-score ${r.tone}"><strong>${r.score}</strong><span>/100</span><small>${esc(r.label)}</small></div></div>
+    host.insertAdjacentHTML('afterbegin',`<section class="detail-section bid-intelligence stable-readiness">
+      <div class="bid-intel-head"><div><h3>Should I Bid? — Readiness Check</h3><p>Lightweight decision support for this tender before you dig into specs and documents.</p></div><div class="bid-score ${r.tone}"><strong>${r.score}</strong><span>/100</span><small>${esc(r.label)}</small></div></div>
       <div class="bid-summary-grid"><div><span>Tender Value</span><strong>${esc(money(r.amount))}</strong></div><div><span>EMD</span><strong>${esc(money(r.emd))}</strong></div><div><span>Days Left</span><strong>${r.days===null?'Not available':r.days<0?'Closed':esc(r.days+' days')}</strong></div><div><span>Location</span><strong>${esc(t.derived_city||t.location||'Not available')}</strong></div></div>
       <div class="bid-score-parts">${r.parts.map(p=>`<div><div class="bid-part-top"><strong>${esc(p[0])}</strong><span>${p[1]}/${p[2]}</span></div><div class="bid-mini-track"><i style="width:${Math.round(p[1]/p[2]*100)}%"></i></div><p>${esc(p[3])}</p></div>`).join('')}</div>
       <div class="bid-manual-checks"><strong>Before bidding, manually verify:</strong><span>Eligibility/class/license</span><span>BOQ & quantities</span><span>Site conditions</span><span>Material/labour cost</span><span>Taxes & escalation</span><span>Working capital</span></div>
     </section>`);
+    try { window.KPPPDetailLayout?.scheduleOrganize?.(); } catch {}
   }
 
   async function loadTenderKartOnce(t,key){

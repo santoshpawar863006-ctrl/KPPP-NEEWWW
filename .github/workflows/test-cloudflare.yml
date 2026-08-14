@@ -18,6 +18,8 @@ on:
       - "public/emd-enrichment.css"
       - "public/bid-cost-planner.js"
       - "public/bid-cost-planner.css"
+      - "public/bid-calculator.js"
+      - "public/bid-calculator.css"
       - "public/filter-quality.js"
       - "public/filter-quality.css"
       - "public/tender-list-experience.js"
@@ -48,8 +50,11 @@ jobs:
           node --check public/modal-stability.js
           node --check public/missing-financial-enrichment.js
           node --check public/bid-cost-planner.js
+          node --check public/bid-calculator.js
           node --check public/filter-quality.js
           node --check public/tender-list-experience.js
+          grep -q "bid-calculator.js" public/index.html
+          grep -q "/api/bid_calculator" worker/index.js
 
       - name: Filter Normalization Regression Test
         run: |

@@ -4,26 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Karnataka Tender Intelligence</title>
-<link rel="stylesheet" href="/app.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/auth.css?v=20260814a">
+<link rel="stylesheet" href="/app.css?v=20260814a">
+<script src="/auth-client.js?v=20260814a"></script>
 <link rel="stylesheet" href="/workspace.css?v=20260812a">
 <link rel="stylesheet" href="/analysis-tools.css?v=20260812a">
 <link rel="stylesheet" href="/bid-intelligence.css?v=20260812a">
 <link rel="stylesheet" href="/public-web-enrichment.css?v=20260812d">
-<link rel="stylesheet" href="/tenderkart-stability.css?v=20260812a">
+<link rel="stylesheet" href="/tenderkart-stability.css?v=20260814e">
 <link rel="stylesheet" href="/system-health.css?v=20260812a">
 <link rel="stylesheet" href="/emd-enrichment.css?v=20260812c">
 <link rel="stylesheet" href="/bid-cost-planner.css?v=20260812a">
+<link rel="stylesheet" href="/bid-calculator.css?v=20260814d">
 <link rel="stylesheet" href="/filter-quality.css?v=20260812a">
+<link rel="stylesheet" href="/detail-layout.css?v=20260814a">
 <link rel="stylesheet" href="/tender-list-experience.css?v=20260812b">
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <h1>🏛 Karnataka Tender Intelligence</h1>
-      <p>Government WORKS, GOODS & SERVICES — contractor-focused tender dashboard</p>
+      <h1>Karnataka Tender Intelligence</h1>
+      <p>Secure contractor workspace for KPPP WORKS, GOODS &amp; SERVICES tenders</p>
     </div>
-    <div class="live-chip"><span class="dot"></span> KPPP Tender Intelligence</div>
+    <div class="live-chip"><span class="dot"></span> Live KPPP desk</div>
   </div>
 </header>
 
@@ -34,7 +41,7 @@
       <button data-cat="WORKS">WORKS</button>
       <button data-cat="GOODS">GOODS</button>
       <button data-cat="SERVICES">SERVICES</button>
-      <a href="/history.html" style="border:1px solid #7c3aed;background:#f5f3ff;color:#6d28d9;border-radius:9px;padding:10px 13px;font-weight:800;text-decoration:none">🏆 Closed / Awarded Tenders</a>
+      <a class="history-link" href="/history.html">Closed / Awarded</a>
     </div>
     <div class="sync" id="syncText">Loading tender database…</div>
   </div>
@@ -100,7 +107,7 @@
 </main>
 
 <div class="modal" id="detailModal">
-  <div class="modal-card">
+  <div class="modal-card detail-modal-card">
     <div class="modal-head">
       <div>
         <h2 id="modalTitle">Tender Details</h2>
@@ -108,21 +115,46 @@
       </div>
       <button class="modal-close" id="modalClose" aria-label="Close">×</button>
     </div>
-    <div id="tenderKartPrimaryHost" class="tenderkart-primary-host"></div>
-    <div class="modal-body" id="modalBody"></div>
+    <nav class="detail-tabs" id="detailTabs" aria-label="Tender detail sections">
+      <button type="button" class="detail-tab active" data-tab="enrichment">Enrichment</button>
+      <button type="button" class="detail-tab" data-tab="summary">Summary</button>
+      <button type="button" class="detail-tab" data-tab="bid">Bid plan</button>
+      <button type="button" class="detail-tab" data-tab="specs">Full specs</button>
+    </nav>
+    <div class="detail-panels">
+      <div class="detail-panel active" id="panel-enrichment" data-panel="enrichment">
+        <div id="tenderKartPrimaryHost" class="tenderkart-primary-host"></div>
+        <div id="enrichmentExtraHost"></div>
+        <div class="detail-empty soft" id="enrichmentEmptyHint">Verified TenderKart and public enrichment will appear here.</div>
+      </div>
+      <div class="detail-panel" id="panel-summary" data-panel="summary">
+        <div id="summaryReadinessHost"></div>
+        <div id="summaryOverviewHost"></div>
+        <div class="detail-empty" id="summaryEmptyHint">Open a tender to see the executive summary.</div>
+      </div>
+      <div class="detail-panel" id="panel-bid" data-panel="bid">
+        <div id="bidPanelHost"></div>
+        <div class="detail-empty soft" id="bidEmptyHint">Use this tab for site-cost and bid planning after the tender opens.</div>
+      </div>
+      <div class="detail-panel" id="panel-specs" data-panel="specs">
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="/app.js?v=20260812b" defer></script>
-<script src="/detail-enrichment.js?v=20260812b" defer></script>
+<script src="/detail-enrichment.js?v=20260814a" defer></script>
 <script src="/workspace.js?v=20260812a" defer></script>
 <script src="/tender-class-filter.js?v=20260812a" defer></script>
 <script src="/filter-quality.js?v=20260812a" defer></script>
 <script src="/analysis-tools.js?v=20260812a" defer></script>
 <script src="/amount-fix.js?v=20260812b" defer></script>
-<script src="/modal-stability.js?v=20260812a" defer></script>
+<script src="/modal-stability.js?v=20260814f" defer></script>
 <script src="/system-health.js?v=20260812a" defer></script>
 <script src="/missing-financial-enrichment.js?v=20260812c" defer></script>
 <script src="/tender-list-experience.js?v=20260812b" defer></script>
+<script src="/bid-calculator.js?v=20260814e" defer></script>
+<script src="/detail-layout.js?v=20260814b" defer></script>
 </body>
 </html>

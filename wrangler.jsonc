@@ -12,6 +12,13 @@
       "/health.json"
     ]
   },
+  "kv_namespaces": [
+    {
+      "binding": "AUTH_STORE",
+      "id": "00000000000000000000000000000001",
+      "preview_id": "00000000000000000000000000000002"
+    }
+  ],
   "observability": {
     "enabled": true
   }

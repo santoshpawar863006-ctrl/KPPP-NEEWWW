@@ -30,7 +30,7 @@ function renderListingFallback(t, loading=false, message=''){
     : (message ? `<div class="live-banner warning">ℹ ${esc(message)} Showing all details already available in the KPPP tender feed.</div>` : '');
 
   return `${banner}
-    <section class="detail-section">
+    <section class="detail-section detail-overview">
       <div class="section-title"><h3>Overview</h3><span class="source-chip live">KPPP data</span></div>
       <div class="metric-grid">
         ${metric('Estimated Contract Value',money(value,'Refer tender'))}

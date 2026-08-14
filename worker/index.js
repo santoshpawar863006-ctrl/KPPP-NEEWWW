@@ -1,5 +1,7 @@
 'use strict';
 
+import { handleAuthRoutes, requireAuthOrError, ensureAdminSeeded } from './auth.js';
+
 const RAW_BASE = 'https://raw.githubusercontent.com/santoshpawar863006-ctrl/KPPP-NEEWWW/main/public';
 const KPPP_BASE = 'https://kppp.karnataka.gov.in';
 const KPPP_WORKS = KPPP_BASE + '/supplier-registration-service/v1/api/portal-service/works/search-eproc-tenders';
@@ -488,18 +490,434 @@ async function systemHealth(ctx) {
   }, 200, 'public, max-age=60, s-maxage=60');
 }
 
+const BID_PROFILES = {
+  WORKS: { direct_pct: 80, overhead_pct: 5, contingency_pct: 3, savings_pct: 0, target_margin_pct: 8 },
+  GOODS: { direct_pct: 90, overhead_pct: 3, contingency_pct: 2, savings_pct: 0, target_margin_pct: 6 },
+  SERVICES: { direct_pct: 75, overhead_pct: 8, contingency_pct: 4, savings_pct: 0, target_margin_pct: 10 },
+  DEFAULT: { direct_pct: 80, overhead_pct: 5, contingency_pct: 3, savings_pct: 0, target_margin_pct: 8 }
+};
+
+function clampPct(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+function computeBidMath(ecv, assumptions) {
+  const directPct = clampPct(assumptions.direct_pct, 0, 150, 80);
+  const overheadPct = clampPct(assumptions.overhead_pct, 0, 50, 5);
+  const contingencyPct = clampPct(assumptions.contingency_pct, 0, 50, 3);
+  const savingsPct = clampPct(assumptions.savings_pct, 0, 50, 0);
+  const marginPct = clampPct(assumptions.target_margin_pct, 0, 40, 8);
+
+  const directBase = ecv * (directPct / 100);
+  const saving = directBase * (savingsPct / 100);
+  const adjustedDirect = directBase - saving;
+  const overhead = ecv * (overheadPct / 100);
+  const contingency = ecv * (contingencyPct / 100);
+  const siteCost = adjustedDirect + overhead + contingency;
+  const targetBid = marginPct < 100 ? siteCost / (1 - marginPct / 100) : siteCost;
+  const profit = targetBid - siteCost;
+  const targetDiscount = ((ecv - targetBid) / ecv) * 100;
+  const breakEvenDiscount = ((ecv - siteCost) / ecv) * 100;
+  const costShare = (siteCost / ecv) * 100;
+  const workingCapital = Math.max(siteCost * 0.12, asNumber(assumptions.emd_hint) || 0);
+
+  const round = (n) => Math.round(n * 100) / 100;
+  const scenarios = [
+    { label: 'Aggressive', bid: round(siteCost * 1.03), note: 'Thin ~3% buffer above site cost' },
+    { label: 'Balanced (target)', bid: round(targetBid), note: `${marginPct.toFixed(1)}% target margin` },
+    { label: 'Conservative', bid: round(Math.max(targetBid, siteCost * 1.12)), note: 'Higher safety cushion' }
+  ].map((s) => ({
+    ...s,
+    profit: round(s.bid - siteCost),
+    discount_vs_ecv_pct: round(((ecv - s.bid) / ecv) * 100)
+  }));
+
+  const warnings = [];
+  if (costShare >= 100) warnings.push('Modelled site cost is at or above ECV. Re-rate carefully before bidding.');
+  else if (costShare >= 95) warnings.push('Very little cost headroom remains under these assumptions.');
+  if (targetBid > ecv) warnings.push('Target margin implies a bid above ECV.');
+  if (directPct + overheadPct + contingencyPct < 60) warnings.push('Entered cost percentages look unusually low.');
+
+  return {
+    assumptions: {
+      direct_pct: directPct,
+      overhead_pct: overheadPct,
+      contingency_pct: contingencyPct,
+      savings_pct: savingsPct,
+      target_margin_pct: marginPct,
+      rationale: assumptions.rationale || null
+    },
+    results: {
+      estimated_site_cost: round(siteCost),
+      break_even_bid: round(siteCost),
+      cost_to_cost_bid: round(siteCost),
+      target_bid: round(targetBid),
+      expected_profit: round(profit),
+      target_discount_vs_ecv_pct: round(targetDiscount),
+      max_safe_discount_pct: round(breakEvenDiscount),
+      cost_share_of_ecv_pct: round(costShare),
+      working_capital_hint: round(workingCapital)
+    },
+    scenarios,
+    risks: Array.isArray(assumptions.risks) ? assumptions.risks.filter(Boolean).slice(0, 8) : [],
+    warnings
+  };
+}
+
+function defaultAssumptions(category, emd) {
+  const base = BID_PROFILES[String(category || '').toUpperCase()] || BID_PROFILES.DEFAULT;
+  return {
+    ...base,
+    emd_hint: asNumber(emd),
+    rationale: `Default ${String(category || 'WORKS').toUpperCase()} contractor planning profile. Adjust with your rate analysis.`,
+    risks: [
+      'Verify BOQ quantities and current material/labour rates before submission.',
+      'Confirm eligibility, class, EMD mode and site conditions on the official KPPP notice.'
+    ]
+  };
+}
+
+async function askClaudeForAssumptions(env, tender) {
+  const apiKey = String(env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY || '').trim();
+  if (!apiKey) {
+    return {
+      assumptions: defaultAssumptions(tender.category, tender.emd),
+      ai_used: false,
+      ai_message: 'ANTHROPIC_API_KEY not set. Add it to .dev.vars and restart wrangler. Using category defaults.'
+    };
+  }
+
+  const category = String(tender.category || 'WORKS').toUpperCase();
+  const defaults = defaultAssumptions(category, tender.emd);
+  const system = `You are a Karnataka government works/goods/services tender bid planner for Indian contractors.
+Return ONLY valid JSON with keys:
+direct_pct, overhead_pct, contingency_pct, savings_pct, target_margin_pct, rationale, risks (array of short strings).
+Percentages are of ECV except savings_pct which is % saving on direct cost.
+Be practical for Karnataka site conditions. Do not invent fake BOQ line items. No markdown.`;
+  const userContent = JSON.stringify({
+    ref_no: tender.ref_no || tender.id || '',
+    title: tender.title || '',
+    category,
+    department: tender.department || '',
+    location: tender.location || '',
+    amount_ecv: asNumber(tender.amount),
+    emd: asNumber(tender.emd),
+    fee: asNumber(tender.fee),
+    closing_date: tender.closing_date || '',
+    work_category: tender.work_category || '',
+    tender_type: tender.tender_type || '',
+    inviting_strategy: tender.inviting_strategy || '',
+    default_profile: defaults
+  });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: env.ANTHROPIC_MODEL || env.CLAUDE_MODEL || 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        temperature: 0.2,
+        system,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let detail = String(errText).slice(0, 220);
+      try {
+        const errJson = JSON.parse(errText);
+        detail = String(errJson?.error?.message || errJson?.message || detail).slice(0, 220);
+      } catch {}
+      let hint = `Claude HTTP ${response.status}. Using defaults. ${detail}`;
+      if (response.status === 401) hint = 'Claude rejected the API key (401). Check ANTHROPIC_API_KEY in .dev.vars, then restart wrangler.';
+      if (response.status === 403) hint = `Claude access forbidden (403). Check plan/billing for the API key. ${detail}`;
+      if (response.status === 429) hint = `Claude rate limit / quota (429). Check console.anthropic.com usage/billing, then retry. ${detail}`;
+      return {
+        assumptions: defaults,
+        ai_used: false,
+        ai_message: hint
+      };
+    }
+
+    const payload = await response.json();
+    const content = Array.isArray(payload?.content)
+      ? payload.content.map((part) => part?.text || '').join('\n')
+      : '';
+    let parsed = {};
+    const raw = String(content || '').trim();
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fence) {
+        try { parsed = JSON.parse(fence[1]); } catch { parsed = {}; }
+      } else {
+        const start = raw.indexOf('{');
+        const end = raw.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+          try { parsed = JSON.parse(raw.slice(start, end + 1)); } catch { parsed = {}; }
+        }
+      }
+    }
+
+    return {
+      assumptions: {
+        direct_pct: clampPct(parsed.direct_pct, 0, 150, defaults.direct_pct),
+        overhead_pct: clampPct(parsed.overhead_pct, 0, 50, defaults.overhead_pct),
+        contingency_pct: clampPct(parsed.contingency_pct, 0, 50, defaults.contingency_pct),
+        savings_pct: clampPct(parsed.savings_pct, 0, 50, defaults.savings_pct),
+        target_margin_pct: clampPct(parsed.target_margin_pct, 0, 40, defaults.target_margin_pct),
+        emd_hint: asNumber(tender.emd),
+        rationale: String(parsed.rationale || defaults.rationale).slice(0, 600),
+        risks: Array.isArray(parsed.risks) && parsed.risks.length
+          ? parsed.risks.map((x) => String(x).slice(0, 180)).slice(0, 8)
+          : defaults.risks
+      },
+      ai_used: true,
+      ai_message: 'Assumptions suggested by Claude. Rupee totals are calculated locally.'
+    };
+  } catch (error) {
+    return {
+      assumptions: defaults,
+      ai_used: false,
+      ai_message: `Claude unavailable (${String(error).slice(0, 120)}). Using defaults.`
+    };
+  }
+}
+
+async function bidCalculator(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch { body = {}; }
+
+  const tender = {
+    id: body.id || '',
+    ref_no: body.ref_no || body.tender || '',
+    title: body.title || '',
+    category: body.category || 'WORKS',
+    department: body.department || '',
+    location: body.location || '',
+    amount: asNumber(body.amount ?? body.ecv),
+    emd: asNumber(body.emd),
+    fee: asNumber(body.fee),
+    closing_date: body.closing_date || '',
+    work_category: body.work_category || '',
+    tender_type: body.tender_type || '',
+    inviting_strategy: body.inviting_strategy || ''
+  };
+
+  if (!tender.amount) {
+    return json({
+      success: false,
+      message: 'Tender value (ECV) is required to calculate a bid. Enter amount manually if missing from the feed.'
+    }, 400);
+  }
+
+  const override = body.assumptions && typeof body.assumptions === 'object' ? body.assumptions : null;
+  let aiMeta = { ai_used: false, ai_message: 'Using your edited assumptions.' };
+  let assumptions;
+
+  if (override) {
+    assumptions = {
+      ...defaultAssumptions(tender.category, tender.emd),
+      ...override,
+      emd_hint: asNumber(tender.emd)
+    };
+  } else if (body.skip_ai) {
+    assumptions = defaultAssumptions(tender.category, tender.emd);
+    aiMeta = { ai_used: false, ai_message: 'Using category defaults (AI skipped).' };
+  } else {
+    const asked = await askClaudeForAssumptions(env, tender);
+    assumptions = asked.assumptions;
+    aiMeta = { ai_used: asked.ai_used, ai_message: asked.ai_message };
+  }
+
+  const math = computeBidMath(tender.amount, assumptions);
+  return json({
+    success: true,
+    tender_ref: tender.ref_no || tender.id || '',
+    ecv: tender.amount,
+    emd: tender.emd,
+    category: String(tender.category || '').toUpperCase(),
+    ...aiMeta,
+    ...math,
+    disclaimer: 'Planning estimate only. Verify BOQ quantities, current rates, royalties, GST, machinery and site conditions before submitting a bid.'
+  });
+}
+
+async function bidAsk(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch { body = {}; }
+
+  const question = String(body.question || body.prompt || '').trim();
+  if (!question) {
+    return json({ success: false, message: 'Type a question about this tender or bid plan first.' }, 400);
+  }
+  if (question.length > 2000) {
+    return json({ success: false, message: 'Question is too long. Keep it under 2000 characters.' }, 400);
+  }
+
+  const apiKey = String(env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY || '').trim();
+  if (!apiKey) {
+    return json({
+      success: false,
+      message: 'ANTHROPIC_API_KEY not set. Add it to .dev.vars and restart wrangler.'
+    }, 503);
+  }
+
+  const tender = body.tender && typeof body.tender === 'object' ? body.tender : {};
+  const bidPlan = body.bid_plan && typeof body.bid_plan === 'object' ? body.bid_plan : {};
+  const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
+
+  const system = `You are a practical Karnataka government tender bidding advisor for Indian contractors.
+Answer clearly and briefly using the tender details and bid calculator context provided.
+Use Indian rupees and percentage terms when relevant.
+If information is missing (BOQ, site photos, soil, royalty, GST slabs), say what the contractor should verify on KPPP / site.
+Do not invent exact official BOQ rates. This is planning advice, not a certified estimate.
+Prefer short paragraphs or bullet points.`;
+
+  const contextBlock = JSON.stringify({
+    tender: {
+      ref_no: tender.ref_no || tender.id || '',
+      title: tender.title || '',
+      category: tender.category || '',
+      department: tender.department || '',
+      location: tender.location || '',
+      amount_ecv: tender.amount || tender.ecv || null,
+      emd: tender.emd || null,
+      fee: tender.fee || null,
+      closing_date: tender.closing_date || '',
+      work_category: tender.work_category || '',
+      tender_type: tender.tender_type || '',
+      inviting_strategy: tender.inviting_strategy || ''
+    },
+    bid_plan: {
+      assumptions: bidPlan.assumptions || null,
+      results: bidPlan.results || null,
+      scenarios: bidPlan.scenarios || null,
+      risks: bidPlan.risks || null,
+      warnings: bidPlan.warnings || null,
+      ai_message: bidPlan.ai_message || null
+    }
+  });
+
+  const messages = [];
+  for (const turn of history) {
+    const role = String(turn.role || '').toLowerCase() === 'assistant' ? 'assistant' : 'user';
+    const text = String(turn.content || '').trim();
+    if (!text) continue;
+    messages.push({ role, content: text.slice(0, 2500) });
+  }
+  messages.push({
+    role: 'user',
+    content: `Tender + bid calculator context:\n${contextBlock}\n\nContractor question:\n${question}`
+  });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: env.ANTHROPIC_MODEL || env.CLAUDE_MODEL || 'claude-sonnet-4-5',
+        max_tokens: 1200,
+        temperature: 0.3,
+        system,
+        messages
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let detail = String(errText).slice(0, 220);
+      try {
+        const errJson = JSON.parse(errText);
+        detail = String(errJson?.error?.message || errJson?.message || detail).slice(0, 220);
+      } catch {}
+      let message = `Claude HTTP ${response.status}. ${detail}`;
+      if (response.status === 401) message = 'Claude rejected the API key (401). Check ANTHROPIC_API_KEY in .dev.vars.';
+      if (response.status === 429) message = `Claude rate limit / quota (429). ${detail}`;
+      return json({ success: false, message }, response.status === 401 ? 401 : 502);
+    }
+
+    const payload = await response.json();
+    const answer = Array.isArray(payload?.content)
+      ? payload.content.map((part) => part?.text || '').join('\n').trim()
+      : '';
+    if (!answer) {
+      return json({ success: false, message: 'Claude returned an empty answer. Try again.' }, 502);
+    }
+
+    return json({
+      success: true,
+      answer,
+      model: payload?.model || null
+    });
+  } catch (error) {
+    return json({
+      success: false,
+      message: `Claude unavailable (${String(error).slice(0, 140)}).`
+    }, 502);
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
+      return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
     }
+
+    // Seed default admin on cold starts when KV is available.
+    if (env.AUTH_STORE) {
+      ctx.waitUntil(ensureAdminSeeded(env).catch(() => {}));
+    }
+
+    if (url.pathname.startsWith('/api/auth') || url.pathname.startsWith('/api/admin')) {
+      const handled = await handleAuthRoutes(request, env, url);
+      if (handled) return handled;
+      return json({ success: false, message: 'Auth route not found.' }, 404);
+    }
+
+    if (url.pathname === '/api/bid_calculator' && request.method === 'POST') {
+      const denied = await requireAuthOrError(request, env);
+      if (denied) return denied;
+      return bidCalculator(request, env);
+    }
+    if (url.pathname === '/api/bid_ask' && request.method === 'POST') {
+      const denied = await requireAuthOrError(request, env);
+      if (denied) return denied;
+      return bidAsk(request, env);
+    }
+
     if (request.method !== 'GET') return json({ success: false, message: 'Method not allowed.' }, 405);
 
-    if (url.pathname === '/tenders.json') return proxyRaw('tenders.json', ctx, 60);
+    if (url.pathname === '/tenders.json') {
+      const denied = await requireAuthOrError(request, env);
+      if (denied) return denied;
+      return proxyRaw('tenders.json', ctx, 60);
+    }
     if (url.pathname === '/health.json') return proxyRaw('health.json', ctx, 30);
-    if (url.pathname === '/api/system_health') return systemHealth(ctx);
-    if (url.pathname === '/api/public_tender_detail') return lookupPublicDetails(url);
+    if (url.pathname === '/api/system_health') {
+      const denied = await requireAuthOrError(request, env);
+      if (denied) return denied;
+      return systemHealth(ctx);
+    }
+    if (url.pathname === '/api/public_tender_detail') {
+      const denied = await requireAuthOrError(request, env);
+      if (denied) return denied;
+      return lookupPublicDetails(url);
+    }
     if (url.pathname === '/api/tender_detail') {
       return json({ success: false, message: 'Authenticated KPPP full-view is not required on Cloudflare. All public KPPP feed details remain available, with TenderKart enrichment loaded separately.' });
     }

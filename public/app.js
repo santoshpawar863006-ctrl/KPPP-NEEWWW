@@ -204,7 +204,7 @@ function renderLiveDetail(listing,d){
   const docs=[...asArray(d.tenderCriterionDocumentList),...asArray(d.tenderFiles)];
   const boq=subEst.flatMap(se=>asArray(se.itemList||se.tenderItemList||se.items).map(item=>({...item,__group:se.subEstimateName||se.workCategoryName||''})));
   return `<div class="live-banner success">✓ Full details loaded from KPPP</div>
-    <section class="detail-section"><div class="section-title"><h3>Overview</h3><span class="source-chip live">Live KPPP detail</span></div>
+    <section class="detail-section detail-overview"><div class="section-title"><h3>Overview</h3><span class="source-chip live">Live KPPP detail</span></div>
       <div class="metric-grid">
         ${metric('Estimated Contract Value',money(ecv,'Refer tender'))}
         ${metric('EMD',money(emd,'Refer tender'))}
