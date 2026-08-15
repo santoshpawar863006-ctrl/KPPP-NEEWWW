@@ -1,10 +1,10 @@
 {
-  "last_success_at": "2026-08-14T23:55:44.575508+00:00",
-  "generated_at": "2026-08-14T23:55:43.952684+00:00",
+  "last_success_at": "2026-08-15T03:05:19.295562+00:00",
+  "generated_at": "2026-08-15T03:05:18.668891+00:00",
   "status": "healthy",
-  "count": 4871,
+  "count": 4874,
   "category_counts": {
-    "WORKS": 3059,
+    "WORKS": 3062,
     "GOODS": 620,
     "SERVICES": 1192
   },
