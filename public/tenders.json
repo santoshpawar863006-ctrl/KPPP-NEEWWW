@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16T14:54:38.674524+00:00",
+  "generated_at": "2026-08-16T15:49:27.755072+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 4952,
   "category_counts": {
@@ -31364,8 +31364,8 @@
       "location": "DMA City Corporation Raichur",
       "district": "",
       "city": "",
-      "amount": 3600000.0,
-      "amount_display": "3600000.0",
+      "amount": 3600000.03,
+      "amount_display": "3600000.03",
       "emd": null,
       "fee": null,
       "published_date": "13-08-2026 22:33:46",
@@ -31379,7 +31379,7 @@
         "description": "Construction of Akka Cafe at City Corportation Office ( Old DC Office) in Raichur City.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 3600000.0,
+        "ecv": 3600000.03,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
