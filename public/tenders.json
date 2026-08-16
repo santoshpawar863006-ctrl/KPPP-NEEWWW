@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16T13:45:18.310741+00:00",
+  "generated_at": "2026-08-16T14:54:38.674524+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 4952,
   "category_counts": {
@@ -172029,8 +172029,8 @@
       "location": "CNNL MP Div Ramanagar",
       "district": "",
       "city": "",
-      "amount": 8447008.65,
-      "amount_display": "8447008.65",
+      "amount": 8447008.64,
+      "amount_display": "8447008.64",
       "emd": null,
       "fee": null,
       "published_date": "01-08-2026 15:30:08",
@@ -172044,7 +172044,7 @@
         "description": "Improvements to road from Halaguru- Benamanahalli road to Bheemanadoddi village in Malavalli Taluk under IBP",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 8447008.65,
+        "ecv": 8447008.64,
         "deptId": 5532,
         "status": "PUBLISHED",
         "statusText": "Published",
