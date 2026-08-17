@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16T23:41:13.219832+00:00",
+  "generated_at": "2026-08-17T03:17:01.567439+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 4954,
   "category_counts": {
@@ -109542,8 +109542,8 @@
       "location": "Sri Durgaparameshwari Temple Kateel Dakshina Kannada",
       "district": "",
       "city": "",
-      "amount": 905067.6,
-      "amount_display": "905067.6",
+      "amount": 905067.62,
+      "amount_display": "905067.62",
       "emd": null,
       "fee": null,
       "published_date": "08-08-2026 12:58:51",
@@ -109557,7 +109557,7 @@
         "description": "Construction of Staff room in SDPT PU COLLEGE KATEEL",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 905067.6,
+        "ecv": 905067.62,
         "deptId": 2588,
         "status": "PUBLISHED",
         "statusText": "Published",
