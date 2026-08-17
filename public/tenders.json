@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T21:01:02.177005+00:00",
+  "generated_at": "2026-08-17T22:55:38.338906+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 4991,
   "category_counts": {
@@ -130900,8 +130900,8 @@
       "location": "RDPR Division Office Bagalakote",
       "district": "",
       "city": "",
-      "amount": 1250587.72,
-      "amount_display": "1250587.72",
+      "amount": 1250587.71,
+      "amount_display": "1250587.71",
       "emd": null,
       "fee": null,
       "published_date": "08-08-2026 11:47:53",
@@ -130915,7 +130915,7 @@
         "description": "CONSTRUCTION OF BHEERESHWARATEMPLE SAMUDAYA BHAVAN AT BEVINAMATTI VILLAGE OF BAGALKOT TALUK",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1250587.72,
+        "ecv": 1250587.71,
         "deptId": 52,
         "status": "PUBLISHED",
         "statusText": "Published",
