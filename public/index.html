@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/emd-enrichment.css?v=20260812c">
 <link rel="stylesheet" href="/bid-cost-planner.css?v=20260812a">
 <link rel="stylesheet" href="/bid-calculator.css?v=20260814d">
+<link rel="stylesheet" href="/homepage-chat.css?v=20260818a">
 <link rel="stylesheet" href="/filter-quality.css?v=20260812a">
 <link rel="stylesheet" href="/detail-layout.css?v=20260814a">
 <link rel="stylesheet" href="/tender-list-experience.css?v=20260812b">
@@ -45,6 +46,41 @@
     </div>
     <div class="sync" id="syncText">Loading tender database…</div>
   </div>
+
+  <section class="home-ai" id="homeAiAssistant" aria-labelledby="homeAiTitle">
+    <div class="home-ai-head">
+      <div>
+        <span class="home-ai-kicker">AI Tender Desk</span>
+        <h2 id="homeAiTitle">Ask Claude — Tender Assistant</h2>
+        <p>Ask your tender and contractor doubts directly from the front page. Use it for KPPP process questions, eligibility, EMD, documents, bid discounts, profit planning, site risks and pre-bid checks.</p>
+      </div>
+      <span class="home-ai-badge">Claude AI</span>
+    </div>
+    <div class="home-ai-layout">
+      <aside class="home-ai-prompts" aria-label="Suggested questions">
+        <strong>Quick questions</strong>
+        <div class="home-ai-chips">
+          <button type="button" class="home-ai-chip" data-home-ai-question="How do I check whether I am eligible for a Karnataka KPPP tender?">How do I check tender eligibility?</button>
+          <button type="button" class="home-ai-chip" data-home-ai-question="Explain EMD, tender fee and the main payment-related things I should verify before bidding on KPPP.">Explain EMD &amp; tender fee</button>
+          <button type="button" class="home-ai-chip" data-home-ai-question="What should a contractor verify on site and in the BOQ before deciding a bid percentage?">What should I verify before bidding?</button>
+          <button type="button" class="home-ai-chip" data-home-ai-question="How should I think about a safe discount below ECV while protecting profit on a government works tender?">How do I decide a safe discount?</button>
+        </div>
+        <p class="home-ai-note">For a specific tender, open its Bid plan tab to give Claude that tender and calculator context automatically.</p>
+      </aside>
+      <div class="home-ai-chat">
+        <div class="hc-thread" id="homeAiThread" aria-live="polite"></div>
+        <form class="hc-compose" id="homeAiForm">
+          <label for="homeAiInput">Ask your doubt</label>
+          <textarea id="homeAiInput" rows="3" maxlength="2000" placeholder="Example: I am bidding for a road work tender. What documents and site risks should I check before deciding my percentage?"></textarea>
+          <div class="hc-actions">
+            <span class="hc-status" id="homeAiStatus" aria-live="polite">Enter sends · Shift+Enter adds a new line</span>
+            <button type="button" class="hc-btn" id="homeAiClear">Clear chat</button>
+            <button type="submit" class="hc-btn primary" id="homeAiSend">Ask Claude</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
 
   <section class="stats">
     <div class="stat"><span>Matching</span><strong id="statTotal">0</strong></div>
@@ -155,6 +191,7 @@
 <script src="/missing-financial-enrichment.js?v=20260812c" defer></script>
 <script src="/tender-list-experience.js?v=20260812b" defer></script>
 <script src="/bid-calculator.js?v=20260814e" defer></script>
+<script src="/homepage-chat.js?v=20260818a" defer></script>
 <script src="/detail-layout.js?v=20260814b" defer></script>
 </body>
 </html>
