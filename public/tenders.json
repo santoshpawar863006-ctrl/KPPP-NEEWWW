@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T21:51:21.578591+00:00",
+  "generated_at": "2026-08-18T22:56:42.241105+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5310,
   "category_counts": {
@@ -173746,8 +173746,8 @@
       "location": "PWD Division Office Udupi",
       "district": "",
       "city": "",
-      "amount": 999046.66,
-      "amount_display": "999046.66",
+      "amount": 999046.65,
+      "amount_display": "999046.65",
       "emd": null,
       "fee": null,
       "published_date": "06-08-2026 15:10:50",
@@ -173761,7 +173761,7 @@
         "description": "Annual Manintenance of Udyavara Belle Road from km 0.00 to 3.84, km 3.88 to 4.27, km 4.52 to 5.00, km 5.20 to 5.35, km 5.50 to 6.00, km 6.20 to 7.00, km 7.30 to 7.50, km 7.75 to 11.28 & km 11.75 to 14.24 in Udupi Taluk.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 999046.66,
+        "ecv": 999046.65,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
