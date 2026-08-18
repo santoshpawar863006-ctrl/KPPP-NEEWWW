@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="/bid-cost-planner.css?v=20260812a">
 <link rel="stylesheet" href="/filter-quality.css?v=20260812a">
 <link rel="stylesheet" href="/tender-list-experience.css?v=20260812b">
+<link rel="stylesheet" href="/claude-chat.css?v=20260818a">
 </head>
 <body>
 <header class="topbar">
@@ -113,6 +114,23 @@
   </div>
 </div>
 
+<button class="claude-fab" id="claudeFab" type="button" aria-controls="claudePanel" aria-expanded="false">✦ Ask Claude</button>
+<aside class="claude-panel" id="claudePanel" aria-label="Claude assistant">
+  <div class="claude-head">
+    <div><strong>Claude Assistant</strong><small>Ask me anything</small></div>
+    <button class="claude-close" id="claudeClose" type="button" aria-label="Close Claude">×</button>
+  </div>
+  <div class="claude-thread" id="claudeThread" aria-live="polite"></div>
+  <form class="claude-compose" id="claudeForm">
+    <textarea id="claudeInput" maxlength="8000" placeholder="Ask anything… construction, coding, business, writing, calculations, tenders, documents, planning…"></textarea>
+    <div class="claude-actions">
+      <span class="claude-status" id="claudeStatus">Enter sends · Shift+Enter newline</span>
+      <button class="claude-clear" id="claudeClear" type="button">Clear</button>
+      <button class="claude-send" id="claudeSend" type="submit">Send</button>
+    </div>
+  </form>
+</aside>
+
 <script src="/app.js?v=20260812b" defer></script>
 <script src="/detail-enrichment.js?v=20260812b" defer></script>
 <script src="/workspace.js?v=20260812a" defer></script>
@@ -124,5 +142,6 @@
 <script src="/system-health.js?v=20260812a" defer></script>
 <script src="/missing-financial-enrichment.js?v=20260812c" defer></script>
 <script src="/tender-list-experience.js?v=20260812b" defer></script>
+<script src="/claude-chat.js?v=20260818a" defer></script>
 </body>
 </html>
