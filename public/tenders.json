@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T19:36:19.672278+00:00",
+  "generated_at": "2026-08-18T20:55:36.009965+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5310,
   "category_counts": {
@@ -169689,8 +169689,8 @@
       "location": "PWD Division Office Udupi",
       "district": "",
       "city": "",
-      "amount": 478077.35,
-      "amount_display": "478077.35",
+      "amount": 478077.33,
+      "amount_display": "478077.33",
       "emd": null,
       "fee": null,
       "published_date": "06-08-2026 17:01:31",
@@ -169704,7 +169704,7 @@
         "description": "Annual Maintenance of Katapadi - Dendoorkatte Road From Km.0.00 to Km.1.39 and Km.2.38 to Km.3.50, Kapu Pete Road From Km.0.00 to Km.1.07, Katapadi Pete Road From Km.0.00 to Km.1.84 and Pangala Pete Road From Km.0.00 to Km.0.52 in Kapu Taluk",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 478077.35,
+        "ecv": 478077.33,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
