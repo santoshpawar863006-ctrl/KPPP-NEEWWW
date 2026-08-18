@@ -1,0 +1,56 @@
+name: Deploy Cloudflare Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "worker/**"
+      - "public/**"
+      - "wrangler.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-cloudflare.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Verify Cloudflare credentials are configured
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN GitHub secret is missing."
+            exit 1
+          fi
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Verify Claude UI is live
+        run: |
+          curl --retry 5 --retry-delay 4 --retry-all-errors -fsSL \
+            https://karnataka-tender-intelligence.acute-gorilla.workers.dev/ \
+            -o /tmp/home.html
+          grep -q "Ask Claude" /tmp/home.html
+          curl --retry 5 --retry-delay 4 --retry-all-errors -fsSL \
+            https://karnataka-tender-intelligence.acute-gorilla.workers.dev/claude-chat.js \
+            -o /tmp/claude-chat.js
+          grep -q "/api/claude" /tmp/claude-chat.js
+          echo "Claude floating chat is live on Cloudflare."
