@@ -1,13 +1,55 @@
 {
-  "generated_at": "2026-08-21T19:50:14.398622+00:00",
+  "generated_at": "2026-08-21T20:55:46.985148+00:00",
   "source": "https://kppp.karnataka.gov.in",
-  "count": 5480,
+  "count": 5481,
   "category_counts": {
     "WORKS": 3617,
     "GOODS": 582,
-    "SERVICES": 1281
+    "SERVICES": 1282
   },
   "tenders": [
+    {
+      "id": "86559",
+      "ref_no": "RDPR/2026-27/SE4306",
+      "title": "Maintanance of street lights in villages under Anaberu gram panchayat in davangere taluk",
+      "category": "SERVICES",
+      "department": "Rural Development and Panchayat Raj Department",
+      "location": "RDPR Gram Panchayat Office Anaberu TP Davanagere",
+      "district": "",
+      "city": "",
+      "amount": 199962.0,
+      "amount_display": "199962.0",
+      "emd": null,
+      "fee": null,
+      "published_date": "22-08-2026 01:51:04",
+      "closing_date": "29-08-2026 16:00:00",
+      "status": "PUBLISHED",
+      "status_text": "Published",
+      "raw": {
+        "id": 86559,
+        "tenderNumber": "RDPR/2026-27/SE4306",
+        "title": "Maintanance of street lights in villages under Anaberu gram panchayat in davangere taluk",
+        "description": "Maintanance of street lights in villages under Anaberu gram panchayat in davangere taluk",
+        "category": "SERVICES",
+        "categoryText": "Services",
+        "ecv": 199962.0,
+        "deptId": 52,
+        "status": "PUBLISHED",
+        "statusText": "Published",
+        "nitId": 86615,
+        "publishedDate": "22-08-2026 01:51:04",
+        "tenderClosureDate": "29-08-2026 16:00:00",
+        "invitingStrategy": "OPEN",
+        "invitingStrategyText": "Open",
+        "deptName": "Rural Development and Panchayat Raj Department",
+        "locationId": 8911,
+        "locationName": "RDPR Gram Panchayat Office Anaberu TP Davanagere",
+        "ecvtenderYn": true,
+        "canViewAddendum": false,
+        "canViewCorrigendum": false,
+        "itemwise": true
+      }
+    },
     {
       "id": "323352",
       "ref_no": "RDPR/2026-27/RD/WORK_INDENT27794",
