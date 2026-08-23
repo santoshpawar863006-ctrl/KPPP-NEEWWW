@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-23T10:55:23.760954+00:00",
+  "generated_at": "2026-08-23T11:49:05.996205+00:00",
   "source": "https://kppp.karnataka.gov.in",
-  "count": 5469,
+  "count": 5468,
   "category_counts": {
     "WORKS": 3627,
     "GOODS": 598,
-    "SERVICES": 1244
+    "SERVICES": 1243
   },
   "tenders": [
     {
@@ -120275,48 +120275,6 @@
         "workCategoryName": "Roads",
         "tenderType": "RFQ",
         "itemwise": true
-      }
-    },
-    {
-      "id": "85727",
-      "ref_no": "RDPR/2026-27/SE4253",
-      "title": "RENOVATION OF HUMBI KERE KOPPLA (D) YALBURGA(T) 2026-27",
-      "category": "SERVICES",
-      "department": "Rural Development and Panchayat Raj Department",
-      "location": "RDPR Gram Panchayat Office Mudhol TP Yelburga",
-      "district": "",
-      "city": "",
-      "amount": 339385.0,
-      "amount_display": "339385.0",
-      "emd": null,
-      "fee": null,
-      "published_date": "15-08-2026 10:18:14",
-      "closing_date": "23-08-2026 16:30:00",
-      "status": "PUBLISHED",
-      "status_text": "Published",
-      "raw": {
-        "id": 85727,
-        "tenderNumber": "RDPR/2026-27/SE4253",
-        "title": "RENOVATION OF HUMBI KERE KOPPLA (D) YALBURGA(T) 2026-27",
-        "description": "RENOVATION OF HUMBI KERE KOPPLA (D) YALBURGA(T) 2026-27",
-        "category": "SERVICES",
-        "categoryText": "Services",
-        "ecv": 339385.0,
-        "deptId": 52,
-        "status": "PUBLISHED",
-        "statusText": "Published",
-        "nitId": 85783,
-        "publishedDate": "15-08-2026 10:18:14",
-        "tenderClosureDate": "23-08-2026 16:30:00",
-        "invitingStrategy": "OPEN",
-        "invitingStrategyText": "Open",
-        "deptName": "Rural Development and Panchayat Raj Department",
-        "locationId": 9287,
-        "locationName": "RDPR Gram Panchayat Office Mudhol TP Yelburga",
-        "ecvtenderYn": true,
-        "canViewAddendum": false,
-        "canViewCorrigendum": false,
-        "itemwise": false
       }
     },
     {
