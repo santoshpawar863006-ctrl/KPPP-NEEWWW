@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-25T23:01:27.459325+00:00",
+  "generated_at": "2026-08-26T03:36:18.487812+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5497,
   "category_counts": {
@@ -199108,8 +199108,8 @@
       "location": "DMA TP Doddathoguru",
       "district": "",
       "city": "",
-      "amount": 4227743.12,
-      "amount_display": "4227743.12",
+      "amount": 4227743.13,
+      "amount_display": "4227743.13",
       "emd": null,
       "fee": null,
       "published_date": "11-08-2026 16:36:34",
@@ -199123,7 +199123,7 @@
         "description": "Construction of UGD, Drain and Road in Bettadasanpura Trishasakthi Nilayama in Doddathoguru TP Limits",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 4227743.12,
+        "ecv": 4227743.13,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
