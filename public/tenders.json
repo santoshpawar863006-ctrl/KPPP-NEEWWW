@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29T02:07:47.479558+00:00",
+  "generated_at": "2026-08-29T03:07:39.318648+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5618,
   "category_counts": {
@@ -194265,8 +194265,8 @@
       "location": "RDPR Division Office Kolar",
       "district": "",
       "city": "",
-      "amount": 4085149.95,
-      "amount_display": "4085149.95",
+      "amount": 4085149.96,
+      "amount_display": "4085149.96",
       "emd": null,
       "fee": null,
       "published_date": "15-08-2026 14:24:28",
@@ -194280,7 +194280,7 @@
         "description": "Improvements of Asphalt Road from Hutturu Main Road to Hollambahalli Village in Shapur Gp in Banagarapet Constituency in Kolar Taluk (CATEGORY OTHERS)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 4085149.95,
+        "ecv": 4085149.96,
         "deptId": 52,
         "status": "PUBLISHED",
         "statusText": "Published",
