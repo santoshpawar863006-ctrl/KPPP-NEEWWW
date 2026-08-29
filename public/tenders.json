@@ -1,13 +1,55 @@
 {
-  "generated_at": "2026-08-29T03:07:39.318648+00:00",
+  "generated_at": "2026-08-29T04:07:51.438898+00:00",
   "source": "https://kppp.karnataka.gov.in",
-  "count": 5618,
+  "count": 5619,
   "category_counts": {
     "WORKS": 3903,
     "GOODS": 585,
-    "SERVICES": 1130
+    "SERVICES": 1131
   },
   "tenders": [
+    {
+      "id": "86929",
+      "ref_no": "KSRTC/2026-27/SE3743",
+      "title": "BANAVARASTALL24",
+      "category": "SERVICES",
+      "department": "Karnataka State Road Transport Corporation",
+      "location": "KSRTC Divisional Controller Office Chikkmagaluru",
+      "district": "",
+      "city": "",
+      "amount": null,
+      "amount_display": "Refer tender",
+      "emd": null,
+      "fee": null,
+      "published_date": "29-08-2026 09:29:49",
+      "closing_date": "17-09-2026 17:00:00",
+      "status": "PUBLISHED",
+      "status_text": "Published",
+      "raw": {
+        "id": 86929,
+        "tenderNumber": "KSRTC/2026-27/SE3743",
+        "title": "BANAVARASTALL24",
+        "description": "Genaral stall 24 at Banavara Bus Stand Specification per stall 172 sq ft license period 05 years economic LICENSE fee per month Rs 11347 RESERVED FOR SC",
+        "category": "SERVICES",
+        "categoryText": "Services",
+        "ecv": null,
+        "deptId": 3591,
+        "status": "PUBLISHED",
+        "statusText": "Published",
+        "nitId": 86985,
+        "publishedDate": "29-08-2026 09:29:49",
+        "tenderClosureDate": "17-09-2026 17:00:00",
+        "invitingStrategy": "OPEN",
+        "invitingStrategyText": "Open",
+        "deptName": "Karnataka State Road Transport Corporation",
+        "locationId": 3629,
+        "locationName": "KSRTC Divisional Controller Office Chikkmagaluru",
+        "ecvtenderYn": false,
+        "canViewAddendum": false,
+        "canViewCorrigendum": false,
+        "itemwise": false
+      }
+    },
     {
       "id": "325956",
       "ref_no": "RWSSD/2026-27/WS/WORK_INDENT10431",
