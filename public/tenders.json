@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T18:07:47.609983+00:00",
+  "generated_at": "2026-08-30T19:07:49.237101+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5658,
   "category_counts": {
@@ -23610,8 +23610,8 @@
       "location": "DMA City Municipal Council Hootagalli",
       "district": "",
       "city": "",
-      "amount": 1268325.94,
-      "amount_display": "1268325.94",
+      "amount": 1268325.95,
+      "amount_display": "1268325.95",
       "emd": null,
       "fee": null,
       "published_date": "28-08-2026 21:17:53",
@@ -23625,7 +23625,7 @@
         "description": "Construction of CC Drain and deck near SWD High tension double road way to Basavanapura in Hootagalli CMC Limit. (Reserved for CAT-IIA Bidders)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1268325.94,
+        "ecv": 1268325.95,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
