@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T19:07:58.071775+00:00",
+  "generated_at": "2026-08-31T20:07:45.631182+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5582,
   "category_counts": {
@@ -124504,8 +124504,8 @@
       "location": "KNNL Division GLBC Div No 2 Jamakhandi",
       "district": "",
       "city": "",
-      "amount": 2544217.24,
-      "amount_display": "2544217.24",
+      "amount": 2544217.21,
+      "amount_display": "2544217.21",
       "emd": null,
       "fee": null,
       "published_date": "25-08-2026 11:19:58",
@@ -124519,7 +124519,7 @@
         "description": "Reconstruction of Bridge at km 13.545 of Jamkhandi Branch Canal & other works.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 2544217.24,
+        "ecv": 2544217.21,
         "deptId": 3900,
         "status": "PUBLISHED",
         "statusText": "Published",
