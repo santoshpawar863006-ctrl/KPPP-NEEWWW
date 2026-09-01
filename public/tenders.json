@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T16:39:29.166309+00:00",
+  "generated_at": "2026-09-01T17:14:03.391030+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5730,
   "category_counts": {
@@ -206603,7 +206603,7 @@
         "locationName": "Office of the DGP Internal Security Division Bengaluru",
         "ecvtenderYn": false,
         "canViewAddendum": true,
-        "canViewCorrigendum": false,
+        "canViewCorrigendum": true,
         "itemwise": true
       }
     },
