@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T18:16:51.120067+00:00",
+  "generated_at": "2026-09-01T19:12:57.007580+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5731,
   "category_counts": {
@@ -174398,8 +174398,8 @@
       "location": "RDPR Division Office Chitradurga",
       "district": "",
       "city": "",
-      "amount": 590108.34,
-      "amount_display": "590108.34",
+      "amount": 590108.35,
+      "amount_display": "590108.35",
       "emd": null,
       "fee": null,
       "published_date": "21-08-2026 18:16:08",
@@ -174413,7 +174413,7 @@
         "description": "Repairs to Drain at Thimmappayyanahally SC Colony and Construction of CC road from Kyathagondanahally village SC Colony in Challakere Taluk",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 590108.34,
+        "ecv": 590108.35,
         "deptId": 52,
         "status": "PUBLISHED",
         "statusText": "Published",
