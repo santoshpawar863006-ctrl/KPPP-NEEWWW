@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T00:22:23.334879+00:00",
+  "generated_at": "2026-09-02T02:22:08.757551+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5731,
   "category_counts": {
@@ -180052,8 +180052,8 @@
       "location": "DMA City Corporation Tumakuru",
       "district": "",
       "city": "",
-      "amount": 3373567.08,
-      "amount_display": "3373567.08",
+      "amount": 3373567.09,
+      "amount_display": "3373567.09",
       "emd": null,
       "fee": null,
       "published_date": "21-08-2026 13:10:15",
@@ -180067,7 +180067,7 @@
         "description": "Development of Drainage work at ward no 07 GCR Colony (near Public School) development of drainage work at ward no 12 Sadashiva Nagar 4th Main Road in Tumakuru city Corporation Limits",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 3373567.08,
+        "ecv": 3373567.09,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
