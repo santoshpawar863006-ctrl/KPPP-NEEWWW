@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T18:17:37.899247+00:00",
+  "generated_at": "2026-09-02T19:12:53.450307+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5605,
   "category_counts": {
@@ -58265,8 +58265,8 @@
       "location": "DMA Town Municipal Council Hunasemaranahalli",
       "district": "",
       "city": "",
-      "amount": 2283340.38,
-      "amount_display": "2283340.38",
+      "amount": 2283340.39,
+      "amount_display": "2283340.39",
       "emd": null,
       "fee": null,
       "published_date": "31-08-2026 15:47:56",
@@ -58280,7 +58280,7 @@
         "description": "Construction of Asphalt Road in SVS Homes Layout 1st Gate 1st cross Road to to 8 th cross Roads in Hunsamaranahalli TMC Limits",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 2283340.38,
+        "ecv": 2283340.39,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
