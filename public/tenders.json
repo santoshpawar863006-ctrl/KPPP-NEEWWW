@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T23:12:28.432532+00:00",
+  "generated_at": "2026-09-03T00:23:30.430573+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5605,
   "category_counts": {
@@ -132298,8 +132298,8 @@
       "location": "PWD Division Office Chikkamagaluru",
       "district": "",
       "city": "",
-      "amount": 1211633.1,
-      "amount_display": "1211633.1",
+      "amount": 1211633.09,
+      "amount_display": "1211633.09",
       "emd": null,
       "fee": null,
       "published_date": "27-08-2026 10:51:47",
@@ -132313,7 +132313,7 @@
         "description": "Annual maintenance of road From Kachige-Meguru Road to Heggarukodige-Somanakodige- Kallubasthi- Sathukodige- Kallugudde- Bilalukoppa- Jayapura- Balehole Connecting Road (0.00-1.50, 8.22-21.28) in Koppa Taluk in Koppa Taluk. (SC Reservation)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1211633.1,
+        "ecv": 1211633.09,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
