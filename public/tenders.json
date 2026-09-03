@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T19:12:11.405611+00:00",
+  "generated_at": "2026-09-03T20:13:39.640627+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5423,
   "category_counts": {
@@ -144135,8 +144135,8 @@
       "location": "PWD Division Office Kalaburagi",
       "district": "",
       "city": "",
-      "amount": 84471.97,
-      "amount_display": "84471.97",
+      "amount": 84471.98,
+      "amount_display": "84471.98",
       "emd": null,
       "fee": null,
       "published_date": "26-08-2026 16:46:27",
@@ -144150,7 +144150,7 @@
         "description": "Maintenance of Road from Bharathanoor Cross (on SH192) connecting Kodli Cross (on SH32) MDR04096 From 0.00 Km to 1.00 Km in Maintenance of Road from Hosalli (H) (on SH192) connecting Raikod (on SH149) via Halchera, Tegaltippi, Gadikeshwar MDR04091 From 4.00 Km to 6.00 Km, 7.00 Km to 12.92 Kmn Kalagi Taluka.Under 3054 MDR Maintenance for the year 2026-27.(Work Reserved for CAT-II(A)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 84471.97,
+        "ecv": 84471.98,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
