@@ -1,14 +1,14 @@
 {
-  "last_success_at": "2026-09-04T11:13:30.585753+00:00",
-  "generated_at": "2026-09-04T11:13:29.867243+00:00",
+  "last_success_at": "2026-09-04T12:18:49.448955+00:00",
+  "generated_at": "2026-09-04T12:18:48.784207+00:00",
   "status": "healthy",
-  "count": 5356,
+  "count": 5357,
   "category_counts": {
-    "WORKS": 3484,
-    "GOODS": 687,
-    "SERVICES": 1185
+    "WORKS": 3503,
+    "GOODS": 676,
+    "SERVICES": 1178
   },
-  "previous_count": 5602,
+  "previous_count": 5356,
   "guard": {
     "zero_protection": true,
     "abnormal_drop_protection": true,
