@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T02:13:50.961133+00:00",
+  "generated_at": "2026-09-05T03:14:11.952151+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5505,
   "category_counts": {
@@ -32665,8 +32665,8 @@
       "location": "DMA City Municipal Council Siraguppa",
       "district": "",
       "city": "",
-      "amount": 1127514.52,
-      "amount_display": "1127514.52",
+      "amount": 1127514.51,
+      "amount_display": "1127514.51",
       "emd": null,
       "fee": null,
       "published_date": "03-09-2026 14:12:39",
@@ -32680,7 +32680,7 @@
         "description": "Providing and Laying of interlock pavers from Rangha swamy house to Gopalrao house in ward no.12 in Siruguppa",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1127514.52,
+        "ecv": 1127514.51,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
