@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T18:15:10.996259+00:00",
+  "generated_at": "2026-09-05T19:11:50.595014+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5209,
   "category_counts": {
@@ -146626,7 +146626,7 @@
         "locationId": 257,
         "locationName": "MWD District Officer Chamarajanagr",
         "ecvtenderYn": false,
-        "canViewAddendum": false,
+        "canViewAddendum": true,
         "canViewCorrigendum": false,
         "itemwise": true
       }
