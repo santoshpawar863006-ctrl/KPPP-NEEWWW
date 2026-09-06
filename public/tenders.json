@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-06T13:13:30.946763+00:00",
+  "generated_at": "2026-09-06T14:13:48.952752+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5192,
   "category_counts": {
@@ -66610,8 +66610,8 @@
       "location": "DMA City Corporation Mangaluru",
       "district": "",
       "city": "",
-      "amount": 272878.78,
-      "amount_display": "272878.78",
+      "amount": 272878.77,
+      "amount_display": "272878.77",
       "emd": null,
       "fee": null,
       "published_date": "02-09-2026 14:27:15",
@@ -66625,7 +66625,7 @@
         "description": "Painting of the Road and Footpath kerb on the occasion of Dasara festival from Urvastore junction to Kottara Chowki in ward 25 Derebail West under MCC limit",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 272878.78,
+        "ecv": 272878.77,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
