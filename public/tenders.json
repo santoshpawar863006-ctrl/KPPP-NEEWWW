@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-06T06:17:33.239466+00:00",
+  "generated_at": "2026-09-06T07:13:21.093709+00:00",
   "source": "https://kppp.karnataka.gov.in",
-  "count": 5209,
+  "count": 5208,
   "category_counts": {
     "WORKS": 3434,
     "GOODS": 662,
-    "SERVICES": 1113
+    "SERVICES": 1112
   },
   "tenders": [
     {
@@ -4577,7 +4577,7 @@
         "locationId": 5587,
         "locationName": "CCADA EE Division No 2 Mysore",
         "ecvtenderYn": true,
-        "canViewAddendum": false,
+        "canViewAddendum": true,
         "canViewCorrigendum": false,
         "workCategoryName": "Other Works",
         "tenderType": "RFQ",
@@ -136003,48 +136003,6 @@
         "canViewCorrigendum": false,
         "workCategoryName": "Water supply/sewage lines",
         "tenderType": "RFQ",
-        "itemwise": true
-      }
-    },
-    {
-      "id": "86940",
-      "ref_no": "RDPR/2026-27/SE4263",
-      "title": "Renovation and development of Ganganal Lake and Hirebomanal Lake Chalari Lake and Chikkabomanala Lake and Northern part of Chikabomanala Lake of Chikabomanala Gram Panchayat 5 work desilt package",
-      "category": "SERVICES",
-      "department": "Rural Development and Panchayat Raj Department",
-      "location": "RDPR Gram Panchayat Office Chikkabommanal TP Koppal",
-      "district": "",
-      "city": "",
-      "amount": 1231650.0,
-      "amount_display": "1231650.0",
-      "emd": null,
-      "fee": null,
-      "published_date": "29-08-2026 12:06:15",
-      "closing_date": "06-09-2026 11:59:51",
-      "status": "PUBLISHED",
-      "status_text": "Published",
-      "raw": {
-        "id": 86940,
-        "tenderNumber": "RDPR/2026-27/SE4263",
-        "title": "Renovation and development of Ganganal Lake and Hirebomanal Lake Chalari Lake and Chikkabomanala Lake and Northern part of Chikabomanala Lake of Chikabomanala Gram Panchayat 5 work desilt package",
-        "description": "Renovation and development of Ganganal Lake and Hirebomanal Lake Chalari Lake and Chikkabomanala Lake and Northern part of Chikabomanala Lake of Chikabomanala Gram Panchayat 5 work desilt package",
-        "category": "SERVICES",
-        "categoryText": "Services",
-        "ecv": 1231650.0,
-        "deptId": 52,
-        "status": "PUBLISHED",
-        "statusText": "Published",
-        "nitId": 86996,
-        "publishedDate": "29-08-2026 12:06:15",
-        "tenderClosureDate": "06-09-2026 11:59:51",
-        "invitingStrategy": "OPEN",
-        "invitingStrategyText": "Open",
-        "deptName": "Rural Development and Panchayat Raj Department",
-        "locationId": 11453,
-        "locationName": "RDPR Gram Panchayat Office Chikkabommanal TP Koppal",
-        "ecvtenderYn": true,
-        "canViewAddendum": false,
-        "canViewCorrigendum": false,
         "itemwise": true
       }
     },
