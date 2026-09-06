@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-06T03:14:12.827012+00:00",
+  "generated_at": "2026-09-06T04:14:23.517210+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5209,
   "category_counts": {
@@ -63602,8 +63602,8 @@
       "location": "PWD Division Office Yadagiri",
       "district": "",
       "city": "",
-      "amount": 766879.35,
-      "amount_display": "766879.35",
+      "amount": 766879.34,
+      "amount_display": "766879.34",
       "emd": null,
       "fee": null,
       "published_date": "02-09-2026 15:13:33",
@@ -63617,7 +63617,7 @@
         "description": "Maintenance of MDR Road From Yadgir (NH-150) To Saidapur (SH-127) Km 5.00 To 7.00,17.00 To 21.00 & 24.00 To 27.00 (selected reaches) in Yadgir Taluk & Yadgir Dist.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 766879.35,
+        "ecv": 766879.34,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
