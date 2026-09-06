@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-06T01:12:42.559898+00:00",
+  "generated_at": "2026-09-06T02:14:01.702558+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5209,
   "category_counts": {
@@ -185284,8 +185284,8 @@
       "location": "RDPR Division Office Chikkodi",
       "district": "",
       "city": "",
-      "amount": 8471357.28,
-      "amount_display": "8471357.28",
+      "amount": 8471357.3,
+      "amount_display": "8471357.3",
       "emd": null,
       "fee": null,
       "published_date": "21-08-2026 16:24:22",
@@ -185299,7 +185299,7 @@
         "description": "BUILDING",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 8471357.28,
+        "ecv": 8471357.3,
         "deptId": 52,
         "status": "PUBLISHED",
         "statusText": "Published",
