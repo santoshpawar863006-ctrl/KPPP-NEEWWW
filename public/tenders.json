@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T16:14:28.957455+00:00",
+  "generated_at": "2026-09-07T17:13:24.150870+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5066,
   "category_counts": {
@@ -86048,8 +86048,8 @@
       "location": "PWD Division Office Yadagiri",
       "district": "",
       "city": "",
-      "amount": 1379537.95,
-      "amount_display": "1379537.95",
+      "amount": 1379537.94,
+      "amount_display": "1379537.94",
       "emd": null,
       "fee": null,
       "published_date": "02-09-2026 14:58:45",
@@ -86063,7 +86063,7 @@
         "description": "Maintenance of Road from Mundergi (on NH150) connecting Achola D Tanda (Chittapur Taluk Border) MDR (Km. 2.00 to 9.00, 10.00 to 18.00, 25.00 to 26.820, and 29.00 to 37.27) in Yadgir Taluk under 3054 MDR Maintenance for the year 2026-27 (Reserved for ST Category)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1379537.95,
+        "ecv": 1379537.94,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
