@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T22:14:26.036173+00:00",
+  "generated_at": "2026-09-07T23:14:05.898287+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5066,
   "category_counts": {
@@ -20184,7 +20184,7 @@
         "locationId": 948,
         "locationName": "RDPR Division Office Koppal",
         "ecvtenderYn": true,
-        "canViewAddendum": false,
+        "canViewAddendum": true,
         "canViewCorrigendum": false,
         "workCategoryName": "Buildings",
         "tenderType": "RFQ",
