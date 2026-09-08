@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T02:14:29.061180+00:00",
+  "generated_at": "2026-09-08T03:15:01.220077+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5066,
   "category_counts": {
@@ -133492,8 +133492,8 @@
       "location": "PWD Special Division Office Ramanagara",
       "district": "",
       "city": "",
-      "amount": 580951.29,
-      "amount_display": "580951.29",
+      "amount": 580951.28,
+      "amount_display": "580951.28",
       "emd": null,
       "fee": null,
       "published_date": "31-08-2026 15:37:28",
@@ -133507,7 +133507,7 @@
         "description": "ANNUAL MAINTENANCE",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 580951.29,
+        "ecv": 580951.28,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
