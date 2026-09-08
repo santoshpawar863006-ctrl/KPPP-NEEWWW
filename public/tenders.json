@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T01:13:57.798324+00:00",
+  "generated_at": "2026-09-08T02:14:29.061180+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5066,
   "category_counts": {
@@ -177610,8 +177610,8 @@
       "location": "DMA City Municipal Council Ilkal",
       "district": "",
       "city": "",
-      "amount": 1036341.84,
-      "amount_display": "1036341.84",
+      "amount": 1036341.83,
+      "amount_display": "1036341.83",
       "emd": null,
       "fee": null,
       "published_date": "25-08-2026 13:46:23",
@@ -177625,7 +177625,7 @@
         "description": "Construction of CC Road from Sharanapppa Amadhihala house to Hosamani Kalyanamatapa in ward no 28 And Also Rising of ugd Chamber in ilkal cmc under Muncipal Fund",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1036341.84,
+        "ecv": 1036341.83,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
