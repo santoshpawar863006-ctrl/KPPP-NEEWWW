@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T17:14:53.501638+00:00",
+  "generated_at": "2026-09-08T18:17:33.492365+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5150,
   "category_counts": {
@@ -177811,8 +177811,8 @@
       "location": "DMA City Corporation Hubballi-Dharawada",
       "district": "",
       "city": "",
-      "amount": 1011000.0,
-      "amount_display": "1011000.0",
+      "amount": 1011000.01,
+      "amount_display": "1011000.01",
       "emd": null,
       "fee": null,
       "published_date": "25-08-2026 18:47:05",
@@ -177826,7 +177826,7 @@
         "description": "Zonal no.07 Laying of Pavers at Nagaling Nagar Sub Roads in ward no.53",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 1011000.0,
+        "ecv": 1011000.01,
         "deptId": 2146,
         "status": "PUBLISHED",
         "statusText": "Published",
