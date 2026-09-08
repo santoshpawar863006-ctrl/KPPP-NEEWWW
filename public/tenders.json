@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T14:16:48.443880+00:00",
+  "generated_at": "2026-09-08T15:16:20.346896+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5140,
   "category_counts": {
@@ -119124,8 +119124,8 @@
       "location": "PWD Division Office Hosapete",
       "district": "",
       "city": "",
-      "amount": 202116.31,
-      "amount_display": "202116.31",
+      "amount": 202116.32,
+      "amount_display": "202116.32",
       "emd": null,
       "fee": null,
       "published_date": "01-09-2026 17:38:16",
@@ -119139,7 +119139,7 @@
         "description": "Annual Maintenance of Road from Danapura (NH-50) to Mariyammanahalli (SH-25) via Venkatapura, Ayyanahalli from Km 0.00 to 2.43 & Km 5.00 to 6.11 - Overlap 0.62 Km from Km 2.43 to 3.05 on Mariyammanahalli-Vyasanakeri MDR in Hosapete Taluk, Vijayanagara District.(HOA 3054 MDR MAINTENANCE)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 202116.31,
+        "ecv": 202116.32,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
