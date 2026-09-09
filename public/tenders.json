@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-09T20:15:16.112814+00:00",
+  "generated_at": "2026-09-09T21:12:50.504292+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5239,
   "category_counts": {
@@ -129506,8 +129506,8 @@
       "location": "PWD Division Office Yadagiri",
       "district": "",
       "city": "",
-      "amount": 385073.95,
-      "amount_display": "385073.95",
+      "amount": 385073.96,
+      "amount_display": "385073.96",
       "emd": null,
       "fee": null,
       "published_date": "02-09-2026 11:49:21",
@@ -129521,7 +129521,7 @@
         "description": "Maintenance of Road from Yedalbhavi (SH-177) to Hanmanhal Cross Km 0.00 to 3.50 in Shorapur Taluka (Under 3054 MDR Maintenance for the year 2026-27)",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 385073.95,
+        "ecv": 385073.96,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
