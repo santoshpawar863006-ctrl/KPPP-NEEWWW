@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T01:13:46.046910+00:00",
+  "generated_at": "2026-09-10T02:14:59.011993+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5239,
   "category_counts": {
@@ -121065,8 +121065,8 @@
       "location": "PWD Division Office Yadagiri",
       "district": "",
       "city": "",
-      "amount": 329262.2,
-      "amount_display": "329262.2",
+      "amount": 329262.19,
+      "amount_display": "329262.19",
       "emd": null,
       "fee": null,
       "published_date": "02-09-2026 15:21:34",
@@ -121080,7 +121080,7 @@
         "description": "Maintenance of Road From Gurumitkal (SH-126) To Buragapalli (SH-16) Km 4.70 To 7.72 (selected reaches) in Gurumitkal Taluk & Yadgir Dist.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 329262.2,
+        "ecv": 329262.19,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
