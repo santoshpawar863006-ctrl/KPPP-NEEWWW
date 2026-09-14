@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T23:57:54.250051+00:00",
+  "generated_at": "2026-09-14T04:42:57.177778+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 5530,
   "category_counts": {
@@ -38753,8 +38753,8 @@
       "location": "PWD Division Office Ballari",
       "district": "",
       "city": "",
-      "amount": 324198.06,
-      "amount_display": "324198.06",
+      "amount": 324198.05,
+      "amount_display": "324198.05",
       "emd": null,
       "fee": null,
       "published_date": "10-09-2026 17:41:11",
@@ -38768,7 +38768,7 @@
         "description": "Annual Maintenance of Belagal to join Bannihatti- Rajapura-Metriki via Tumati, Anthapura lingadahalli Road ch 0.00 Km to 0.30, 1.6 to 4.4 and 4.9 to 6.70 KM in Ballari Taluk Under 3054 Non Plan MDR Maintenance for the year 2026-27.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 324198.06,
+        "ecv": 324198.05,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
