@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T18:11:59.693478+00:00",
+  "generated_at": "2026-09-18T21:31:26.502386+00:00",
   "source": "https://kppp.karnataka.gov.in",
   "count": 4843,
   "category_counts": {
@@ -90125,8 +90125,8 @@
       "location": "PWD Division Office Ballari",
       "district": "",
       "city": "",
-      "amount": 7512645.18,
-      "amount_display": "7512645.18",
+      "amount": 7512645.19,
+      "amount_display": "7512645.19",
       "emd": null,
       "fee": null,
       "published_date": "11-09-2026 17:04:47",
@@ -90140,7 +90140,7 @@
         "description": "Improvement of Cement Concrete Road from H. Lakshmikanth House to B. Srinivas House at Sushma Swaraaj Colony, 4th Cross Road at Ward No. 21, Siddarth Gouda House to BUDA Park, Behind Sulemaan House to Nagana Gouda House, Infront of Manjunath House to Anand House at Ward No. 21 in Ballari City under KKRDB Intrest Fund 2025-26.",
         "category": "WORKS",
         "categoryText": "Works",
-        "ecv": 7512645.18,
+        "ecv": 7512645.19,
         "deptId": 51,
         "status": "PUBLISHED",
         "statusText": "Published",
